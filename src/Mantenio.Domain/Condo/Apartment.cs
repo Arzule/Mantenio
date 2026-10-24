@@ -23,10 +23,34 @@ public sealed class Apartment
     /// <summary>Unique, human-friendly identifier used in search and CSV imports, e.g. "H-102".</summary>
     public string Code { get; private set; } = "";
 
-    /// <summary>Apartment-specific fee; null means the global fee applies.</summary>
-    public decimal? FeeOverride { get; private set; }
-
+    /// <summary>
+    /// Frozen apartments get no new charges, late fees or reminders (e.g. under a legal process). Previous debt stays.
+    /// The history is in <see cref="ApartmentFreeze"/>.
+    /// </summary>
     public bool IsFrozen { get; private set; }
+
+    public ApartmentFreeze Freeze(string reason, Guid adminId, DateTimeOffset now)
+    {
+        if (IsFrozen)
+        {
+            throw new InvalidOperationException("The apartment is already frozen.");
+        }
+
+        IsFrozen = true;
+        return new ApartmentFreeze(Id, reason, adminId, now);
+    }
+
+    public void Unfreeze(ApartmentFreeze activeFreeze, string reason, Guid adminId, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(activeFreeze);
+        if (!IsFrozen || activeFreeze.ApartmentId != Id)
+        {
+            throw new InvalidOperationException("The apartment is not frozen.");
+        }
+
+        activeFreeze.End(reason, adminId, now);
+        IsFrozen = false;
+    }
 
     public static string BuildCode(string towerName, string number) =>
         $"{towerName.Trim().ToUpperInvariant()}-{number.Trim().ToUpperInvariant()}";

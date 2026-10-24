@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Time.Testing;
 using Npgsql;
 using Testcontainers.PostgreSql;
@@ -29,6 +30,9 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public FakeTimeProvider Time { get; } = new(DateTimeOffset.UtcNow);
     public CapturingEmailSender Emails { get; } = new();
 
+    /// <summary>Server-side errors logged while the tests ran (handy when an endpoint answers 500).</summary>
+    public ConcurrentQueue<string> ServerErrors { get; } = new();
+
     /// <summary>Generous by default so tests do not trip over each other; RateLimitTests lowers them.</summary>
     protected virtual int RateLimit => 10_000;
 
@@ -48,6 +52,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             builder.UseSetting($"RateLimiting:{name}", RateLimit.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
 
+        builder.ConfigureLogging(logging => logging.AddProvider(new ErrorCaptureProvider(ServerErrors)));
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<TimeProvider>();
@@ -130,4 +135,28 @@ public sealed partial class CapturingEmailSender : IEmailSender
 
     [GeneratedRegex(@"(?m)^\d{6}$")]
     private static partial Regex SixDigits();
+}
+
+internal sealed class ErrorCaptureProvider(ConcurrentQueue<string> errors) : ILoggerProvider
+{
+    public ILogger CreateLogger(string categoryName) => new ErrorCaptureLogger(errors);
+
+    public void Dispose()
+    {
+    }
+
+    private sealed class ErrorCaptureLogger(ConcurrentQueue<string> errors) : ILogger
+    {
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Error;
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            if (IsEnabled(logLevel))
+            {
+                errors.Enqueue(formatter(state, exception) + Environment.NewLine + exception);
+            }
+        }
+    }
 }

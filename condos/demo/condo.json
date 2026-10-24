@@ -9,6 +9,12 @@
   "currency": "PEN",
   "timeZone": "America/Lima",
   "towerLabel": "Torre",
+  "billing": {
+    "monthlyFee": 150,
+    "dueDay": 1,
+    "dueMonthOffset": 1,
+    "trackingStartPeriod": 202611
+  },
   "theme": {
     "primary": "#2F5D8A",
     "primaryDarken": "#244A6E",

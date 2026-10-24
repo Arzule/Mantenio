@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Mantenio.Api.Features.Apartments;
 using Mantenio.Api.Infrastructure.Identity;
 using Mantenio.Api.Infrastructure.Persistence;
 using Mantenio.Domain.Audit;
@@ -28,41 +29,9 @@ internal sealed class Seeding(AppDbContext db, UserManager<AppUser> users, TimeP
     /// <summary>Adds the towers and apartments that do not exist yet. Returns how many apartments were added.</summary>
     public async Task<int> SeedApartmentsAsync(string csv, CancellationToken cancellationToken)
     {
-        var entries = ApartmentList.Parse(csv);
-        var towers = await db.Towers.Include(t => t.Apartments).ToDictionaryAsync(t => t.Name, StringComparer.OrdinalIgnoreCase, cancellationToken);
-        var nextSortOrder = towers.Count == 0 ? 1 : towers.Values.Max(t => t.SortOrder) + 1;
-        var added = 0;
-
-        foreach (var entry in entries)
-        {
-            if (!towers.TryGetValue(entry.Tower, out var tower))
-            {
-                tower = new Tower(entry.Tower, nextSortOrder++);
-                towers[tower.Name] = tower;
-                db.Towers.Add(tower);
-            }
-
-            var code = Apartment.BuildCode(entry.Tower, entry.Number);
-            if (tower.Apartments.Any(a => a.Code == code))
-            {
-                continue;
-            }
-
-            var apartment = new Apartment(tower, entry.Number);
-            tower.Apartments.Add(apartment);
-            db.Apartments.Add(apartment);
-            added++;
-        }
-
-        if (added > 0)
-        {
-            db.AuditEvents.Add(new AuditEvent(
-                AuditEntities.ApartmentList, "seed", "Seeded", AuditSource.System, null, time.GetUtcNow(),
-                newValues: AuditLog.Json(new { Towers = towers.Count, ApartmentsAdded = added })));
-            await db.SaveChangesAsync(cancellationToken);
-        }
-
-        return added;
+        var result = await ApartmentImport.ApplyAsync(
+            db, ApartmentList.Parse(csv), AuditSource.System, null, time.GetUtcNow(), cancellationToken);
+        return result.ApartmentsAdded;
     }
 
     /// <summary>

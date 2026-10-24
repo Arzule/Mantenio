@@ -236,6 +236,49 @@ namespace Mantenio.Api.Infrastructure.Persistence.Migrations
                     b.ToTable("AuditEvents", (string)null);
                 });
 
+            modelBuilder.Entity("Mantenio.Domain.Banking.BankAccount", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("Cci")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("HolderName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedById")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BankAccounts", (string)null);
+                });
+
             modelBuilder.Entity("Mantenio.Domain.Condo.Apartment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -246,10 +289,6 @@ namespace Mantenio.Api.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(80)
                         .HasColumnType("character varying(80)");
-
-                    b.Property<decimal?>("FeeOverride")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("numeric(10,2)");
 
                     b.Property<bool>("IsFrozen")
                         .HasColumnType("boolean");
@@ -273,12 +312,55 @@ namespace Mantenio.Api.Infrastructure.Persistence.Migrations
                     b.ToTable("Apartments", (string)null);
                 });
 
+            modelBuilder.Entity("Mantenio.Domain.Condo.ApartmentFreeze", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ApartmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EndReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTimeOffset?>("EndedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("EndedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("StartedById")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApartmentId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ApartmentFreezes_Active")
+                        .HasFilter("\"EndedAt\" IS NULL");
+
+                    b.ToTable("ApartmentFreezes", (string)null);
+                });
+
             modelBuilder.Entity("Mantenio.Domain.Condo.CondoSettings", b =>
                 {
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
                     b.Property<int>("DueDay")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DueMonthOffset")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("LateFeePercent")
@@ -300,6 +382,8 @@ namespace Mantenio.Api.Infrastructure.Persistence.Migrations
                     b.ToTable("CondoSettings", null, t =>
                         {
                             t.HasCheckConstraint("CK_CondoSettings_DueDay", "\"DueDay\" BETWEEN 1 AND 28");
+
+                            t.HasCheckConstraint("CK_CondoSettings_DueMonthOffset", "\"DueMonthOffset\" BETWEEN 0 AND 1");
 
                             t.HasCheckConstraint("CK_CondoSettings_Singleton", "\"Id\" = 1");
                         });
@@ -325,6 +409,51 @@ namespace Mantenio.Api.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Towers", (string)null);
+                });
+
+            modelBuilder.Entity("Mantenio.Domain.Fees.FeeChange", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ApartmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChangedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EffectivePeriod")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("NewAmount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<decimal?>("OldAmount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApartmentId");
+
+                    b.HasIndex("Scope", "ApartmentId", "EffectivePeriod");
+
+                    b.ToTable("FeeChanges", (string)null);
                 });
 
             modelBuilder.Entity("Mantenio.Domain.Identity.InvitationCode", b =>
@@ -378,6 +507,43 @@ namespace Mantenio.Api.Infrastructure.Persistence.Migrations
                     b.HasIndex("UsedById");
 
                     b.ToTable("InvitationCodes", (string)null);
+                });
+
+            modelBuilder.Entity("Mantenio.Domain.Notifications.UserNotification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("AcknowledgedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Data")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTimeOffset?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("RequiresAcknowledgement")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
@@ -479,6 +645,23 @@ namespace Mantenio.Api.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Tower");
+                });
+
+            modelBuilder.Entity("Mantenio.Domain.Condo.ApartmentFreeze", b =>
+                {
+                    b.HasOne("Mantenio.Domain.Condo.Apartment", null)
+                        .WithMany()
+                        .HasForeignKey("ApartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Mantenio.Domain.Fees.FeeChange", b =>
+                {
+                    b.HasOne("Mantenio.Domain.Condo.Apartment", null)
+                        .WithMany()
+                        .HasForeignKey("ApartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Mantenio.Domain.Identity.InvitationCode", b =>

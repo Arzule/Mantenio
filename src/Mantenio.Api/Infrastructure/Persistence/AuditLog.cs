@@ -11,6 +11,11 @@ internal static class AuditEntities
     public const string User = "User";
     public const string InvitationCode = "InvitationCode";
     public const string ApartmentList = "ApartmentList";
+    public const string CondoSettings = "CondoSettings";
+    public const string FeeChange = "FeeChange";
+    public const string Tower = "Tower";
+    public const string Apartment = "Apartment";
+    public const string BankAccount = "BankAccount";
 }
 
 internal static class AuditLog

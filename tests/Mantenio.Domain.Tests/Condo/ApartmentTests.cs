@@ -15,7 +15,6 @@ public sealed class ApartmentTests
         apartment.Code.ShouldBe("H-102");
         apartment.Number.ShouldBe("102");
         apartment.TowerId.ShouldBe(tower.Id);
-        apartment.FeeOverride.ShouldBeNull();
         apartment.IsFrozen.ShouldBeFalse();
     }
 }

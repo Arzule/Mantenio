@@ -85,6 +85,19 @@ public static class TestFlows
     }
 
     /// <summary>Asserts the status code, showing the response body when it does not match.</summary>
+    /// <summary>GET as JSON, failing with the server-side error when the endpoint answers 500.</summary>
+    public static async Task<T> GetJsonAsync<T>(this HttpClient client, ApiFactory factory, string path)
+    {
+        var response = await client.GetAsync(new Uri(path, UriKind.Relative), Ct);
+        if (response.StatusCode == HttpStatusCode.InternalServerError)
+        {
+            throw new InvalidOperationException(string.Join(Environment.NewLine, factory.ServerErrors));
+        }
+
+        await response.ShouldBeAsync(HttpStatusCode.OK);
+        return (await response.Content.ReadFromJsonAsync<T>(Ct))!;
+    }
+
     public static async Task ShouldBeAsync(this HttpResponseMessage response, HttpStatusCode expected)
     {
         if (response.StatusCode != expected)

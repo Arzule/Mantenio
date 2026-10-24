@@ -33,4 +33,15 @@ public static class ErrorCodes
     public const string ApartmentNotFound = "apartment_not_found";
     public const string FounderProtected = "founder_protected";
     public const string CannotModifySelf = "cannot_modify_self";
+
+    // Condo configuration
+    public const string InvalidPeriod = "invalid_period";
+    public const string InvalidBankAccount = "invalid_bank_account";
+    public const string ApartmentAlreadyFrozen = "apartment_already_frozen";
+    public const string ApartmentNotFrozen = "apartment_not_frozen";
+    public const string ApartmentInUse = "apartment_in_use";
+    public const string TowerExists = "tower_exists";
+    public const string TowerNotFound = "tower_not_found";
+    public const string ApartmentExists = "apartment_exists";
+    public const string InvalidCsv = "invalid_csv";
 }

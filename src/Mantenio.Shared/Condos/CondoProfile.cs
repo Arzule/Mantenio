@@ -19,6 +19,7 @@ public sealed record CondoProfile
     public string Currency { get; init; } = "PEN";
     public string TimeZone { get; init; } = "America/Lima";
     public string TowerLabel { get; init; } = "Torre";
+    public CondoBilling Billing { get; init; } = new();
     public required CondoTheme Theme { get; init; }
     public required CondoReceiptSettings Receipt { get; init; }
     public required CondoAndroidSettings Android { get; init; }
@@ -62,6 +63,20 @@ public sealed record CondoProfile
         stream.CopyTo(buffer);
         return buffer.ToArray();
     }
+}
+
+/// <summary>
+/// Initial billing settings, copied to the database the first time (afterwards admins change them in the app).
+/// <see cref="DueMonthOffset"/> 1 means the fee of month M is due on <see cref="DueDay"/> of M+1.
+/// </summary>
+public sealed record CondoBilling
+{
+    public decimal MonthlyFee { get; init; }
+    public int DueDay { get; init; } = 1;
+    public int DueMonthOffset { get; init; } = 1;
+
+    /// <summary>yyyymm of the first month tracked by the system.</summary>
+    public int TrackingStartPeriod { get; init; }
 }
 
 public sealed record CondoTheme

@@ -1,7 +1,10 @@
 using Mantenio.Api.Infrastructure.Identity;
 using Mantenio.Domain.Audit;
+using Mantenio.Domain.Banking;
 using Mantenio.Domain.Condo;
+using Mantenio.Domain.Fees;
 using Mantenio.Domain.Identity;
+using Mantenio.Domain.Notifications;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +22,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : Ident
     public DbSet<InvitationCode> InvitationCodes => Set<InvitationCode>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
+    public DbSet<FeeChange> FeeChanges => Set<FeeChange>();
+    public DbSet<ApartmentFreeze> ApartmentFreezes => Set<ApartmentFreeze>();
+    public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
+    public DbSet<UserNotification> Notifications => Set<UserNotification>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

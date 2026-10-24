@@ -1,15 +1,20 @@
 using Mantenio.Api.Features.Account;
 using Mantenio.Api.Features.Apartments;
 using Mantenio.Api.Features.Auth;
+using Mantenio.Api.Features.BankAccounts;
 using Mantenio.Api.Features.Invitations;
+using Mantenio.Api.Features.Notifications;
+using Mantenio.Api.Features.Settings;
 using Mantenio.Api.Features.Setup;
 using Mantenio.Api.Features.SystemInfo;
 using Mantenio.Api.Features.Users;
 using Mantenio.Api.Infrastructure.Auth;
 using Mantenio.Api.Infrastructure.Email;
 using Mantenio.Api.Infrastructure.Errors;
+using Mantenio.Api.Infrastructure.Notifications;
 using Mantenio.Api.Infrastructure.Persistence;
 using Mantenio.Api.Infrastructure.RateLimiting;
+using Mantenio.Api.Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Scalar.AspNetCore;
@@ -41,8 +46,10 @@ builder.Services.AddMantenioRateLimiting(builder.Configuration);
 builder.Services.AddMantenioEmail(builder.Configuration, builder.Environment);
 builder.Services.AddScoped<SignInFlow>();
 builder.Services.AddScoped<Seeding>();
+builder.Services.AddSingleton<CondoClock>();
+builder.Services.AddScoped<NotificationService>();
 
-// The web app (Static Web Apps) lives on another origin. The Android app calls the API natively, without CORS.
+// The web app (Cloudflare Pages) lives on another origin. The Android app calls the API natively, without CORS.
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
     policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod()));
@@ -83,6 +90,10 @@ app.MapAccountEndpoints();
 app.MapInvitationEndpoints();
 app.MapApartmentEndpoints();
 app.MapUserAdminEndpoints();
+app.MapApartmentAdminEndpoints();
+app.MapSettingsEndpoints();
+app.MapBankAccountEndpoints();
+app.MapNotificationEndpoints();
 
 await app.RunAsync();
 return 0;
