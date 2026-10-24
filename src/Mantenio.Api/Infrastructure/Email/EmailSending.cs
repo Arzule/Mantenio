@@ -1,3 +1,5 @@
+using Azure;
+using Azure.Communication.Email;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Mantenio.Shared.Condos;
@@ -14,12 +16,16 @@ public interface IEmailSender
 }
 
 /// <summary>
-/// SMTP settings ("Email" section). Production: Gmail (smtp.gmail.com:587, StartTls, app password as a secret).
-/// Local: the Mailpit container started by the Aspire AppHost (no TLS, no credentials).
+/// Email settings ("Email" section). Production: Azure Communication Services (<see cref="AcsConnectionString"/>,
+/// a secret). Any SMTP server also works (<see cref="Host"/>). Local: the Mailpit container started by the
+/// Aspire AppHost (SMTP, no TLS, no credentials).
 /// </summary>
 public sealed class EmailOptions
 {
     public const string SectionName = "Email";
+
+    /// <summary>Azure Communication Services connection string; when set it wins over SMTP.</summary>
+    public string? AcsConnectionString { get; set; }
 
     public string Host { get; set; } = "";
     public int Port { get; set; } = 587;
@@ -55,6 +61,22 @@ internal sealed class SmtpEmailSender(IOptions<EmailOptions> options) : IEmailSe
     }
 }
 
+/// <summary>Azure Communication Services Email. The sender is a verified address of the linked email domain.</summary>
+internal sealed class AcsEmailSender(IOptions<EmailOptions> options) : IEmailSender
+{
+    private readonly EmailClient _client = new(options.Value.AcsConnectionString);
+
+    public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
+    {
+        var content = new EmailContent(message.Subject) { PlainText = message.TextBody };
+        var recipients = new EmailRecipients([new EmailAddress(message.To, message.ToName)]);
+        var email = new Azure.Communication.Email.EmailMessage(options.Value.FromAddress, recipients, content);
+
+        // Returns once ACS accepts the message (not on delivery); a rejection throws RequestFailedException.
+        await _client.SendAsync(WaitUntil.Started, email, cancellationToken);
+    }
+}
+
 /// <summary>Development fallback when no SMTP server is configured: the email is written to the log.</summary>
 internal sealed partial class LogEmailSender(ILogger<LogEmailSender> logger) : IEmailSender
 {
@@ -76,11 +98,15 @@ internal static class EmailSetup
         services.AddOptions<EmailOptions>().Bind(section);
         services.AddScoped<AccountEmails>();
 
-        if (string.IsNullOrWhiteSpace(section[nameof(EmailOptions.Host)]))
+        if (!string.IsNullOrWhiteSpace(section[nameof(EmailOptions.AcsConnectionString)]))
+        {
+            services.AddSingleton<IEmailSender, AcsEmailSender>();
+        }
+        else if (string.IsNullOrWhiteSpace(section[nameof(EmailOptions.Host)]))
         {
             if (!environment.IsDevelopment() && !environment.IsEnvironment("Testing"))
             {
-                throw new InvalidOperationException("Email:Host is not configured.");
+                throw new InvalidOperationException("Email is not configured (Email:AcsConnectionString or Email:Host).");
             }
 
             services.AddSingleton<IEmailSender, LogEmailSender>();

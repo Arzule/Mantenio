@@ -1,0 +1,11 @@
+{
+  "githubUser": "your-github-user",
+  "image": "your-github-user/mantenio-yourcondo-api",
+  "resourceGroup": "rg-mantenio-yourcondo",
+  "containerEnvironment": "cae-mantenio-yourcondo",
+  "apiApp": "api-yourcondo",
+  "communicationService": "acs-mantenio-yourcondo",
+  "emailService": "email-mantenio-yourcondo",
+  "pagesProject": "mantenio-yourcondo",
+  "corsOrigins": [ "https://mantenio-yourcondo.pages.dev" ]
+}
