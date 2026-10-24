@@ -29,7 +29,7 @@ public sealed class Phase3UiTests : BunitContext
     [Fact]
     public void Money_and_months_are_written_the_peruvian_way()
     {
-        Formats.Money(180m).ShouldBe("S/ 180.00");
+        Formats.Money(180m).ShouldBe("S/ 180.00");
         Formats.Month(202611).ShouldBe("Noviembre 2026");
         Formats.NextMonths(202611, 3).ShouldBe([202612, 202701, 202702]);
     }
@@ -52,7 +52,7 @@ public sealed class Phase3UiTests : BunitContext
         var global = Notice(NotificationKind.FeeChanged, new { apartmentCode = (string?)null, oldAmount = 180m, newAmount = 200m, effectivePeriod = 202701, reason = "Vigilancia" });
         var removed = Notice(NotificationKind.FeeChanged, new { apartmentCode = "H-102", oldAmount = 90m, newAmount = (decimal?)null, effectivePeriod = 202702, reason = "Fin" });
 
-        NoticeText.Body(global).ShouldStartWith("La cuota de mantenimiento será de S/ 200.00 desde Enero 2027.");
+        NoticeText.Body(global).ShouldBe("La cuota de mantenimiento será de S/ 200.00 desde Enero 2027. Motivo: Vigilancia.");
         NoticeText.Body(removed).ShouldContain("H-102");
         NoticeText.Body(removed).ShouldContain("Febrero 2027");
     }

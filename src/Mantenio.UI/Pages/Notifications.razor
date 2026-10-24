@@ -9,10 +9,6 @@
 <MudContainer MaxWidth="MaxWidth.Medium" Class="py-6">
     <div class="d-flex align-center justify-space-between flex-wrap gap-2 mb-4">
         <MudText Typo="Typo.h5" HtmlTag="h1">@UiStrings.NotificationsTitle</MudText>
-        @if (_page is { UnreadCount: > 0 })
-        {
-            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="MarkAllReadAsync" Disabled="Busy">@UiStrings.MarkAllRead</MudButton>
-        }
     </div>
 
     @if (Error is not null)
@@ -50,15 +46,17 @@
 @code {
     private NotificationPage? _page;
 
-    protected override Task OnInitializedAsync() => LoadAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+
+        // Opening the page counts as reading; unread ones stay highlighted until the next visit.
+        if (_page is { UnreadCount: > 0 })
+        {
+            await RunAsync(() => Api.MarkAllNotificationsReadAsync());
+        }
+    }
 
     private Task LoadAsync() => RunAsync(async () => _page = await Api.ListNotificationsAsync());
 
-    private async Task MarkAllReadAsync()
-    {
-        if (await RunAsync(() => Api.MarkAllNotificationsReadAsync()))
-        {
-            await LoadAsync();
-        }
-    }
 }

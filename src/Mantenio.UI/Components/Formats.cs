@@ -8,7 +8,8 @@ public static class Formats
 {
     private static readonly CultureInfo Culture = CultureInfo.GetCultureInfo(CondoProfile.Current.Culture);
 
-    public static string Money(decimal amount) => amount.ToString("C2", Culture);
+    /// <summary>"S/ 180.00" with a non-breaking space, so the symbol never ends a line alone.</summary>
+    public static string Money(decimal amount) => amount.ToString("C2", Culture).Replace(' ', (char)0xA0);
 
     /// <summary>yyyymm → "Noviembre 2026".</summary>
     public static string Month(int period)

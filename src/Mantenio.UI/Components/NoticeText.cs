@@ -17,7 +17,7 @@ public static class NoticeText
     {
         ArgumentNullException.ThrowIfNull(notice);
         var data = notice.Data;
-        var reason = Formats.Format(UiStrings.NoticeReason, Text(data, "reason"));
+        var reason = Formats.Format(UiStrings.NoticeReason, Text(data, "reason").TrimEnd('.', ' '));
 
         if (notice.Kind == NotificationKind.BankAccountsChanged)
         {

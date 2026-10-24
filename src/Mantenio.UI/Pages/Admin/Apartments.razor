@@ -40,9 +40,17 @@
             <MudTh>@UiStrings.ColumnStatus</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="@UiStrings.Apartment"><b>@context.Code</b></MudTd>
-            <MudTd DataLabel="@UiStrings.ColumnResidents">@context.ResidentCount</MudTd>
-            <MudTd DataLabel="@UiStrings.ColumnSpecialFee">@(context.SpecialFee is { } fee ? Formats.Money(fee) : "—")</MudTd>
+            <MudTd DataLabel="@UiStrings.Apartment">
+                <b>@context.Code</b>
+                @* On phones the other columns are hidden, so their data goes under the code. *@
+                <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                    <MudText Typo="Typo.caption" Class="d-block">
+                        @UiStrings.ColumnResidents: @context.ResidentCount@(context.SpecialFee is { } special ? $" · {UiStrings.ColumnSpecialFee}: {Formats.Money(special)}" : "")
+                    </MudText>
+                </MudHidden>
+            </MudTd>
+            <MudTd DataLabel="@UiStrings.ColumnResidents" HideSmall="true">@context.ResidentCount</MudTd>
+            <MudTd DataLabel="@UiStrings.ColumnSpecialFee" HideSmall="true">@(context.SpecialFee is { } fee ? Formats.Money(fee) : "—")</MudTd>
             <MudTd DataLabel="@UiStrings.ColumnStatus">
                 <div class="d-flex align-center justify-end gap-1">
                     @if (context.IsFrozen)

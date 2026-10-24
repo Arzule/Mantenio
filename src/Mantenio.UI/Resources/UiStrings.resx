@@ -227,7 +227,7 @@
   <data name="NoticeFeeGlobal" xml:space="preserve"><value>La cuota de mantenimiento será de {0} desde {1}.</value></data>
   <data name="NoticeFeeApartment" xml:space="preserve"><value>La cuota del departamento {0} será de {1} desde {2}.</value></data>
   <data name="NoticeFeeApartmentRemoved" xml:space="preserve"><value>El departamento {0} vuelve a pagar la cuota general desde {1}.</value></data>
-  <data name="NoticeReason" xml:space="preserve"><value>Motivo: {0}</value></data>
+  <data name="NoticeReason" xml:space="preserve"><value>Motivo: {0}.</value></data>
   <data name="PendingNoticeTitle" xml:space="preserve"><value>Aviso importante</value></data>
   <!-- Admin: settings (fee and due date) -->
   <data name="SettingsTitle" xml:space="preserve"><value>Cuota y vencimiento</value></data>
