@@ -1,13 +1,11 @@
 <Solution>
   <Folder Name="/condos/" />
-  <Folder Name="/condos/pradosj/">
-    <File Path="condos/pradosj/condo.json" />
-    <File Path="condos/pradosj/icon.svg" />
-    <File Path="condos/pradosj/logo.svg" />
-    <File Path="condos/pradosj/splash.svg" />
-  </Folder>
-  <Folder Name="/condos/pradosj/reference/">
-    <File Path="condos/pradosj/reference/receipt-sample.jpeg" />
+  <Folder Name="/condos/demo/">
+    <File Path="condos/demo/apartments.csv" />
+    <File Path="condos/demo/condo.json" />
+    <File Path="condos/demo/icon.svg" />
+    <File Path="condos/demo/logo.svg" />
+    <File Path="condos/demo/splash.svg" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Mantenio.Api/Mantenio.Api.csproj" />

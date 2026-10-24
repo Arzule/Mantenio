@@ -32,6 +32,9 @@ public sealed class CondoSettings
 
     public int MaxAdmins { get; private set; } = DefaultMaxAdmins;
 
+    /// <summary>Active admins (founder included) can never exceed <see cref="MaxAdmins"/>.</summary>
+    public bool HasAdminSeat(int activeAdmins) => activeAdmins < MaxAdmins;
+
     /// <summary>First period (yyyymm) tracked by the system; older debt is loaded as opening balance.</summary>
     public int TrackingStartPeriod { get; private set; }
 }

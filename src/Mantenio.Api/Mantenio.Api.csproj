@@ -3,16 +3,39 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <UserSecretsId>mantenio-api</UserSecretsId>
+    <!-- EmailTexts.resx is the Spanish (es-PE) text; there are no satellite translations. -->
+    <NeutralLanguage>es-PE</NeutralLanguage>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="MailKit" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Scalar.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Mantenio.Api.Tests" />
+  </ItemGroup>
+
+  <!-- Apartment list of the selected condo, used by `seed-apartments` (and the dev seed). -->
+  <ItemGroup>
+    <EmbeddedResource Include="$(CondoDir)apartments.csv" LogicalName="apartments.csv" Condition="Exists('$(CondoDir)apartments.csv')" />
+  </ItemGroup>
+
+  <!-- Email text (Spanish) lives here, exposed as a strongly typed class. -->
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\EmailTexts.resx"
+                      StronglyTypedLanguage="CSharp"
+                      StronglyTypedNamespace="Mantenio.Api.Resources"
+                      StronglyTypedClassName="EmailTexts"
+                      StronglyTypedFileName="$(IntermediateOutputPath)EmailTexts.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,4 +1,5 @@
 @page "/"
+@attribute [Authorize]
 
 <PageTitle>@UiStrings.NavHome · @Profile.ShortName</PageTitle>
 
@@ -7,6 +8,11 @@
         <div class="home-hero">
             <img class="home-logo" src="@CondoProfile.LogoDataUri" alt="@string.Format(UiStrings.LogoAlt, Profile.DisplayName)" />
             <div class="home-text">
+                <AuthorizeView>
+                    <MudText Typo="Typo.subtitle1" Color="Color.Secondary">
+                        @string.Format(UiStrings.HomeGreeting, context.User.FindFirst(MantenioClaims.FirstName)?.Value)
+                    </MudText>
+                </AuthorizeView>
                 <MudText Typo="Typo.h4" HtmlTag="h1" Color="Color.Primary" Class="home-title">
                     @string.Format(UiStrings.HomeWelcomeTitle, Profile.DisplayName)
                 </MudText>

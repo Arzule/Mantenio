@@ -1,0 +1,59 @@
+@* Confirms an admin action on a user and asks for the reason (and the apartment, when it changes). *@
+<MudDialog>
+    <DialogContent>
+        <MudText>@Message</MudText>
+        @if (AskApartment)
+        {
+            <ApartmentPicker @bind-Value="_apartment"
+                             Required="!AllowNoApartment"
+                             HelperText="@(AllowNoApartment ? UiStrings.RemoveApartmentHint : null)"
+                             Class="mt-4" />
+        }
+        <MudTextField @bind-Value="_reason"
+                      Label="@UiStrings.Reason"
+                      HelperText="@UiStrings.ReasonHint"
+                      Lines="2"
+                      MaxLength="500"
+                      Immediate="true"
+                      Variant="Variant.Outlined"
+                      Class="mt-4" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@UiStrings.Cancel</MudButton>
+        <MudButton Color="ConfirmColor" Variant="Variant.Filled" OnClick="Confirm" Disabled="!CanConfirm">@ConfirmText</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private string _reason = "";
+    private ApartmentOption? _apartment;
+
+    [CascadingParameter]
+    private IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public string Message { get; set; } = "";
+
+    [Parameter, EditorRequired]
+    public string ConfirmText { get; set; } = "";
+
+    [Parameter]
+    public Color ConfirmColor { get; set; } = Color.Primary;
+
+    [Parameter]
+    public bool AskApartment { get; set; }
+
+    [Parameter]
+    public bool AllowNoApartment { get; set; }
+
+    [Parameter]
+    public ApartmentOption? InitialApartment { get; set; }
+
+    protected override void OnInitialized() => _apartment = InitialApartment;
+
+    private bool CanConfirm => _reason.Trim().Length >= 3 && (!AskApartment || AllowNoApartment || _apartment is not null);
+
+    private void Confirm() => Dialog.Close(DialogResult.Ok(new UserActionResult(_reason.Trim(), _apartment)));
+
+    private void Cancel() => Dialog.Cancel();
+}

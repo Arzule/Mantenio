@@ -1,0 +1,80 @@
+@page "/admin/invitations"
+@attribute [Authorize(Policy = MantenioPolicies.AdminOnly)]
+@inherits BusyComponentBase
+@inject MantenioApi Api
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+
+<PageTitle>@UiStrings.InvitationsTitle · @CondoProfile.Current.ShortName</PageTitle>
+
+<div class="invitations-page">
+<MudContainer MaxWidth="MaxWidth.Small" Class="py-6">
+    <MudText Typo="Typo.h5" HtmlTag="h1">@UiStrings.InvitationsTitle</MudText>
+    <MudText Class="mt-2 mb-4">@UiStrings.InvitationsBody</MudText>
+
+    @if (_created is not null)
+    {
+        <MudPaper Class="pa-6 invitation-result" Elevation="1">
+            <MudText Typo="Typo.subtitle1">@UiStrings.GeneratedCodeTitle</MudText>
+            <MudText Typo="Typo.h3" Class="invitation-code my-3" Color="Color.Primary">@_created.Code</MudText>
+            <MudChip T="string" Color="Color.Default" Size="Size.Small">
+                @(_created.Role == AccountRole.Admin ? UiStrings.RoleAdmin : UiStrings.RoleResident)
+            </MudChip>
+            @if (_created.Apartment is { } apartment)
+            {
+                <MudText Typo="Typo.body2" Class="mt-2">@string.Format(UiStrings.GeneratedCodeApartment, apartment.Code)</MudText>
+            }
+            <MudText Typo="Typo.body2" Class="mt-2">
+                @string.Format(UiStrings.GeneratedCodeBody, CondoTime.ToLocal(_created.ExpiresAt).ToString("HH:mm", System.Globalization.CultureInfo.CurrentCulture))
+            </MudText>
+            <div class="d-flex justify-center flex-wrap gap-2 mt-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyAsync">
+                    @UiStrings.Copy
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="() => _created = null">@UiStrings.GenerateAnother</MudButton>
+            </div>
+        </MudPaper>
+    }
+    else
+    {
+        <MudPaper Class="pa-6" Elevation="1">
+            <MudSelect T="AccountRole" @bind-Value="_role" Label="@UiStrings.InvitationRole" Variant="Variant.Outlined">
+                <MudSelectItem Value="AccountRole.Resident">@UiStrings.RoleResident</MudSelectItem>
+                <MudSelectItem Value="AccountRole.Admin">@UiStrings.RoleAdmin</MudSelectItem>
+            </MudSelect>
+            <ApartmentPicker @bind-Value="_apartment"
+                             Label="@UiStrings.InvitationApartmentLabel"
+                             HelperText="@UiStrings.InvitationApartmentHint"
+                             Class="mt-4" />
+
+            @if (Error is not null)
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-3" Dense="true">@Error</MudAlert>
+            }
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="GenerateAsync" Disabled="Busy"
+                       StartIcon="@Icons.Material.Filled.PersonAdd">
+                @UiStrings.GenerateCode
+            </MudButton>
+        </MudPaper>
+    }
+</MudContainer>
+</div>
+
+@code {
+    private AccountRole _role = AccountRole.Resident;
+    private ApartmentOption? _apartment;
+    private Mantenio.Shared.Invitations.CreateInvitationResponse? _created;
+
+    private Task GenerateAsync() => RunAsync(async () =>
+    {
+        _created = await Api.CreateInvitationAsync(new Mantenio.Shared.Invitations.CreateInvitationRequest(_role, _apartment?.Id));
+        _apartment = null;
+    });
+
+    private async Task CopyAsync()
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", _created!.Code);
+        Snackbar.Add(UiStrings.Copied, Severity.Success);
+    }
+}

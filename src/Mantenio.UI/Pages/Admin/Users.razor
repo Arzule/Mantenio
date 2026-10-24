@@ -1,0 +1,165 @@
+@page "/admin/users"
+@attribute [Authorize(Policy = MantenioPolicies.AdminOnly)]
+@using Mantenio.Shared.Users
+@inject MantenioApi Api
+@inject IDialogService Dialogs
+@inject ISnackbar Snackbar
+
+<PageTitle>@UiStrings.UsersTitle · @CondoProfile.Current.ShortName</PageTitle>
+
+<div class="users-page">
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+    <MudText Typo="Typo.h5" HtmlTag="h1" Class="mb-4">@UiStrings.UsersTitle</MudText>
+
+    <MudTable T="UserSummary" @ref="_table" ServerData="LoadAsync" Hover="true" Elevation="1"
+              Breakpoint="Breakpoint.Sm" RowsPerPage="20" LoadingProgressColor="Color.Primary">
+        <ToolBarContent>
+            <div class="users-toolbar">
+                <MudTextField T="string" Value="_search" ValueChanged="OnSearchAsync" Placeholder="@UiStrings.UsersSearch"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true"
+                              DebounceInterval="300" Clearable="true" Class="users-search mt-0" />
+                <MudSwitch T="bool" Value="_includeInactive" ValueChanged="OnIncludeInactiveAsync" Label="@UiStrings.IncludeInactive" Color="Color.Primary" />
+            </div>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>@UiStrings.ColumnName</MudTh>
+            <MudTh>@UiStrings.ColumnApartment</MudTh>
+            <MudTh>@UiStrings.ColumnAuthorizedBy</MudTh>
+            <MudTh>@UiStrings.ColumnStatus</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@UiStrings.ColumnName">
+                <div class="user-cell">
+                    <MudText Typo="Typo.body1"><b>@context.FirstName @context.LastName</b></MudText>
+                    <MudText Typo="Typo.body2" Class="user-email">@context.Email</MudText>
+                    <MudText Typo="Typo.caption" Color="@(context.Role == AccountRole.Admin ? Color.Primary : Color.Default)">@RoleLabel(context)</MudText>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="@UiStrings.ColumnApartment">@(context.ApartmentCode ?? "—")</MudTd>
+            <MudTd DataLabel="@UiStrings.ColumnAuthorizedBy" HideSmall="true">@(context.AuthorizedByName ?? "—")</MudTd>
+            <MudTd DataLabel="@UiStrings.ColumnStatus">
+                <div class="d-flex align-center justify-end gap-1">
+                    <MudChip T="string" Size="Size.Small" Color="@(context.IsActive ? Color.Success : Color.Default)">
+                        @(context.IsActive ? UiStrings.StatusActive : UiStrings.StatusInactive)
+                    </MudChip>
+                    <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" AriaLabel="@UiStrings.ColumnActions"
+                             AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                        <MudMenuItem Icon="@Icons.Material.Filled.Apartment" OnClick="() => ChangeApartmentAsync(context)">@UiStrings.ChangeApartment</MudMenuItem>
+                        @if (!context.IsFounder)
+                        {
+                            @if (context.IsActive)
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.Block" OnClick="() => SetActiveAsync(context, false)">@UiStrings.Deactivate</MudMenuItem>
+                            }
+                            else
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.CheckCircle" OnClick="() => SetActiveAsync(context, true)">@UiStrings.Reactivate</MudMenuItem>
+                            }
+                        }
+                    </MudMenu>
+                </div>
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Class="pa-4">@UiStrings.NoUsers</MudText>
+        </NoRecordsContent>
+        <PagerContent>
+            <MudTablePager RowsPerPageString="@UiStrings.RowsPerPage" InfoFormat="@UiStrings.PagerInfo" PageSizeOptions="@(new[] { 20, 50, 100 })" />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+</div>
+
+@code {
+    private MudTable<UserSummary> _table = default!;
+    private string? _search;
+    private bool _includeInactive;
+
+    private async Task<TableData<UserSummary>> LoadAsync(TableState state, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var page = await Api.ListUsersAsync(_search, _includeInactive, state.Page + 1, state.PageSize, cancellationToken);
+            return new TableData<UserSummary> { Items = page.Items, TotalItems = page.Total };
+        }
+        catch (ApiException ex)
+        {
+            Snackbar.Add(ErrorMessages.For(ex.Code), Severity.Error);
+            return new TableData<UserSummary> { Items = [], TotalItems = 0 };
+        }
+    }
+
+    private Task OnSearchAsync(string? search)
+    {
+        _search = search;
+        return _table.ReloadServerData();
+    }
+
+    private Task OnIncludeInactiveAsync(bool include)
+    {
+        _includeInactive = include;
+        return _table.ReloadServerData();
+    }
+
+    private async Task SetActiveAsync(UserSummary user, bool active)
+    {
+        var name = $"{user.FirstName} {user.LastName}";
+        var result = await AskAsync(active ? UiStrings.Reactivate : UiStrings.Deactivate, new DialogParameters<UserActionDialog>
+        {
+            { d => d.Message, string.Format(active ? UiStrings.ReactivateBody : UiStrings.DeactivateBody, name) },
+            { d => d.ConfirmText, active ? UiStrings.Reactivate : UiStrings.Deactivate },
+            { d => d.ConfirmColor, active ? Color.Primary : Color.Error },
+        });
+        if (result is null)
+        {
+            return;
+        }
+
+        await SaveAsync(() => active
+            ? Api.ReactivateUserAsync(user.Id, result.Reason)
+            : Api.DeactivateUserAsync(user.Id, result.Reason));
+    }
+
+    private async Task ChangeApartmentAsync(UserSummary user)
+    {
+        var current = user.ApartmentId is { } id ? new ApartmentOption(id, user.ApartmentCode!, "", "") : null;
+        var result = await AskAsync(UiStrings.ChangeApartment, new DialogParameters<UserActionDialog>
+        {
+            { d => d.Message, string.Format(UiStrings.ChangeApartmentBody, $"{user.FirstName} {user.LastName}") },
+            { d => d.ConfirmText, UiStrings.ChangeApartment },
+            { d => d.AskApartment, true },
+            { d => d.AllowNoApartment, user.Role == AccountRole.Admin },
+            { d => d.InitialApartment, current },
+        });
+        if (result is null)
+        {
+            return;
+        }
+
+        await SaveAsync(() => Api.ChangeUserApartmentAsync(user.Id, result.Apartment?.Id, result.Reason));
+    }
+
+    private async Task<UserActionResult?> AskAsync(string title, DialogParameters<UserActionDialog> parameters)
+    {
+        var dialog = await Dialogs.ShowAsync<UserActionDialog>(title, parameters, new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        var result = await dialog.Result;
+        return result is { Canceled: false, Data: UserActionResult data } ? data : null;
+    }
+
+    private async Task SaveAsync(Func<Task> action)
+    {
+        try
+        {
+            await action();
+            Snackbar.Add(UiStrings.UserUpdated, Severity.Success);
+            await _table.ReloadServerData();
+        }
+        catch (ApiException ex)
+        {
+            Snackbar.Add(ErrorMessages.For(ex.Code), Severity.Error);
+        }
+    }
+
+    private static string RoleLabel(UserSummary user) =>
+        user.IsFounder ? UiStrings.RoleFounder : user.Role == AccountRole.Admin ? UiStrings.RoleAdmin : UiStrings.RoleResident;
+}

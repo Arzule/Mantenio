@@ -1,0 +1,68 @@
+@inject PublicApi Api
+
+@* Searchable apartment combobox: "h102", "H-102" or "h 102" all find H-102. *@
+<MudAutocomplete T="ApartmentOption"
+                 Value="_selected"
+                 ValueChanged="OnSelectedAsync"
+                 SearchFunc="SearchAsync"
+                 ToStringFunc="@(a => a?.Code)"
+                 Label="@Label"
+                 HelperText="@(HelperText ?? UiStrings.ApartmentSearchHint)"
+                 Required="Required"
+                 RequiredError="@UiStrings.Required"
+                 Disabled="Disabled"
+                 Clearable="true"
+                 ResetValueOnEmptyText="true"
+                 DebounceInterval="250"
+                 MaxItems="20"
+                 Variant="Variant.Outlined"
+                 Class="@Class">
+    <NoItemsTemplate>
+        <MudText Class="pa-3" Typo="Typo.body2">@UiStrings.ApartmentNoResults</MudText>
+    </NoItemsTemplate>
+</MudAutocomplete>
+
+@code {
+    private ApartmentOption? _selected;
+
+    [Parameter]
+    public ApartmentOption? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<ApartmentOption?> ValueChanged { get; set; }
+
+    [Parameter]
+    public string Label { get; set; } = UiStrings.Apartment;
+
+    [Parameter]
+    public string? HelperText { get; set; }
+
+    [Parameter]
+    public bool Required { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    protected override void OnParametersSet() => _selected = Value;
+
+    private async Task OnSelectedAsync(ApartmentOption? apartment)
+    {
+        _selected = apartment;
+        await ValueChanged.InvokeAsync(apartment);
+    }
+
+    private async Task<IEnumerable<ApartmentOption>> SearchAsync(string? text, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await Api.SearchApartmentsAsync(text, cancellationToken);
+        }
+        catch (ApiException)
+        {
+            return [];
+        }
+    }
+}

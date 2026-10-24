@@ -14,6 +14,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Mantenio.Api\Mantenio.Api.csproj" />
     <ProjectReference Include="..\Mantenio.Web\Mantenio.Web.csproj" />
+    <!-- Only to read the condo profile (database name); not a service. -->
+    <ProjectReference Include="..\Mantenio.Shared\Mantenio.Shared.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
 </Project>

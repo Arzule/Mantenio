@@ -1,8 +1,12 @@
 using System.Reflection;
+using System.Security.Claims;
 using Bunit;
+using Mantenio.Client;
+using Mantenio.Shared.Auth;
 using Mantenio.Shared.Condos;
 using Mantenio.Shared.Errors;
 using Mantenio.UI.Errors;
+using Mantenio.UI.Layout;
 using Mantenio.UI.Pages;
 using Mantenio.UI.Resources;
 using Mantenio.UI.Theme;
@@ -21,11 +25,16 @@ public sealed class UiTests : BunitContext
     }
 
     [Fact]
-    public void Home_shows_the_condo_name_from_the_profile()
+    public void Home_greets_the_signed_in_user_and_shows_the_condo_name()
     {
+        var auth = AddAuthorization();
+        auth.SetAuthorized("Rosa Quispe");
+        auth.SetClaims(new Claim(MantenioClaims.FirstName, "Rosa"));
+
         var cut = Render<Home>();
 
         cut.Find("h1").TextContent.ShouldContain(CondoProfile.Current.DisplayName);
+        cut.Markup.ShouldContain(UiStrings.HomeGreeting.Replace("{0}", "Rosa", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -46,6 +55,8 @@ public sealed class UiTests : BunitContext
         {
             data.Add((string)field.GetRawConstantValue()!);
         }
+
+        data.Add(ApiException.NetworkUnavailable);
         return data;
     }
 
@@ -57,4 +68,14 @@ public sealed class UiTests : BunitContext
     [Fact]
     public void Unknown_error_codes_fall_back_to_the_generic_message() =>
         ErrorMessages.For("something_new").ShouldBe(UiStrings.Error_internal_error);
+
+    [Fact]
+    public void Residents_do_not_see_the_admin_menu()
+    {
+        var resident = new ClaimsPrincipal(new ClaimsIdentity([new Claim(MantenioClaims.Role, nameof(AccountRole.Resident))], "jwt"));
+        var admin = new ClaimsPrincipal(new ClaimsIdentity([new Claim(MantenioClaims.Role, nameof(AccountRole.Admin))], "jwt"));
+
+        NavigationItems.For(resident).ShouldAllBe(item => !item.AdminOnly);
+        NavigationItems.For(admin).Count().ShouldBe(NavigationItems.All.Count);
+    }
 }

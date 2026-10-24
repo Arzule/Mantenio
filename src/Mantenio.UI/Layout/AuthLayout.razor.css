@@ -1,0 +1,33 @@
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    background: var(--mud-palette-background);
+}
+
+::deep .auth-card {
+    width: 100%;
+    max-width: 440px;
+    padding: 24px;
+}
+
+.auth-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.auth-brand img {
+    width: 88px;
+    height: 88px;
+}
+
+::deep .auth-brand-name {
+    color: var(--mud-palette-primary);
+    font-weight: 600;
+}

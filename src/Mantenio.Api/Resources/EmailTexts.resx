@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- Subjects: {0} = condo name. Bodies: {0} = first name, {1} = condo name, {2} = 6-digit code. -->
+  <data name="TwoFactorSubject" xml:space="preserve"><value>Tu código de acceso a {0}</value></data>
+  <data name="TwoFactorBody" xml:space="preserve"><value>Hola, {0}:
+
+Tu código para iniciar sesión en {1} es:
+
+{2}
+
+El código vence en unos minutos. Si no intentaste iniciar sesión, cambia tu contraseña y avisa a la administración.</value></data>
+  <data name="ConfirmEmailSubject" xml:space="preserve"><value>Confirma tu correo en {0}</value></data>
+  <data name="ConfirmEmailBody" xml:space="preserve"><value>Hola, {0}:
+
+Gracias por registrarte en {1}. Tu código de verificación es:
+
+{2}
+
+El código vence en unos minutos. Si no creaste esta cuenta, ignora este correo.</value></data>
+  <data name="ResetPasswordSubject" xml:space="preserve"><value>Recupera tu contraseña de {0}</value></data>
+  <data name="ResetPasswordBody" xml:space="preserve"><value>Hola, {0}:
+
+Recibimos una solicitud para cambiar tu contraseña de {1}. Tu código es:
+
+{2}
+
+El código vence en unos minutos. Si no lo solicitaste, ignora este correo: tu contraseña no cambiará.</value></data>
+</root>

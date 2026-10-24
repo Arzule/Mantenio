@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Generic demo logo (no text, so it also works as the Android icon and splash). -->
+  <circle cx="128" cy="128" r="126" fill="#B5651D"/>
+  <circle cx="128" cy="128" r="104" fill="#EEF3F8"/>
+  <rect x="70" y="96" width="48" height="96" rx="4" fill="#2F5D8A"/>
+  <rect x="126" y="70" width="60" height="122" rx="4" fill="#3C6E9E"/>
+  <g fill="#EEF3F8">
+    <rect x="80" y="108" width="10" height="12"/><rect x="98" y="108" width="10" height="12"/>
+    <rect x="80" y="132" width="10" height="12"/><rect x="98" y="132" width="10" height="12"/>
+    <rect x="80" y="156" width="10" height="12"/><rect x="98" y="156" width="10" height="12"/>
+    <rect x="138" y="84" width="12" height="12"/><rect x="162" y="84" width="12" height="12"/>
+    <rect x="138" y="108" width="12" height="12"/><rect x="162" y="108" width="12" height="12"/>
+    <rect x="138" y="132" width="12" height="12"/><rect x="162" y="132" width="12" height="12"/>
+    <rect x="138" y="156" width="12" height="12"/><rect x="162" y="156" width="12" height="12"/>
+  </g>
+  <rect x="58" y="190" width="140" height="8" rx="4" fill="#244A6E"/>
+</svg>

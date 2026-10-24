@@ -1,0 +1,94 @@
+@inherits BusyComponentBase
+@inject PublicApi Api
+@inject AuthSession Session
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+@* Second step of login (admin 2FA) and registration (email confirmation): the 6-digit emailed code. *@
+<MudText Typo="Typo.h5" HtmlTag="h1">@(IsTwoFactor ? UiStrings.TwoFactorTitle : UiStrings.ConfirmEmailTitle)</MudText>
+<MudText Class="mt-2">@string.Format(IsTwoFactor ? UiStrings.TwoFactorBody : UiStrings.ConfirmEmailBody, _current.MaskedEmail)</MudText>
+<MudText Typo="Typo.body2" Class="mt-1 text-secondary">@UiStrings.CheckSpam</MudText>
+
+<EditForm Model="_model" OnValidSubmit="VerifyAsync" class="mt-4">
+    <DataAnnotationsValidator />
+    <MudTextField @bind-Value="_model.Code"
+                  For="@(() => _model.Code)"
+                  Label="@UiStrings.CodeLabel"
+                  InputMode="InputMode.numeric"
+                  MaxLength="6"
+                  AutoFocus="true"
+                  UserAttributes="@(new Dictionary<string, object?> { ["autocomplete"] = "one-time-code" })"
+                  Variant="Variant.Outlined" />
+
+    @if (Error is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mt-3" Dense="true">@Error</MudAlert>
+    }
+
+    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="mt-4" Disabled="Busy">
+        @UiStrings.VerifySubmit
+    </MudButton>
+</EditForm>
+
+<div class="d-flex justify-space-between flex-wrap mt-2">
+    <MudButton Variant="Variant.Text" OnClick="ResendAsync" Disabled="Busy">@UiStrings.ResendCode</MudButton>
+    <MudButton Variant="Variant.Text" OnClick="OnStartOver">@UiStrings.StartOver</MudButton>
+</div>
+
+@code {
+    private readonly CodeModel _model = new();
+
+    [Parameter, EditorRequired]
+    public SignInResponse Challenge { get; set; } = default!;
+
+    [Parameter]
+    public bool KeepSignedIn { get; set; }
+
+    /// <summary>Relative URL to open once signed in.</summary>
+    [Parameter]
+    public string? ReturnUrl { get; set; }
+
+    [Parameter]
+    public EventCallback OnStartOver { get; set; }
+
+    private SignInResponse _current = default!;
+
+    private bool IsTwoFactor => _current.Step == SignInStep.TwoFactorRequired;
+
+    protected override void OnParametersSet() => _current = Challenge;
+
+    private Task VerifyAsync() => RunAsync(async () =>
+    {
+        var request = new VerifyCodeRequest(_current.ChallengeToken!, _model.Code);
+        var result = IsTwoFactor ? await Api.VerifyTwoFactorAsync(request) : await Api.ConfirmEmailAsync(request);
+        await Session.SignInAsync(result.Tokens!, KeepSignedIn);
+        Navigation.NavigateTo(SafeReturnUrl(ReturnUrl), replace: true);
+    });
+
+    private async Task ResendAsync()
+    {
+        var sent = await RunAsync(async () =>
+        {
+            _current = IsTwoFactor
+                ? await Api.ResendTwoFactorAsync(_current.ChallengeToken!)
+                : await Api.ResendEmailConfirmationAsync(_current.ChallengeToken!);
+        });
+        if (sent)
+        {
+            Snackbar.Add(UiStrings.CodeResent, Severity.Success);
+        }
+    }
+
+    /// <summary>Only paths inside the app; never another site (open redirect).</summary>
+    public static string SafeReturnUrl(string? returnUrl) =>
+        string.IsNullOrEmpty(returnUrl) || returnUrl.Contains("//", StringComparison.Ordinal) || returnUrl.Contains(':', StringComparison.Ordinal)
+            ? ""
+            : returnUrl.TrimStart('/');
+
+    private sealed class CodeModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessageResourceType = typeof(UiStrings), ErrorMessageResourceName = nameof(UiStrings.Required))]
+        [System.ComponentModel.DataAnnotations.RegularExpression(ValidationPatterns.SixDigits, ErrorMessageResourceType = typeof(UiStrings), ErrorMessageResourceName = nameof(UiStrings.CodeFormat))]
+        public string Code { get; set; } = "";
+    }
+}

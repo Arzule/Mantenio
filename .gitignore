@@ -482,9 +482,18 @@ $RECYCLE.BIN/
 *.swp
 
 # Mantenio
+# Only the generic demo profile lives in this repo; real condo profiles live in their own deployment repos.
+condos/*
+!condos/demo/
 # Reference material with personal data (real receipts, etc.) never goes to git
 condos/*/reference/
 # Local file storage used in development
 .storage/
 # Project docs (AGENTS.md, CLAUDE.md, docs/*.md) stay local, not in the remote repo
 *.md
+
+# Local secrets for deployment (never commit)
+secrets.json
+
+# Claude Code personal settings
+.claude/settings.local.json

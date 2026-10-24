@@ -1,0 +1,37 @@
+{
+  "slug": "demo",
+  "displayName": "Condominio Demo",
+  "shortName": "Demo",
+  "organizationAcronym": "JD",
+  "address": "Av. Ejemplo 123, Lima",
+  "apiBaseUrl": "",
+  "culture": "es-PE",
+  "currency": "PEN",
+  "timeZone": "America/Lima",
+  "towerLabel": "Torre",
+  "theme": {
+    "primary": "#2F5D8A",
+    "primaryDarken": "#244A6E",
+    "secondary": "#B5651D",
+    "tertiary": "#3C6E9E",
+    "appBar": "#244A6E",
+    "background": "#F3F5F9",
+    "surface": "#FFFFFF",
+    "textPrimary": "#1F2937"
+  },
+  "receipt": {
+    "series": "0001",
+    "concept": "Por pago de la cuota de mantenimiento",
+    "signerTitle": "Tesorero"
+  },
+  "android": {
+    "applicationId": "pe.mantenio.demo",
+    "appTitle": "Mantenio Demo"
+  },
+  "modules": {
+    "lateFees": true,
+    "pushNotifications": true,
+    "emailReminders": true
+  },
+  "fileRetentionMonths": 60
+}

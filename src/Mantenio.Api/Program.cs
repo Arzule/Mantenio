@@ -1,11 +1,22 @@
+using Mantenio.Api.Features.Account;
+using Mantenio.Api.Features.Apartments;
+using Mantenio.Api.Features.Auth;
+using Mantenio.Api.Features.Invitations;
+using Mantenio.Api.Features.Setup;
 using Mantenio.Api.Features.SystemInfo;
+using Mantenio.Api.Features.Users;
+using Mantenio.Api.Infrastructure.Auth;
+using Mantenio.Api.Infrastructure.Email;
 using Mantenio.Api.Infrastructure.Errors;
 using Mantenio.Api.Infrastructure.Persistence;
+using Mantenio.Api.Infrastructure.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Scalar.AspNetCore;
 
-var builder = WebApplication.CreateBuilder(args);
+// `Mantenio.Api <command> --option value` runs a setup command instead of the web server (see SetupCommands).
+var command = args.Length > 0 && SetupCommands.Names.Contains(args[0]) ? args[0] : null;
+var builder = WebApplication.CreateBuilder(command is null ? args : args[1..]);
 
 builder.AddServiceDefaults();
 
@@ -21,13 +32,34 @@ builder.AddNpgsqlDbContext<AppDbContext>(AppDbContext.ConnectionName, settings =
     }
 });
 
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddMantenioProblemDetails();
+builder.Services.AddValidation();
 builder.Services.AddOpenApi();
+builder.Services.AddMantenioAuth();
+builder.Services.AddMantenioRateLimiting(builder.Configuration);
+builder.Services.AddMantenioEmail(builder.Configuration, builder.Environment);
+builder.Services.AddScoped<SignInFlow>();
+builder.Services.AddScoped<Seeding>();
+
+// The web app (Static Web Apps) lives on another origin. The Android app calls the API natively, without CORS.
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
+    policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod()));
 
 var app = builder.Build();
 
+if (command is not null)
+{
+    return await SetupCommands.RunAsync(app, command);
+}
+
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())
 {
@@ -42,7 +74,15 @@ if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
     await db.Database.MigrateAsync();
 }
 
+await DevSeedOptions.RunAsync(app);
+
 app.MapDefaultEndpoints();
 app.MapSystemInfoEndpoints();
+app.MapAuthEndpoints();
+app.MapAccountEndpoints();
+app.MapInvitationEndpoints();
+app.MapApartmentEndpoints();
+app.MapUserAdminEndpoints();
 
 await app.RunAsync();
+return 0;

@@ -1,4 +1,6 @@
 using System.Globalization;
+using Mantenio.Client;
+using Mantenio.Client.Auth;
 using Mantenio.Shared.Condos;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
@@ -18,6 +20,9 @@ public static class MauiProgram
 
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddMudServices();
+        builder.Services.AddSingleton<ITokenStore, SecureTokenStore>();
+        builder.Services.AddSingleton(new ClientPreferences(KeepSignedInByDefault: true));
+        builder.Services.AddMantenioClient(ApiBaseAddress());
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
@@ -25,5 +30,19 @@ public static class MauiProgram
 #endif
 
         return builder.Build();
+    }
+
+    /// <summary>
+    /// Debug builds talk to the API on the dev machine through `adb reverse tcp:5013 tcp:5013`
+    /// (works the same on a USB phone and on the emulator). Release builds use the condo profile.
+    /// </summary>
+    private static Uri ApiBaseAddress()
+    {
+#if DEBUG
+        return new Uri("http://localhost:5013");
+#else
+        // Filled in condo.json when the API is deployed (Phase 2).
+        return new Uri(CondoProfile.Current.ApiBaseUrl is { Length: > 0 } url ? url : "https://localhost/");
+#endif
     }
 }

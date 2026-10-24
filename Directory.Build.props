@@ -15,8 +15,11 @@
     Condo profile selection. Every condo has its own folder under condos/<slug>/
     (condo.json + logo + app icons). Build with -p:Condo=<slug> to target another condo.
   -->
+  <!-- A condo deployment repo (e.g. a pilot) adds Condo.props at the root to pick its profile. -->
+  <Import Project="$(MSBuildThisFileDirectory)Condo.props" Condition="Exists('$(MSBuildThisFileDirectory)Condo.props')" />
+
   <PropertyGroup>
-    <Condo Condition="'$(Condo)' == ''">pradosj</Condo>
+    <Condo Condition="'$(Condo)' == ''">demo</Condo>
     <CondoDir>$(MSBuildThisFileDirectory)condos\$(Condo)\</CondoDir>
   </PropertyGroup>
 

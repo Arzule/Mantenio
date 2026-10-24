@@ -37,4 +37,135 @@
   <data name="Error_forbidden" xml:space="preserve"><value>No tienes permiso para realizar esta acción.</value></data>
   <data name="Error_concurrency_conflict" xml:space="preserve"><value>Otro usuario modificó este registro. Actualiza la página e inténtalo de nuevo.</value></data>
   <data name="Error_database_unavailable" xml:space="preserve"><value>El sistema no está disponible en este momento. La administración ya fue notificada.</value></data>
+  <!-- Layout / navigation (Phase 1) -->
+  <data name="NavUsers" xml:space="preserve"><value>Usuarios</value></data>
+  <data name="NavInvitations" xml:space="preserve"><value>Códigos</value></data>
+  <data name="AccountMenu" xml:space="preserve"><value>Mi cuenta</value></data>
+  <data name="ChangePasswordMenu" xml:space="preserve"><value>Cambiar contraseña</value></data>
+  <data name="SignOut" xml:space="preserve"><value>Cerrar sesión</value></data>
+  <data name="RoleAdmin" xml:space="preserve"><value>Administrador</value></data>
+  <data name="RoleResident" xml:space="preserve"><value>Residente</value></data>
+  <data name="RoleFounder" xml:space="preserve"><value>Admin fundador</value></data>
+  <data name="ForbiddenTitle" xml:space="preserve"><value>Acceso restringido</value></data>
+  <data name="ForbiddenBody" xml:space="preserve"><value>Esta sección es solo para administradores.</value></data>
+  <data name="Loading" xml:space="preserve"><value>Cargando…</value></data>
+  <!-- Common form texts -->
+  <data name="Email" xml:space="preserve"><value>Correo electrónico</value></data>
+  <data name="Password" xml:space="preserve"><value>Contraseña</value></data>
+  <data name="ConfirmPassword" xml:space="preserve"><value>Confirmar contraseña</value></data>
+  <data name="NewPassword" xml:space="preserve"><value>Nueva contraseña</value></data>
+  <data name="CurrentPassword" xml:space="preserve"><value>Contraseña actual</value></data>
+  <data name="FirstName" xml:space="preserve"><value>Nombres</value></data>
+  <data name="LastName" xml:space="preserve"><value>Apellidos</value></data>
+  <data name="Apartment" xml:space="preserve"><value>Departamento</value></data>
+  <data name="Continue" xml:space="preserve"><value>Continuar</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Back" xml:space="preserve"><value>Volver</value></data>
+  <data name="Copy" xml:space="preserve"><value>Copiar</value></data>
+  <data name="Copied" xml:space="preserve"><value>Copiado</value></data>
+  <data name="Reason" xml:space="preserve"><value>Motivo</value></data>
+  <data name="ReasonHint" xml:space="preserve"><value>Quedará registrado en el historial.</value></data>
+  <data name="KeepSignedIn" xml:space="preserve"><value>Mantener sesión abierta</value></data>
+  <data name="Required" xml:space="preserve"><value>Este campo es obligatorio.</value></data>
+  <data name="InvalidEmail" xml:space="preserve"><value>Ingresa un correo válido.</value></data>
+  <data name="PasswordHint" xml:space="preserve"><value>Mínimo 8 caracteres, con al menos un número.</value></data>
+  <data name="PasswordsDontMatch" xml:space="preserve"><value>Las contraseñas no coinciden.</value></data>
+  <data name="CodeFormat" xml:space="preserve"><value>Ingresa los 6 dígitos del código.</value></data>
+  <data name="ApartmentSearchHint" xml:space="preserve"><value>Escribe el edificio y el número, por ejemplo H-102.</value></data>
+  <data name="ApartmentNoResults" xml:space="preserve"><value>No encontramos ese departamento.</value></data>
+  <!-- Login -->
+  <data name="LoginTitle" xml:space="preserve"><value>Iniciar sesión</value></data>
+  <data name="LoginSubmit" xml:space="preserve"><value>Ingresar</value></data>
+  <data name="ForgotPasswordLink" xml:space="preserve"><value>¿Olvidaste tu contraseña?</value></data>
+  <data name="HaveInvitationPrompt" xml:space="preserve"><value>¿Tienes un código de invitación?</value></data>
+  <data name="RegisterLink" xml:space="preserve"><value>Crear cuenta</value></data>
+  <!-- Email codes (2FA and email confirmation). {0} = masked email -->
+  <data name="TwoFactorTitle" xml:space="preserve"><value>Verificación en dos pasos</value></data>
+  <data name="TwoFactorBody" xml:space="preserve"><value>Enviamos un código de 6 dígitos a {0}. Ingrésalo para continuar.</value></data>
+  <data name="ConfirmEmailTitle" xml:space="preserve"><value>Confirma tu correo</value></data>
+  <data name="ConfirmEmailBody" xml:space="preserve"><value>Enviamos un código de 6 dígitos a {0} para confirmar que el correo es tuyo.</value></data>
+  <data name="CheckSpam" xml:space="preserve"><value>Si no lo ves en unos minutos, revisa la carpeta de spam.</value></data>
+  <data name="CodeLabel" xml:space="preserve"><value>Código de 6 dígitos</value></data>
+  <data name="VerifySubmit" xml:space="preserve"><value>Verificar</value></data>
+  <data name="ResendCode" xml:space="preserve"><value>Reenviar código</value></data>
+  <data name="CodeResent" xml:space="preserve"><value>Te enviamos un nuevo código.</value></data>
+  <data name="StartOver" xml:space="preserve"><value>Volver a empezar</value></data>
+  <!-- Registration -->
+  <data name="RegisterTitle" xml:space="preserve"><value>Crear cuenta</value></data>
+  <data name="RegisterCodeBody" xml:space="preserve"><value>Ingresa el código de invitación de 6 dígitos que te dio la administración. Vence a los 30 minutos.</value></data>
+  <data name="InvitationCodeLabel" xml:space="preserve"><value>Código de invitación</value></data>
+  <data name="RegisterAsAdmin" xml:space="preserve"><value>Este código es para una cuenta de administrador.</value></data>
+  <data name="RegisterAsResident" xml:space="preserve"><value>Este código es para una cuenta de residente.</value></data>
+  <data name="ApartmentLocked" xml:space="preserve"><value>Tu departamento ya fue asignado: {0}.</value></data>
+  <data name="ApartmentOptionalHint" xml:space="preserve"><value>Opcional: elige tu departamento solo si también vives en el condominio.</value></data>
+  <data name="RegisterSubmit" xml:space="preserve"><value>Crear cuenta</value></data>
+  <data name="HaveAccountPrompt" xml:space="preserve"><value>¿Ya tienes una cuenta?</value></data>
+  <data name="LoginLink" xml:space="preserve"><value>Inicia sesión</value></data>
+  <!-- Password recovery and change -->
+  <data name="ForgotTitle" xml:space="preserve"><value>Recuperar contraseña</value></data>
+  <data name="ForgotBody" xml:space="preserve"><value>Ingresa tu correo y te enviaremos un código para crear una nueva contraseña.</value></data>
+  <data name="SendCode" xml:space="preserve"><value>Enviar código</value></data>
+  <data name="ResetBody" xml:space="preserve"><value>Si el correo está registrado, te llegará un código de 6 dígitos. Ingrésalo junto con tu nueva contraseña.</value></data>
+  <data name="ResetSubmit" xml:space="preserve"><value>Guardar contraseña</value></data>
+  <data name="ResetDone" xml:space="preserve"><value>Listo, tu contraseña fue cambiada. Ya puedes iniciar sesión.</value></data>
+  <data name="ChangePasswordTitle" xml:space="preserve"><value>Cambiar contraseña</value></data>
+  <data name="MustChangePasswordBody" xml:space="preserve"><value>Por seguridad, reemplaza la contraseña temporal antes de continuar.</value></data>
+  <data name="PasswordChanged" xml:space="preserve"><value>Tu contraseña fue actualizada.</value></data>
+  <!-- Home (signed in). {0} = first name -->
+  <data name="HomeGreeting" xml:space="preserve"><value>Hola, {0}</value></data>
+  <!-- Admin: invitation codes -->
+  <data name="InvitationsTitle" xml:space="preserve"><value>Códigos de invitación</value></data>
+  <data name="InvitationsBody" xml:space="preserve"><value>Genera un código de un solo uso para que una persona cree su cuenta. Vence a los 30 minutos.</value></data>
+  <data name="InvitationRole" xml:space="preserve"><value>Tipo de cuenta</value></data>
+  <data name="InvitationApartmentLabel" xml:space="preserve"><value>Departamento (opcional)</value></data>
+  <data name="InvitationApartmentHint" xml:space="preserve"><value>Si lo eliges, la cuenta quedará asociada a ese departamento y la persona no podrá cambiarlo.</value></data>
+  <data name="GenerateCode" xml:space="preserve"><value>Generar código</value></data>
+  <data name="GenerateAnother" xml:space="preserve"><value>Generar otro código</value></data>
+  <data name="GeneratedCodeTitle" xml:space="preserve"><value>Código generado</value></data>
+  <data name="GeneratedCodeBody" xml:space="preserve"><value>Compártelo solo con la persona que se va a registrar. Vence hoy a las {0}.</value></data>
+  <data name="GeneratedCodeApartment" xml:space="preserve"><value>Departamento asignado: {0}</value></data>
+  <!-- Admin: users -->
+  <data name="UsersTitle" xml:space="preserve"><value>Usuarios</value></data>
+  <data name="UsersSearch" xml:space="preserve"><value>Buscar por nombre, correo o departamento</value></data>
+  <data name="IncludeInactive" xml:space="preserve"><value>Mostrar desactivados</value></data>
+  <data name="ColumnName" xml:space="preserve"><value>Nombre</value></data>
+  <data name="ColumnEmail" xml:space="preserve"><value>Correo</value></data>
+  <data name="ColumnRole" xml:space="preserve"><value>Rol</value></data>
+  <data name="ColumnApartment" xml:space="preserve"><value>Departamento</value></data>
+  <data name="ColumnAuthorizedBy" xml:space="preserve"><value>Autorizado por</value></data>
+  <data name="ColumnStatus" xml:space="preserve"><value>Estado</value></data>
+  <data name="ColumnActions" xml:space="preserve"><value>Acciones</value></data>
+  <data name="StatusActive" xml:space="preserve"><value>Activo</value></data>
+  <data name="StatusInactive" xml:space="preserve"><value>Desactivado</value></data>
+  <data name="Deactivate" xml:space="preserve"><value>Desactivar</value></data>
+  <data name="Reactivate" xml:space="preserve"><value>Reactivar</value></data>
+  <data name="ChangeApartment" xml:space="preserve"><value>Cambiar departamento</value></data>
+  <data name="DeactivateBody" xml:space="preserve"><value>{0} no podrá iniciar sesión y se cerrarán todas sus sesiones abiertas.</value></data>
+  <data name="ReactivateBody" xml:space="preserve"><value>{0} podrá volver a iniciar sesión.</value></data>
+  <data name="ChangeApartmentBody" xml:space="preserve"><value>Elige el nuevo departamento de {0}.</value></data>
+  <data name="RemoveApartmentHint" xml:space="preserve"><value>Déjalo vacío para que este administrador no tenga departamento.</value></data>
+  <data name="UserUpdated" xml:space="preserve"><value>Cambios guardados.</value></data>
+  <data name="NoUsers" xml:space="preserve"><value>No hay usuarios que coincidan con la búsqueda.</value></data>
+  <data name="RowsPerPage" xml:space="preserve"><value>Filas por página</value></data>
+  <data name="PagerInfo" xml:space="preserve"><value>{first_item}-{last_item} de {all_items}</value></data>
+  <!-- API error codes added in Phase 1 (see ErrorCodes) + client-only network_unavailable -->
+  <data name="Error_too_many_requests" xml:space="preserve"><value>Hiciste demasiados intentos. Espera unos minutos e inténtalo de nuevo.</value></data>
+  <data name="Error_email_unavailable" xml:space="preserve"><value>No pudimos enviar el correo. Inténtalo de nuevo en unos minutos.</value></data>
+  <data name="Error_invalid_credentials" xml:space="preserve"><value>El correo o la contraseña no son correctos.</value></data>
+  <data name="Error_account_locked" xml:space="preserve"><value>Tu cuenta quedó bloqueada por varios intentos fallidos. Espera 15 minutos e inténtalo de nuevo.</value></data>
+  <data name="Error_account_inactive" xml:space="preserve"><value>Tu cuenta está desactivada. Comunícate con la administración.</value></data>
+  <data name="Error_invalid_code" xml:space="preserve"><value>El código no es correcto o ya venció.</value></data>
+  <data name="Error_challenge_expired" xml:space="preserve"><value>La verificación expiró. Vuelve a empezar.</value></data>
+  <data name="Error_invalid_refresh_token" xml:space="preserve"><value>Tu sesión expiró. Vuelve a iniciar sesión.</value></data>
+  <data name="Error_password_change_required" xml:space="preserve"><value>Debes cambiar tu contraseña temporal antes de continuar.</value></data>
+  <data name="Error_weak_password" xml:space="preserve"><value>La contraseña debe tener al menos 8 caracteres e incluir un número.</value></data>
+  <data name="Error_wrong_password" xml:space="preserve"><value>La contraseña actual no es correcta.</value></data>
+  <data name="Error_email_taken" xml:space="preserve"><value>Ya existe una cuenta con ese correo.</value></data>
+  <data name="Error_invitation_invalid" xml:space="preserve"><value>El código de invitación no es válido, ya se usó o venció. Pide uno nuevo a la administración.</value></data>
+  <data name="Error_admin_limit_reached" xml:space="preserve"><value>Ya se alcanzó el máximo de administradores activos.</value></data>
+  <data name="Error_apartment_required" xml:space="preserve"><value>Elige tu departamento.</value></data>
+  <data name="Error_apartment_not_found" xml:space="preserve"><value>El departamento elegido no existe.</value></data>
+  <data name="Error_founder_protected" xml:space="preserve"><value>La cuenta del admin fundador no se puede desactivar.</value></data>
+  <data name="Error_cannot_modify_self" xml:space="preserve"><value>No puedes desactivar tu propia cuenta.</value></data>
+  <data name="Error_network_unavailable" xml:space="preserve"><value>No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.</value></data>
 </root>

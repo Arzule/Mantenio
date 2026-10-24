@@ -1,0 +1,68 @@
+@page "/login"
+@layout AuthLayout
+@inherits BusyComponentBase
+@inject PublicApi Api
+@inject AuthSession Session
+@inject NavigationManager Navigation
+@inject ClientPreferences Preferences
+
+<PageTitle>@UiStrings.LoginTitle · @CondoProfile.Current.ShortName</PageTitle>
+
+@if (_challenge is not null)
+{
+    <SignInChallenge Challenge="_challenge" KeepSignedIn="_form.KeepSignedIn" ReturnUrl="@ReturnUrl" OnStartOver="() => _challenge = null" />
+}
+else
+{
+    <MudText Typo="Typo.h5" HtmlTag="h1" Class="mb-2">@UiStrings.LoginTitle</MudText>
+
+    <EditForm Model="_form" OnValidSubmit="LoginAsync">
+        <DataAnnotationsValidator />
+        <MudTextField @bind-Value="_form.Email" For="@(() => _form.Email)" Label="@UiStrings.Email"
+                      InputType="InputType.Email" Variant="Variant.Outlined" Class="mt-3"
+                      UserAttributes="@(new Dictionary<string, object?> { ["autocomplete"] = "username" })" />
+        <MudTextField @bind-Value="_form.Password" For="@(() => _form.Password)" Label="@UiStrings.Password"
+                      InputType="InputType.Password" Variant="Variant.Outlined" Class="mt-3"
+                      UserAttributes="@(new Dictionary<string, object?> { ["autocomplete"] = "current-password" })" />
+        <MudCheckBox @bind-Value="_form.KeepSignedIn" Label="@UiStrings.KeepSignedIn" Color="Color.Primary" Class="mt-2" />
+
+        @if (Error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-2" Dense="true">@Error</MudAlert>
+        }
+
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="mt-4" Disabled="Busy">
+            @UiStrings.LoginSubmit
+        </MudButton>
+    </EditForm>
+
+    <div class="d-flex flex-column align-center mt-4 gap-1">
+        <MudLink Href="forgot-password" Typo="Typo.body2">@UiStrings.ForgotPasswordLink</MudLink>
+        <MudText Typo="Typo.body2" Class="mt-2">
+            @UiStrings.HaveInvitationPrompt <MudLink Href="register" Typo="Typo.body2">@UiStrings.RegisterLink</MudLink>
+        </MudText>
+    </div>
+}
+
+@code {
+    private LoginForm _form = new();
+    private SignInResponse? _challenge;
+
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    protected override void OnInitialized() => _form = new LoginForm { KeepSignedIn = Preferences.KeepSignedInByDefault };
+
+    private Task LoginAsync() => RunAsync(async () =>
+    {
+        var result = await Api.LoginAsync(new LoginRequest(_form.Email.Trim(), _form.Password, _form.KeepSignedIn));
+        if (result.Step == SignInStep.SignedIn)
+        {
+            await Session.SignInAsync(result.Tokens!, _form.KeepSignedIn);
+            Navigation.NavigateTo(SignInChallenge.SafeReturnUrl(ReturnUrl), replace: true);
+            return;
+        }
+
+        _challenge = result;
+    });
+}

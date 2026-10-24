@@ -37,7 +37,7 @@ public sealed class SystemInfoTests(ApiFactory factory) : IClassFixture<ApiFacto
     }
 
     [Fact]
-    public async Task Migrations_are_applied_on_startup()
+    public async Task Migrations_are_applied_and_the_condo_apartments_seeded()
     {
         _ = factory.CreateClient();
         await using var scope = factory.Services.CreateAsyncScope();
@@ -46,7 +46,8 @@ public sealed class SystemInfoTests(ApiFactory factory) : IClassFixture<ApiFacto
         var pending = await db.Database.GetPendingMigrationsAsync(TestContext.Current.CancellationToken);
 
         pending.ShouldBeEmpty();
-        (await db.Towers.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(0);
+        (await db.Towers.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(9);
+        (await db.Apartments.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(180);
     }
 
     [Fact]

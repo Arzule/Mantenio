@@ -1,0 +1,9 @@
+@* MudBlazor providers, rendered once by whichever layout is active. *@
+<MudThemeProvider Theme="Theme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+@code {
+    public static readonly MudTheme Theme = Mantenio.UI.Theme.CondoThemeFactory.Create(CondoProfile.Current);
+}

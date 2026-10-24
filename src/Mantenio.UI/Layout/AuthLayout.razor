@@ -1,0 +1,18 @@
+@inherits LayoutComponentBase
+
+@* Sign-in, registration and password recovery: a centered card with the condo logo, no navigation. *@
+<ThemeProviders />
+
+<div class="auth-page">
+    <MudPaper Class="auth-card" Elevation="2">
+        <div class="auth-brand">
+            <img src="@CondoProfile.LogoDataUri" alt="@string.Format(UiStrings.LogoAlt, Profile.DisplayName)" />
+            <MudText Typo="Typo.subtitle1" Class="auth-brand-name">@Profile.DisplayName</MudText>
+        </div>
+        @Body
+    </MudPaper>
+</div>
+
+@code {
+    private static readonly CondoProfile Profile = CondoProfile.Current;
+}

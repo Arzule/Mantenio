@@ -1,0 +1,137 @@
+@page "/register"
+@layout AuthLayout
+@inherits BusyComponentBase
+@inject PublicApi Api
+@inject ClientPreferences Preferences
+
+<PageTitle>@UiStrings.RegisterTitle · @CondoProfile.Current.ShortName</PageTitle>
+
+@if (_challenge is not null)
+{
+    <SignInChallenge Challenge="_challenge" KeepSignedIn="_form.KeepSignedIn" OnStartOver="StartOver" />
+}
+else if (_invitation is null)
+{
+    <MudText Typo="Typo.h5" HtmlTag="h1">@UiStrings.RegisterTitle</MudText>
+    <MudText Class="mt-2">@UiStrings.RegisterCodeBody</MudText>
+
+    <EditForm Model="_codeForm" OnValidSubmit="CheckCodeAsync" class="mt-4">
+        <DataAnnotationsValidator />
+        <MudTextField @bind-Value="_codeForm.Code" For="@(() => _codeForm.Code)" Label="@UiStrings.InvitationCodeLabel"
+                      InputMode="InputMode.numeric" MaxLength="6" AutoFocus="true" Variant="Variant.Outlined" />
+
+        @if (Error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-3" Dense="true">@Error</MudAlert>
+        }
+
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="mt-4" Disabled="Busy">
+            @UiStrings.Continue
+        </MudButton>
+    </EditForm>
+
+    <MudText Typo="Typo.body2" Align="Align.Center" Class="mt-4">
+        @UiStrings.HaveAccountPrompt <MudLink Href="login" Typo="Typo.body2">@UiStrings.LoginLink</MudLink>
+    </MudText>
+}
+else
+{
+    <MudText Typo="Typo.h5" HtmlTag="h1">@UiStrings.RegisterTitle</MudText>
+    <MudAlert Severity="Severity.Info" Dense="true" Class="mt-2">
+        @(IsAdmin ? UiStrings.RegisterAsAdmin : UiStrings.RegisterAsResident)
+    </MudAlert>
+
+    <EditForm Model="_form" OnValidSubmit="RegisterAsync">
+        <DataAnnotationsValidator />
+        <MudTextField @bind-Value="_form.FirstName" For="@(() => _form.FirstName)" Label="@UiStrings.FirstName"
+                      Variant="Variant.Outlined" Class="mt-3" MaxLength="100"
+                      UserAttributes="@(new Dictionary<string, object?> { ["autocomplete"] = "given-name" })" />
+        <MudTextField @bind-Value="_form.LastName" For="@(() => _form.LastName)" Label="@UiStrings.LastName"
+                      Variant="Variant.Outlined" Class="mt-3" MaxLength="100"
+                      UserAttributes="@(new Dictionary<string, object?> { ["autocomplete"] = "family-name" })" />
+
+        @if (_invitation.Apartment is { } locked)
+        {
+            <MudAlert Severity="Severity.Normal" Dense="true" Class="mt-3" Icon="@Icons.Material.Filled.Apartment">
+                @string.Format(UiStrings.ApartmentLocked, NoBreak(locked.Code))
+            </MudAlert>
+        }
+        else
+        {
+            <ApartmentPicker @bind-Value="_apartment"
+                             Required="!IsAdmin"
+                             HelperText="@(IsAdmin ? UiStrings.ApartmentOptionalHint : null)"
+                             Class="mt-3" />
+        }
+
+        <MudTextField @bind-Value="_form.Email" For="@(() => _form.Email)" Label="@UiStrings.Email"
+                      InputType="InputType.Email" Variant="Variant.Outlined" Class="mt-3"
+                      UserAttributes="@(new Dictionary<string, object?> { ["autocomplete"] = "email" })" />
+        <MudTextField @bind-Value="_form.Password" For="@(() => _form.Password)" Label="@UiStrings.Password"
+                      HelperText="@UiStrings.PasswordHint" InputType="InputType.Password" Variant="Variant.Outlined" Class="mt-3"
+                      UserAttributes="@(new Dictionary<string, object?> { ["autocomplete"] = "new-password" })" />
+        <MudTextField @bind-Value="_form.ConfirmPassword" For="@(() => _form.ConfirmPassword)" Label="@UiStrings.ConfirmPassword"
+                      InputType="InputType.Password" Variant="Variant.Outlined" Class="mt-3"
+                      UserAttributes="@(new Dictionary<string, object?> { ["autocomplete"] = "new-password" })" />
+        <MudCheckBox @bind-Value="_form.KeepSignedIn" Label="@UiStrings.KeepSignedIn" Color="Color.Primary" Class="mt-2" />
+
+        @if (Error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-2" Dense="true">@Error</MudAlert>
+        }
+
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="mt-4" Disabled="Busy">
+            @UiStrings.RegisterSubmit
+        </MudButton>
+    </EditForm>
+
+    <MudButton Variant="Variant.Text" FullWidth="true" Class="mt-2" OnClick="StartOver">@UiStrings.Back</MudButton>
+}
+
+@code {
+    private readonly InvitationCodeForm _codeForm = new();
+    private RegisterForm _form = new();
+    private Mantenio.Shared.Invitations.CheckInvitationResponse? _invitation;
+    private ApartmentOption? _apartment;
+    private SignInResponse? _challenge;
+
+    private bool IsAdmin => _invitation?.Role == AccountRole.Admin;
+
+    protected override void OnInitialized() => _form = new RegisterForm { KeepSignedIn = Preferences.KeepSignedInByDefault };
+
+    private Task CheckCodeAsync() => RunAsync(async () => _invitation = await Api.CheckInvitationAsync(_codeForm.Code));
+
+    private async Task RegisterAsync()
+    {
+        // Residents always need an apartment, unless the code already brings one.
+        if (!IsAdmin && _invitation!.Apartment is null && _apartment is null)
+        {
+            Error = UiStrings.Error_apartment_required;
+            return;
+        }
+
+        await RunAsync(async () =>
+        {
+            _challenge = await Api.RegisterAsync(new Mantenio.Shared.Invitations.RegisterRequest(
+                _codeForm.Code,
+                _form.FirstName.Trim(),
+                _form.LastName.Trim(),
+                _form.Email.Trim(),
+                _form.Password,
+                _invitation!.Apartment?.Id ?? _apartment?.Id,
+                _form.KeepSignedIn));
+        });
+    }
+
+    /// <summary>"H-102" must not wrap at the hyphen (non-breaking hyphen U+2011).</summary>
+    private static string NoBreak(string code) => code.Replace('-', (char)0x2011);
+
+    private void StartOver()
+    {
+        _challenge = null;
+        _invitation = null;
+        _apartment = null;
+        _codeForm.Code = "";
+        Error = null;
+    }
+}

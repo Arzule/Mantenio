@@ -20,6 +20,7 @@ internal static class ProblemDetailsSetup
                     StatusCodes.Status403Forbidden => ErrorCodes.Forbidden,
                     StatusCodes.Status404NotFound => ErrorCodes.NotFound,
                     StatusCodes.Status409Conflict => ErrorCodes.Conflict,
+                    StatusCodes.Status429TooManyRequests => ErrorCodes.TooManyRequests,
                     StatusCodes.Status503ServiceUnavailable => ErrorCodes.DatabaseUnavailable,
                     _ => ErrorCodes.InternalError,
                 });
