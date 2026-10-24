@@ -1,5 +1,8 @@
 using System.Net.Http.Json;
 using Mantenio.Shared.Apartments;
+using Mantenio.Shared.BankAccounts;
+using Mantenio.Shared.Notifications;
+using Mantenio.Shared.Settings;
 using Mantenio.Shared.Auth;
 using Mantenio.Shared.Invitations;
 using Mantenio.Shared.Users;
@@ -94,6 +97,91 @@ public sealed class MantenioApi(IHttpClientFactory httpClientFactory)
 
     public Task ChangeUserApartmentAsync(Guid userId, Guid? apartmentId, string reason, CancellationToken cancellationToken = default) =>
         SendAsync(HttpMethod.Put, $"/api/admin/users/{userId}/apartment", new ChangeUserApartmentRequest(apartmentId, reason), cancellationToken);
+
+    // Settings and fees
+    public Task<CondoSettingsResponse> GetSettingsAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<CondoSettingsResponse>("/api/admin/settings", cancellationToken);
+
+    public Task<MyFeeResponse> GetMyFeeAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<MyFeeResponse>("/api/fees/mine", cancellationToken);
+
+    public Task<List<FeeChangeItem>> GetFeeHistoryAsync(Guid? apartmentId = null, CancellationToken cancellationToken = default) =>
+        GetAsync<List<FeeChangeItem>>(apartmentId is null ? "/api/admin/fees/history" : $"/api/admin/fees/history?apartmentId={apartmentId}", cancellationToken);
+
+    public Task ChangeGlobalFeeAsync(ChangeGlobalFeeRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync(HttpMethod.Post, "/api/admin/fees/global", request, cancellationToken);
+
+    public Task ChangeApartmentFeeAsync(Guid apartmentId, ChangeApartmentFeeRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync(HttpMethod.Post, $"/api/admin/fees/apartments/{apartmentId}", request, cancellationToken);
+
+    public Task ChangeDueRuleAsync(ChangeDueRuleRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync(HttpMethod.Put, "/api/admin/settings/due-rule", request, cancellationToken);
+
+    public Task ChangeLateFeeAsync(ChangeLateFeeRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync(HttpMethod.Put, "/api/admin/settings/late-fee", request, cancellationToken);
+
+    // Towers and apartments
+    public Task<List<TowerItem>> ListTowersAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<List<TowerItem>>("/api/admin/towers", cancellationToken);
+
+    public Task<TowerItem> CreateTowerAsync(string name, CancellationToken cancellationToken = default) =>
+        SendAsync<TowerItem>(HttpMethod.Post, "/api/admin/towers", new CreateTowerRequest(name), cancellationToken);
+
+    public Task<List<ApartmentAdminItem>> ListApartmentsAsync(string? search, bool? frozen, CancellationToken cancellationToken = default) =>
+        GetAsync<List<ApartmentAdminItem>>(
+            $"/api/admin/apartments?search={Uri.EscapeDataString(search ?? "")}{(frozen is null ? "" : frozen.Value ? "&frozen=true" : "&frozen=false")}",
+            cancellationToken);
+
+    public Task<ApartmentAdminItem> CreateApartmentAsync(Guid towerId, string number, CancellationToken cancellationToken = default) =>
+        SendAsync<ApartmentAdminItem>(HttpMethod.Post, "/api/admin/apartments", new CreateApartmentRequest(towerId, number), cancellationToken);
+
+    public async Task DeleteApartmentAsync(Guid apartmentId, CancellationToken cancellationToken = default)
+    {
+        using var client = httpClientFactory.CreateClient(MantenioHttpClients.Authenticated);
+        using var response = await client.DeleteAsync(new Uri($"/api/admin/apartments/{apartmentId}", UriKind.Relative), cancellationToken).SendSafeAsync();
+        await response.EnsureSuccessAsync(cancellationToken);
+    }
+
+    public Task<ImportApartmentsPreview> PreviewApartmentImportAsync(string csv, CancellationToken cancellationToken = default) =>
+        SendAsync<ImportApartmentsPreview>(HttpMethod.Post, "/api/admin/apartments/import/preview", new ImportApartmentsRequest(csv), cancellationToken);
+
+    public Task<ImportApartmentsResult> ImportApartmentsAsync(string csv, CancellationToken cancellationToken = default) =>
+        SendAsync<ImportApartmentsResult>(HttpMethod.Post, "/api/admin/apartments/import", new ImportApartmentsRequest(csv), cancellationToken);
+
+    public Task FreezeApartmentAsync(Guid apartmentId, string reason, CancellationToken cancellationToken = default) =>
+        SendAsync(HttpMethod.Post, $"/api/admin/apartments/{apartmentId}/freeze", new FreezeApartmentRequest(reason), cancellationToken);
+
+    public Task UnfreezeApartmentAsync(Guid apartmentId, string reason, CancellationToken cancellationToken = default) =>
+        SendAsync(HttpMethod.Post, $"/api/admin/apartments/{apartmentId}/unfreeze", new FreezeApartmentRequest(reason), cancellationToken);
+
+    // Bank accounts
+    public Task<List<BankAccountItem>> ListBankAccountsAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<List<BankAccountItem>>("/api/bank-accounts", cancellationToken);
+
+    public Task<List<BankAccountItem>> ListAllBankAccountsAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<List<BankAccountItem>>("/api/admin/bank-accounts", cancellationToken);
+
+    public Task<BankAccountItem> CreateBankAccountAsync(SaveBankAccountRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync<BankAccountItem>(HttpMethod.Post, "/api/admin/bank-accounts", request, cancellationToken);
+
+    public Task<BankAccountItem> UpdateBankAccountAsync(Guid id, SaveBankAccountRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync<BankAccountItem>(HttpMethod.Put, $"/api/admin/bank-accounts/{id}", request, cancellationToken);
+
+    public Task DeactivateBankAccountAsync(Guid id, string reason, CancellationToken cancellationToken = default) =>
+        SendAsync(HttpMethod.Post, $"/api/admin/bank-accounts/{id}/deactivate", new DeactivateBankAccountRequest(reason), cancellationToken);
+
+    // Notifications
+    public Task<NotificationPage> ListNotificationsAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<NotificationPage>("/api/notifications", cancellationToken);
+
+    public Task<List<NotificationItem>> ListPendingNotificationsAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<List<NotificationItem>>("/api/notifications/pending", cancellationToken);
+
+    public Task AcknowledgeNotificationAsync(Guid id, CancellationToken cancellationToken = default) =>
+        SendAsync(HttpMethod.Post, $"/api/notifications/{id}/acknowledge", new { }, cancellationToken);
+
+    public Task MarkAllNotificationsReadAsync(CancellationToken cancellationToken = default) =>
+        SendAsync(HttpMethod.Post, "/api/notifications/read-all", new { }, cancellationToken);
 
     private async Task<T> GetAsync<T>(string path, CancellationToken cancellationToken)
     {

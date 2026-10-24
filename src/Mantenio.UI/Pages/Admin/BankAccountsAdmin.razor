@@ -1,0 +1,101 @@
+@page "/admin/bank-accounts"
+@attribute [Authorize(Policy = MantenioPolicies.AdminOnly)]
+@using Mantenio.Shared.BankAccounts
+@inherits BusyComponentBase
+@inject MantenioApi Api
+@inject IDialogService Dialogs
+@inject ISnackbar Snackbar
+
+<PageTitle>@UiStrings.BankAccountsAdminTitle · @CondoProfile.Current.ShortName</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-6">
+    <div class="d-flex align-center justify-space-between flex-wrap gap-2">
+        <MudText Typo="Typo.h5" HtmlTag="h1">@UiStrings.BankAccountsAdminTitle</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="() => EditAsync(null)">@UiStrings.AddBankAccount</MudButton>
+    </div>
+    <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-3 mb-4">@UiStrings.BankAccountsAdminBody</MudAlert>
+
+    @if (Error is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">@Error</MudAlert>
+    }
+
+    @if (_accounts is null)
+    {
+        <LoadingIndicator />
+    }
+    else if (_accounts.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">@UiStrings.NoBankAccounts</MudAlert>
+    }
+    else
+    {
+        <MudStack Spacing="2">
+            @foreach (var account in _accounts)
+            {
+                <MudPaper Class="pa-4" Elevation="1" Style="@(account.IsActive ? "" : "opacity: 0.6")">
+                    <div class="d-flex align-center justify-space-between gap-2">
+                        <MudText Typo="Typo.h6">@account.BankName</MudText>
+                        @if (account.IsActive)
+                        {
+                            <div>
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" aria-label="@UiStrings.Edit" OnClick="() => EditAsync(account)" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Block" Size="Size.Small" Color="Color.Error" aria-label="@UiStrings.DeactivateBankAccount" OnClick="() => DeactivateAsync(account)" />
+                            </div>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small">@UiStrings.Inactive</MudChip>
+                        }
+                    </div>
+                    <MudText Typo="Typo.body2">@UiStrings.HolderName: @account.HolderName</MudText>
+                    <MudText Typo="Typo.body2">@UiStrings.AccountNumber: @account.AccountNumber</MudText>
+                    <MudText Typo="Typo.body2">@UiStrings.Cci: @account.Cci</MudText>
+                    <MudText Typo="Typo.caption">@Formats.Format(UiStrings.UpdatedOn, Formats.DateTime(account.UpdatedAt))</MudText>
+                </MudPaper>
+            }
+        </MudStack>
+    }
+</MudContainer>
+
+@code {
+    private List<BankAccountItem>? _accounts;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private Task LoadAsync() => RunAsync(async () => _accounts = await Api.ListAllBankAccountsAsync());
+
+    private async Task EditAsync(BankAccountItem? account)
+    {
+        var dialog = await Dialogs.ShowAsync<BankAccountDialog>(account is null ? UiStrings.AddBankAccount : UiStrings.EditBankAccount,
+            new DialogParameters<BankAccountDialog> { { d => d.Account, account } },
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        if (await dialog.Result is { Canceled: false, Data: SaveBankAccountRequest request })
+        {
+            await SaveAsync(() => account is null ? Api.CreateBankAccountAsync(request) : Api.UpdateBankAccountAsync(account.Id, request));
+        }
+    }
+
+    private async Task DeactivateAsync(BankAccountItem account)
+    {
+        var dialog = await Dialogs.ShowAsync<UserActionDialog>(UiStrings.DeactivateBankAccount, new DialogParameters<UserActionDialog>
+        {
+            { d => d.Message, Formats.Format(UiStrings.DeactivateBankAccountBody, account.BankName) },
+            { d => d.ConfirmText, UiStrings.DeactivateBankAccount },
+            { d => d.ConfirmColor, Color.Error },
+        }, new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        if (await dialog.Result is { Canceled: false, Data: UserActionResult result })
+        {
+            await SaveAsync(() => Api.DeactivateBankAccountAsync(account.Id, result.Reason));
+        }
+    }
+
+    private async Task SaveAsync(Func<Task> action)
+    {
+        if (await RunAsync(action))
+        {
+            Snackbar.Add(UiStrings.BankAccountSaved, Severity.Success);
+            await LoadAsync();
+        }
+    }
+}

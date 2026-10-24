@@ -1,0 +1,71 @@
+@page "/bank-accounts"
+@attribute [Authorize]
+@using Mantenio.Shared.BankAccounts
+@inherits BusyComponentBase
+@inject MantenioApi Api
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+
+<PageTitle>@UiStrings.NavBankAccounts · @CondoProfile.Current.ShortName</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-6">
+    <MudText Typo="Typo.h5" HtmlTag="h1">@UiStrings.BankAccountsTitle</MudText>
+    <MudText Class="mt-2 mb-4">@UiStrings.BankAccountsBody</MudText>
+
+    @if (_accounts is null)
+    {
+        @if (Error is not null)
+        {
+            <MudAlert Severity="Severity.Error">@Error</MudAlert>
+        }
+        else
+        {
+            <LoadingIndicator />
+        }
+    }
+    else if (_accounts.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">@UiStrings.NoBankAccounts</MudAlert>
+    }
+    else
+    {
+        <MudGrid Spacing="3">
+            @foreach (var account in _accounts)
+            {
+                <MudItem xs="12" md="6">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.h6" Color="Color.Primary">@account.BankName</MudText>
+                        @CopyRow(UiStrings.HolderName, account.HolderName)
+                        @CopyRow(UiStrings.AccountNumber, account.AccountNumber)
+                        @CopyRow(UiStrings.Cci, account.Cci)
+                        <MudText Typo="Typo.caption" Class="mt-2 d-block">@Formats.Format(UiStrings.UpdatedOn, Formats.Date(account.UpdatedAt))</MudText>
+                    </MudPaper>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    private List<BankAccountItem>? _accounts;
+
+    protected override Task OnInitializedAsync() => RunAsync(async () => _accounts = await Api.ListBankAccountsAsync());
+
+    private RenderFragment CopyRow(string label, string value) => __builder =>
+    {
+        <div class="d-flex align-center justify-space-between mt-2 gap-2">
+            <div style="min-width: 0">
+                <MudText Typo="Typo.caption">@label</MudText>
+                <MudText Typo="Typo.body1" Style="overflow-wrap: anywhere; font-weight: 500">@value</MudText>
+            </div>
+            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" Color="Color.Primary"
+                           aria-label="@($"{UiStrings.Copy} {label}")" OnClick="() => CopyAsync(value)" />
+        </div>
+    };
+
+    private async Task CopyAsync(string value)
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", value);
+        Snackbar.Add(UiStrings.Copied, Severity.Success);
+    }
+}

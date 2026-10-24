@@ -1,8 +1,10 @@
 @inherits LayoutComponentBase
 @inject AuthSession Session
 @inject NavigationManager Navigation
+@inject MantenioApi Api
 
 <ThemeProviders />
+<PendingNoticesGate OnAcknowledged="RefreshUnreadAsync" />
 
 <MudLayout>
     <MudAppBar Elevation="1">
@@ -17,6 +19,11 @@
         <MudText Typo="Typo.h6" Class="ml-3 appbar-title">@Profile.ShortName</MudText>
         <MudSpacer />
         <AuthorizeView>
+            <MudIconButton Href="notifications" Color="Color.Inherit" aria-label="@UiStrings.NavNotifications">
+                <MudBadge Content="_unread" Visible="_unread > 0" Color="Color.Secondary" Overlap="true">
+                    <MudIcon Icon="@Icons.Material.Filled.Notifications" />
+                </MudBadge>
+            </MudIconButton>
             <MudMenu Icon="@Icons.Material.Filled.AccountCircle"
                      Color="Color.Inherit"
                      AriaLabel="@UiStrings.AccountMenu"
@@ -36,7 +43,7 @@
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
         <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="1" Variant="DrawerVariant.Responsive">
             <MudNavMenu Class="pt-2">
-                @foreach (var item in _items)
+                @foreach (var item in _items.Where(i => i.InDrawer))
                 {
                     <MudNavLink Href="@item.Href" Match="item.Match" Icon="@item.Icon">@item.Title</MudNavLink>
                 }
@@ -48,11 +55,11 @@
         @Body
     </MudMainContent>
 
-    @if (_items.Count > 1)
+    @if (_items.Count(i => i.InBottomBar) > 1)
     {
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
             <nav class="bottom-nav mud-elevation-4" aria-label="@UiStrings.AppName">
-                @foreach (var item in _items)
+                @foreach (var item in _items.Where(i => i.InBottomBar))
                 {
                     <NavLink class="bottom-nav-item" href="@item.Href" Match="item.Match">
                         <MudIcon Icon="@item.Icon" />
@@ -68,6 +75,8 @@
     private static readonly CondoProfile Profile = CondoProfile.Current;
     private bool _drawerOpen = true;
     private List<NavigationItem> _items = [.. NavigationItems.All.Where(i => !i.AdminOnly)];
+    private int _unread;
+    private DateTimeOffset _unreadCheckedAt;
 
     [CascadingParameter]
     private Task<AuthenticationState>? AuthenticationState { get; set; }
@@ -81,6 +90,10 @@
 
         var user = (await AuthenticationState).User;
         _items = [.. NavigationItems.For(user)];
+        if (user.Identity?.IsAuthenticated == true && DateTimeOffset.UtcNow - _unreadCheckedAt > TimeSpan.FromSeconds(30))
+        {
+            await RefreshUnreadAsync();
+        }
 
         // A temporary password blocks everything else until it is replaced.
         if (user.HasClaim(MantenioClaims.MustChangePassword, "true")
@@ -91,6 +104,20 @@
     }
 
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+
+    /// <summary>Unread notices for the bell badge; checked at most every 30 s while navigating.</summary>
+    private async Task RefreshUnreadAsync()
+    {
+        _unreadCheckedAt = DateTimeOffset.UtcNow;
+        try
+        {
+            _unread = (await Api.ListNotificationsAsync()).UnreadCount;
+        }
+        catch (ApiException)
+        {
+            // Offline or signed out: keep the last value.
+        }
+    }
 
     private async Task SignOutAsync()
     {

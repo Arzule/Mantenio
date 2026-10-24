@@ -1,0 +1,162 @@
+@page "/admin/settings"
+@attribute [Authorize(Policy = MantenioPolicies.AdminOnly)]
+@using Mantenio.Shared.Settings
+@inherits BusyComponentBase
+@inject MantenioApi Api
+@inject ISnackbar Snackbar
+
+<PageTitle>@UiStrings.SettingsTitle · @CondoProfile.Current.ShortName</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-6">
+    <MudText Typo="Typo.h5" HtmlTag="h1" Class="mb-4">@UiStrings.SettingsTitle</MudText>
+
+    @if (Error is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">@Error</MudAlert>
+    }
+
+    @if (_settings is null)
+    {
+        <LoadingIndicator />
+    }
+    else
+    {
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudText Typo="Typo.subtitle1">@UiStrings.CurrentFeeTitle</MudText>
+            <MudText Typo="Typo.h4" Color="Color.Primary">@Formats.Money(_settings.CurrentGlobalFee)</MudText>
+            @if (_settings.ScheduledGlobalChanges.Count > 0)
+            {
+                <MudText Typo="Typo.subtitle2" Class="mt-3">@UiStrings.ScheduledChanges</MudText>
+                @foreach (var change in _settings.ScheduledGlobalChanges)
+                {
+                    <MudText Typo="Typo.body2">@Formats.Month(change.EffectivePeriod): @Formats.Money(change.NewAmount ?? 0) · @change.Reason</MudText>
+                }
+            }
+
+            <MudDivider Class="my-4" />
+            <MudText Typo="Typo.subtitle1">@UiStrings.ScheduleFeeChange</MudText>
+            <MudText Typo="Typo.body2" Class="mb-2">@UiStrings.ScheduleFeeChangeHint</MudText>
+            <div class="d-flex flex-wrap gap-3">
+                <MudNumericField T="decimal" @bind-Value="_newFee" Label="@UiStrings.Amount" Min="0" Format="N2" Variant="Variant.Outlined" Style="max-width: 180px" />
+                <MudSelect T="int" @bind-Value="_feePeriod" Label="@UiStrings.FromMonth" Variant="Variant.Outlined" Style="max-width: 240px">
+                    @foreach (var month in _months)
+                    {
+                        <MudSelectItem Value="month">@Formats.Month(month)</MudSelectItem>
+                    }
+                </MudSelect>
+            </div>
+            <MudTextField @bind-Value="_feeReason" Label="@UiStrings.Reason" HelperText="@UiStrings.ReasonHint" Variant="Variant.Outlined" Class="mt-3" MaxLength="500" Immediate="true" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" OnClick="ScheduleFeeAsync"
+                       Disabled="@(Busy || _feeReason.Trim().Length < 3 || _feePeriod == 0)">@UiStrings.ScheduleFeeChange</MudButton>
+        </MudPaper>
+
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudText Typo="Typo.subtitle1" Class="mb-2">@UiStrings.DueRuleTitle</MudText>
+            <div class="d-flex flex-wrap gap-3">
+                <MudNumericField T="int" @bind-Value="_dueDay" Label="@UiStrings.DueDay" Min="1" Max="28" Variant="Variant.Outlined" Style="max-width: 160px" />
+                <MudSelect T="int" @bind-Value="_dueOffset" Label="@UiStrings.DueMonth" Variant="Variant.Outlined" Style="max-width: 260px">
+                    <MudSelectItem Value="0">@UiStrings.DueSameMonth</MudSelectItem>
+                    <MudSelectItem Value="1">@UiStrings.DueNextMonth</MudSelectItem>
+                </MudSelect>
+            </div>
+            <MudText Typo="Typo.body2" Class="mt-2">@DueExample</MudText>
+            <MudTextField @bind-Value="_dueReason" Label="@UiStrings.Reason" Variant="Variant.Outlined" Class="mt-3" MaxLength="500" Immediate="true" />
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-3" OnClick="SaveDueRuleAsync"
+                       Disabled="@(Busy || _dueReason.Trim().Length < 3)">@UiStrings.Save</MudButton>
+        </MudPaper>
+
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudText Typo="Typo.subtitle1" Class="mb-2">@UiStrings.LateFeeTitle</MudText>
+            <AuthorizeView Policy="@MantenioPolicies.FounderOnly">
+                <Authorized>
+                    <MudNumericField T="decimal" @bind-Value="_lateFee" Label="@UiStrings.LateFeePercent" Min="0" Max="100" Adornment="Adornment.End" AdornmentText="%" Variant="Variant.Outlined" Style="max-width: 200px" />
+                    <MudTextField @bind-Value="_lateReason" Label="@UiStrings.Reason" Variant="Variant.Outlined" Class="mt-3" MaxLength="500" Immediate="true" />
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-3" OnClick="SaveLateFeeAsync"
+                               Disabled="@(Busy || _lateReason.Trim().Length < 3)">@UiStrings.Save</MudButton>
+                </Authorized>
+                <NotAuthorized>
+                    <MudText Typo="Typo.h6">@_settings.LateFeePercent.ToString("0.##", System.Globalization.CultureInfo.CurrentCulture) %</MudText>
+                    <MudText Typo="Typo.body2">@UiStrings.LateFeeFounderOnly</MudText>
+                </NotAuthorized>
+            </AuthorizeView>
+        </MudPaper>
+
+        <MudText Typo="Typo.h6" HtmlTag="h2" Class="mb-2">@UiStrings.FeeHistoryTitle</MudText>
+        <MudTable T="FeeChangeItem" Items="_history" Dense="true" Elevation="1" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>@UiStrings.ColumnScope</MudTh>
+                <MudTh>@UiStrings.ColumnFrom</MudTh>
+                <MudTh>@UiStrings.ColumnBefore</MudTh>
+                <MudTh>@UiStrings.ColumnAfter</MudTh>
+                <MudTh>@UiStrings.Reason</MudTh>
+                <MudTh>@UiStrings.ColumnChangedBy</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@UiStrings.ColumnScope">@(context.ApartmentCode ?? UiStrings.ScopeGlobal)</MudTd>
+                <MudTd DataLabel="@UiStrings.ColumnFrom">@Formats.Month(context.EffectivePeriod)</MudTd>
+                <MudTd DataLabel="@UiStrings.ColumnBefore">@(context.OldAmount is { } old ? Formats.Money(old) : UiStrings.GeneralFee)</MudTd>
+                <MudTd DataLabel="@UiStrings.ColumnAfter">@(context.NewAmount is { } amount ? Formats.Money(amount) : UiStrings.GeneralFee)</MudTd>
+                <MudTd DataLabel="@UiStrings.Reason">@context.Reason</MudTd>
+                <MudTd DataLabel="@UiStrings.ColumnChangedBy">@context.ChangedByName · @Formats.Date(context.CreatedAt)</MudTd>
+            </RowTemplate>
+            <NoRecordsContent><MudText>@UiStrings.NoData</MudText></NoRecordsContent>
+        </MudTable>
+    }
+</MudContainer>
+
+@code {
+    private CondoSettingsResponse? _settings;
+    private List<FeeChangeItem> _history = [];
+    private int[] _months = [];
+    private decimal _newFee;
+    private int _feePeriod;
+    private string _feeReason = "";
+    private int _dueDay = 1;
+    private int _dueOffset;
+    private string _dueReason = "";
+    private decimal _lateFee;
+    private string _lateReason = "";
+
+    private string DueExample
+    {
+        get
+        {
+            var period = _settings?.CurrentPeriod ?? 202601;
+            var due = new DateOnly(period / 100, period % 100, 1).AddMonths(_dueOffset);
+            return Formats.Format(UiStrings.DueRuleExample, Formats.Month(period), Formats.Date(new DateOnly(due.Year, due.Month, Math.Clamp(_dueDay, 1, 28))));
+        }
+    }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private Task LoadAsync() => RunAsync(async () =>
+    {
+        _settings = await Api.GetSettingsAsync();
+        _history = await Api.GetFeeHistoryAsync();
+        _months = Formats.NextMonths(_settings.CurrentPeriod, 12).Where(m => m >= _settings.TrackingStartPeriod).ToArray();
+        _feePeriod = _months.FirstOrDefault();
+        _newFee = _settings.CurrentGlobalFee;
+        _dueDay = _settings.DueDay;
+        _dueOffset = _settings.DueMonthOffset;
+        _lateFee = _settings.LateFeePercent;
+    });
+
+    private Task ScheduleFeeAsync() => SaveAsync(() => Api.ChangeGlobalFeeAsync(new ChangeGlobalFeeRequest(_newFee, _feePeriod, _feeReason.Trim())),
+        UiStrings.FeeChangeScheduled, () => _feeReason = "");
+
+    private Task SaveDueRuleAsync() => SaveAsync(() => Api.ChangeDueRuleAsync(new ChangeDueRuleRequest(_dueDay, _dueOffset, _dueReason.Trim())),
+        UiStrings.SettingsSaved, () => _dueReason = "");
+
+    private Task SaveLateFeeAsync() => SaveAsync(() => Api.ChangeLateFeeAsync(new ChangeLateFeeRequest(_lateFee, _lateReason.Trim())),
+        UiStrings.SettingsSaved, () => _lateReason = "");
+
+    private async Task SaveAsync(Func<Task> action, string message, Action reset)
+    {
+        if (await RunAsync(action))
+        {
+            reset();
+            Snackbar.Add(message, Severity.Success);
+            await LoadAsync();
+        }
+    }
+}

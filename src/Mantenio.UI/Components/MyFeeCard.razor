@@ -1,0 +1,45 @@
+@using Mantenio.Shared.Settings
+@inject MantenioApi Api
+
+@* The signed-in user's monthly fee, its due date and the next scheduled change. *@
+@if (_fee is not null)
+{
+    <MudPaper Class="pa-6 mt-4" Elevation="1">
+        <MudText Typo="Typo.h6" HtmlTag="h2">@UiStrings.HomeFeeTitle</MudText>
+        @if (_fee.CurrentFee is { } amount)
+        {
+            <MudText Typo="Typo.h4" Color="Color.Primary" Class="mt-2">@Formats.Format(UiStrings.HomeFeeAmount, Formats.Money(amount))</MudText>
+            <MudText Typo="Typo.body2" Class="mt-1">@_fee.ApartmentCode</MudText>
+            @if (_fee.CurrentDueDate is { } due)
+            {
+                <MudText Class="mt-2">@Formats.Format(UiStrings.HomeFeeDue, Formats.Date(due))</MudText>
+            }
+            @if (_fee is { NextFee: { } next, NextFeePeriod: { } period })
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" Class="mt-3">
+                    @Formats.Format(UiStrings.HomeFeeNext, Formats.Money(next), Formats.Month(period))
+                </MudAlert>
+            }
+        }
+        else
+        {
+            <MudText Class="mt-2">@UiStrings.HomeNoApartment</MudText>
+        }
+    </MudPaper>
+}
+
+@code {
+    private MyFeeResponse? _fee;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _fee = await Api.GetMyFeeAsync();
+        }
+        catch (ApiException)
+        {
+            // The card is informative; the rest of the home page still works offline.
+        }
+    }
+}

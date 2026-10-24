@@ -1,0 +1,54 @@
+@using Mantenio.Shared.Apartments
+@inherits BusyComponentBase
+@inject MantenioApi Api
+
+@* CSV import with a mandatory preview: nothing is written until the admin sees what will be added. *@
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body2">@UiStrings.ImportCsvBody</MudText>
+        <MudTextField @bind-Value="_csv" Lines="8" Variant="Variant.Outlined" Class="mt-3" Placeholder="tower,number&#10;H,101&#10;H,102"
+                      Immediate="true" TextChanged="_ => _preview = null" />
+        @if (_preview is not null)
+        {
+            @if (_preview.Error is not null)
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3">@UiStrings.Error_invalid_csv @_preview.Error</MudAlert>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" Class="mt-3">
+                    @Formats.Format(UiStrings.ImportPreviewResult, _preview.NewApartments.Count, _preview.NewTowers.Count, _preview.AlreadyExisting)
+                </MudAlert>
+            }
+        }
+        @if (Error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3">@Error</MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()">@UiStrings.Cancel</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="PreviewAsync" Disabled="@(Busy || string.IsNullOrWhiteSpace(_csv))">@UiStrings.ImportPreview</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ImportAsync"
+                   Disabled="@(Busy || _preview is null || _preview.Error is not null || _preview.NewApartments.Count == 0)">@UiStrings.ImportApply</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private string _csv = "";
+    private ImportApartmentsPreview? _preview;
+
+    [CascadingParameter]
+    private IMudDialogInstance Dialog { get; set; } = default!;
+
+    private Task PreviewAsync() => RunAsync(async () => _preview = await Api.PreviewApartmentImportAsync(_csv));
+
+    private async Task ImportAsync()
+    {
+        ImportApartmentsResult? result = null;
+        if (await RunAsync(async () => result = await Api.ImportApartmentsAsync(_csv)))
+        {
+            Dialog.Close(DialogResult.Ok(result!));
+        }
+    }
+}

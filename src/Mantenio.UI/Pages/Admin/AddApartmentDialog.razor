@@ -1,0 +1,57 @@
+@using Mantenio.Shared.Apartments
+@inherits BusyComponentBase
+@inject MantenioApi Api
+
+@* Adds one apartment, or a new tower first when it does not exist yet. *@
+<MudDialog>
+    <DialogContent>
+        <MudSelect T="Guid" @bind-Value="_towerId" Label="@UiStrings.Tower" Variant="Variant.Outlined">
+            @foreach (var tower in _towers)
+            {
+                <MudSelectItem Value="tower.Id">@tower.Name</MudSelectItem>
+            }
+        </MudSelect>
+        <div class="d-flex align-end gap-2 mt-2">
+            <MudTextField @bind-Value="_newTower" Label="@UiStrings.TowerName" Variant="Variant.Outlined" MaxLength="50" Immediate="true" />
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="AddTowerAsync" Disabled="@(Busy || string.IsNullOrWhiteSpace(_newTower))">@UiStrings.AddTower</MudButton>
+        </div>
+        <MudTextField @bind-Value="_number" Label="@UiStrings.ApartmentNumber" Variant="Variant.Outlined" Class="mt-3" MaxLength="20" Immediate="true" />
+        @if (Error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3">@Error</MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()">@UiStrings.Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddApartmentAsync"
+                   Disabled="@(Busy || _towerId == Guid.Empty || string.IsNullOrWhiteSpace(_number))">@UiStrings.AddApartment</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<TowerItem> _towers = [];
+    private Guid _towerId;
+    private string _newTower = "";
+    private string _number = "";
+
+    [CascadingParameter]
+    private IMudDialogInstance Dialog { get; set; } = default!;
+
+    protected override Task OnInitializedAsync() => RunAsync(async () => _towers = await Api.ListTowersAsync());
+
+    private Task AddTowerAsync() => RunAsync(async () =>
+    {
+        var tower = await Api.CreateTowerAsync(_newTower.Trim());
+        _towers.Add(tower);
+        _towerId = tower.Id;
+        _newTower = "";
+    });
+
+    private async Task AddApartmentAsync()
+    {
+        if (await RunAsync(() => Api.CreateApartmentAsync(_towerId, _number.Trim())))
+        {
+            Dialog.Close(DialogResult.Ok(true));
+        }
+    }
+}

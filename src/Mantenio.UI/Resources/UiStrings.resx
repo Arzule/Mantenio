@@ -168,4 +168,126 @@
   <data name="Error_founder_protected" xml:space="preserve"><value>La cuenta del admin fundador no se puede desactivar.</value></data>
   <data name="Error_cannot_modify_self" xml:space="preserve"><value>No puedes desactivar tu propia cuenta.</value></data>
   <data name="Error_network_unavailable" xml:space="preserve"><value>No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.</value></data>
+  <!-- Navigation (Phase 3) -->
+  <data name="NavBankAccounts" xml:space="preserve"><value>Cuentas</value></data>
+  <data name="NavNotifications" xml:space="preserve"><value>Avisos</value></data>
+  <data name="NavAdmin" xml:space="preserve"><value>Administración</value></data>
+  <data name="NavApartments" xml:space="preserve"><value>Departamentos</value></data>
+  <data name="NavSettings" xml:space="preserve"><value>Cuota y vencimiento</value></data>
+  <data name="NavBankAccountsAdmin" xml:space="preserve"><value>Cuentas bancarias</value></data>
+  <data name="AdminHubTitle" xml:space="preserve"><value>Administración</value></data>
+  <data name="AdminHubBody" xml:space="preserve"><value>Elige qué quieres gestionar.</value></data>
+  <!-- Common (Phase 3) -->
+  <data name="Save" xml:space="preserve"><value>Guardar</value></data>
+  <data name="Add" xml:space="preserve"><value>Agregar</value></data>
+  <data name="Edit" xml:space="preserve"><value>Editar</value></data>
+  <data name="Delete" xml:space="preserve"><value>Eliminar</value></data>
+  <data name="Remove" xml:space="preserve"><value>Quitar</value></data>
+  <data name="Understood" xml:space="preserve"><value>Entendido</value></data>
+  <data name="Amount" xml:space="preserve"><value>Monto (S/)</value></data>
+  <data name="FromMonth" xml:space="preserve"><value>Desde el mes</value></data>
+  <data name="UpdatedOn" xml:space="preserve"><value>Actualizado el {0}</value></data>
+  <data name="NoData" xml:space="preserve"><value>No hay información para mostrar.</value></data>
+  <!-- Home fee card. {0}=amount, {1}=date, {2}=month -->
+  <data name="HomeFeeTitle" xml:space="preserve"><value>Tu cuota de mantenimiento</value></data>
+  <data name="HomeFeeAmount" xml:space="preserve"><value>{0} al mes</value></data>
+  <data name="HomeFeeDue" xml:space="preserve"><value>La cuota de este mes vence el {0}.</value></data>
+  <data name="HomeFeeNext" xml:space="preserve"><value>Desde {1} será de {0}.</value></data>
+  <data name="HomeNoApartment" xml:space="preserve"><value>Tu cuenta no tiene un departamento asociado.</value></data>
+  <!-- Bank accounts (resident view) -->
+  <data name="BankAccountsTitle" xml:space="preserve"><value>Cuentas bancarias del condominio</value></data>
+  <data name="BankAccountsBody" xml:space="preserve"><value>Transfiere tu cuota a una de estas cuentas. Antes de transferir, verifica que los datos coincidan con esta pantalla.</value></data>
+  <data name="BankName" xml:space="preserve"><value>Banco</value></data>
+  <data name="HolderName" xml:space="preserve"><value>Titular</value></data>
+  <data name="AccountNumber" xml:space="preserve"><value>Número de cuenta</value></data>
+  <data name="Cci" xml:space="preserve"><value>CCI</value></data>
+  <data name="NoBankAccounts" xml:space="preserve"><value>Todavía no hay cuentas bancarias registradas.</value></data>
+  <!-- Bank accounts (admin) -->
+  <data name="BankAccountsAdminTitle" xml:space="preserve"><value>Cuentas bancarias</value></data>
+  <data name="BankAccountsAdminBody" xml:space="preserve"><value>Cada cambio avisa a todos los residentes con un mensaje que deben confirmar al abrir la app.</value></data>
+  <data name="AddBankAccount" xml:space="preserve"><value>Agregar cuenta</value></data>
+  <data name="EditBankAccount" xml:space="preserve"><value>Editar cuenta</value></data>
+  <data name="DeactivateBankAccount" xml:space="preserve"><value>Desactivar cuenta</value></data>
+  <data name="DeactivateBankAccountBody" xml:space="preserve"><value>La cuenta de {0} dejará de mostrarse a los residentes.</value></data>
+  <data name="SortOrder" xml:space="preserve"><value>Orden</value></data>
+  <data name="Inactive" xml:space="preserve"><value>Inactiva</value></data>
+  <data name="CciHint" xml:space="preserve"><value>20 dígitos.</value></data>
+  <data name="AccountNumberHint" xml:space="preserve"><value>Solo números y guiones.</value></data>
+  <data name="BankAccountSaved" xml:space="preserve"><value>Cuenta guardada. Los residentes recibirán el aviso.</value></data>
+  <!-- Notifications -->
+  <data name="NotificationsTitle" xml:space="preserve"><value>Avisos</value></data>
+  <data name="MarkAllRead" xml:space="preserve"><value>Marcar todo como leído</value></data>
+  <data name="NoNotifications" xml:space="preserve"><value>No tienes avisos.</value></data>
+  <data name="NoticeBankTitle" xml:space="preserve"><value>Cambio en las cuentas bancarias</value></data>
+  <data name="NoticeBank_added" xml:space="preserve"><value>Se agregó una cuenta de {0}.</value></data>
+  <data name="NoticeBank_updated" xml:space="preserve"><value>Se modificó la cuenta de {0}.</value></data>
+  <data name="NoticeBank_removed" xml:space="preserve"><value>Se retiró la cuenta de {0}. Ya no transfieras a esa cuenta.</value></data>
+  <data name="NoticeBankCheck" xml:space="preserve"><value>Antes de transferir, revisa las cuentas en la sección Cuentas de la app.</value></data>
+  <data name="NoticeFeeTitle" xml:space="preserve"><value>Cambio en la cuota de mantenimiento</value></data>
+  <data name="NoticeFeeGlobal" xml:space="preserve"><value>La cuota de mantenimiento será de {0} desde {1}.</value></data>
+  <data name="NoticeFeeApartment" xml:space="preserve"><value>La cuota del departamento {0} será de {1} desde {2}.</value></data>
+  <data name="NoticeFeeApartmentRemoved" xml:space="preserve"><value>El departamento {0} vuelve a pagar la cuota general desde {1}.</value></data>
+  <data name="NoticeReason" xml:space="preserve"><value>Motivo: {0}</value></data>
+  <data name="PendingNoticeTitle" xml:space="preserve"><value>Aviso importante</value></data>
+  <!-- Admin: settings (fee and due date) -->
+  <data name="SettingsTitle" xml:space="preserve"><value>Cuota y vencimiento</value></data>
+  <data name="CurrentFeeTitle" xml:space="preserve"><value>Cuota general vigente</value></data>
+  <data name="ScheduledChanges" xml:space="preserve"><value>Cambios programados</value></data>
+  <data name="ScheduleFeeChange" xml:space="preserve"><value>Programar cambio de cuota</value></data>
+  <data name="ScheduleFeeChangeHint" xml:space="preserve"><value>El cambio aplica desde el mes elegido (como pronto, el próximo mes). Todos los residentes recibirán un aviso.</value></data>
+  <data name="FeeChangeScheduled" xml:space="preserve"><value>Cambio de cuota programado.</value></data>
+  <data name="DueRuleTitle" xml:space="preserve"><value>Vencimiento</value></data>
+  <data name="DueDay" xml:space="preserve"><value>Día de vencimiento</value></data>
+  <data name="DueMonth" xml:space="preserve"><value>Mes de vencimiento</value></data>
+  <data name="DueSameMonth" xml:space="preserve"><value>El mismo mes de la cuota</value></data>
+  <data name="DueNextMonth" xml:space="preserve"><value>El mes siguiente</value></data>
+  <data name="DueRuleExample" xml:space="preserve"><value>Ejemplo: la cuota de {0} vence el {1}.</value></data>
+  <data name="LateFeeTitle" xml:space="preserve"><value>Recargo por mora</value></data>
+  <data name="LateFeePercent" xml:space="preserve"><value>Porcentaje de recargo</value></data>
+  <data name="LateFeeFounderOnly" xml:space="preserve"><value>Solo el admin fundador puede cambiar el recargo.</value></data>
+  <data name="FeeHistoryTitle" xml:space="preserve"><value>Historial de cambios de cuota</value></data>
+  <data name="ColumnScope" xml:space="preserve"><value>Alcance</value></data>
+  <data name="ColumnFrom" xml:space="preserve"><value>Desde</value></data>
+  <data name="ColumnBefore" xml:space="preserve"><value>Antes</value></data>
+  <data name="ColumnAfter" xml:space="preserve"><value>Después</value></data>
+  <data name="ColumnChangedBy" xml:space="preserve"><value>Cambiado por</value></data>
+  <data name="ColumnDate" xml:space="preserve"><value>Fecha</value></data>
+  <data name="ScopeGlobal" xml:space="preserve"><value>General</value></data>
+  <data name="GeneralFee" xml:space="preserve"><value>Cuota general</value></data>
+  <data name="SettingsSaved" xml:space="preserve"><value>Cambios guardados.</value></data>
+  <!-- Admin: apartments -->
+  <data name="ApartmentsTitle" xml:space="preserve"><value>Departamentos</value></data>
+  <data name="ApartmentsSearch" xml:space="preserve"><value>Buscar departamento</value></data>
+  <data name="OnlyFrozen" xml:space="preserve"><value>Solo congelados</value></data>
+  <data name="ColumnResidents" xml:space="preserve"><value>Residentes</value></data>
+  <data name="ColumnSpecialFee" xml:space="preserve"><value>Cuota especial</value></data>
+  <data name="Frozen" xml:space="preserve"><value>Congelado</value></data>
+  <data name="Freeze" xml:space="preserve"><value>Congelar</value></data>
+  <data name="Unfreeze" xml:space="preserve"><value>Descongelar</value></data>
+  <data name="FreezeBody" xml:space="preserve"><value>{0} no generará cargos, recargos ni recordatorios mientras esté congelado. Su deuda anterior se mantiene.</value></data>
+  <data name="UnfreezeBody" xml:space="preserve"><value>{0} volverá a generar cargos desde ahora.</value></data>
+  <data name="SpecialFee" xml:space="preserve"><value>Cuota especial</value></data>
+  <data name="SpecialFeeBody" xml:space="preserve"><value>Cuota propia de {0}. Déjala vacía para que vuelva a pagar la cuota general.</value></data>
+  <data name="AddTower" xml:space="preserve"><value>Agregar torre</value></data>
+  <data name="TowerName" xml:space="preserve"><value>Nombre de la torre o edificio</value></data>
+  <data name="AddApartment" xml:space="preserve"><value>Agregar departamento</value></data>
+  <data name="ApartmentNumber" xml:space="preserve"><value>Número</value></data>
+  <data name="Tower" xml:space="preserve"><value>Torre / edificio</value></data>
+  <data name="ImportCsv" xml:space="preserve"><value>Importar CSV</value></data>
+  <data name="ImportCsvBody" xml:space="preserve"><value>Una línea por departamento: torre,número (por ejemplo H,102). Los que ya existen se omiten.</value></data>
+  <data name="ImportPreview" xml:space="preserve"><value>Vista previa</value></data>
+  <data name="ImportPreviewResult" xml:space="preserve"><value>Se agregarán {0} departamentos y {1} torres nuevas. Ya existen {2}.</value></data>
+  <data name="ImportApply" xml:space="preserve"><value>Importar</value></data>
+  <data name="ImportDone" xml:space="preserve"><value>Se agregaron {0} departamentos.</value></data>
+  <data name="DeleteApartmentBody" xml:space="preserve"><value>Solo se puede eliminar un departamento creado por error, sin residentes ni historial.</value></data>
+  <!-- API error codes added in Phase 3 -->
+  <data name="Error_invalid_period" xml:space="preserve"><value>El mes elegido no es válido. Los cambios aplican como pronto desde el próximo mes.</value></data>
+  <data name="Error_invalid_bank_account" xml:space="preserve"><value>Revisa los datos: el CCI debe tener 20 dígitos y el número de cuenta solo números y guiones.</value></data>
+  <data name="Error_apartment_already_frozen" xml:space="preserve"><value>El departamento ya está congelado.</value></data>
+  <data name="Error_apartment_not_frozen" xml:space="preserve"><value>El departamento no está congelado.</value></data>
+  <data name="Error_apartment_in_use" xml:space="preserve"><value>No se puede eliminar: el departamento tiene residentes o historial.</value></data>
+  <data name="Error_tower_exists" xml:space="preserve"><value>Ya existe una torre con ese nombre.</value></data>
+  <data name="Error_tower_not_found" xml:space="preserve"><value>La torre elegida no existe.</value></data>
+  <data name="Error_apartment_exists" xml:space="preserve"><value>Ese departamento ya existe.</value></data>
+  <data name="Error_invalid_csv" xml:space="preserve"><value>El archivo no tiene el formato torre,número.</value></data>
 </root>

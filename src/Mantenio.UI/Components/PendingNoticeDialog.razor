@@ -1,0 +1,25 @@
+@using Mantenio.Shared.Notifications
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" />
+            <MudText Typo="Typo.h6">@NoticeText.Title(Notice)</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudText>@NoticeText.Body(Notice)</MudText>
+        <MudText Typo="Typo.caption" Class="mt-3 d-block">@Formats.DateTime(Notice.CreatedAt)</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => Dialog.Close()">@UiStrings.Understood</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public NotificationItem Notice { get; set; } = default!;
+}

@@ -1,0 +1,47 @@
+@* Sets or removes an apartment's own fee from a future month on. *@
+<MudDialog>
+    <DialogContent>
+        <MudText>@Formats.Format(UiStrings.SpecialFeeBody, ApartmentCode)</MudText>
+        <div class="d-flex flex-wrap gap-3 mt-3">
+            <MudNumericField T="decimal?" @bind-Value="_amount" Label="@UiStrings.Amount" Min="0" Format="N2" Clearable="true" Variant="Variant.Outlined" Style="max-width: 180px" />
+            <MudSelect T="int" @bind-Value="_period" Label="@UiStrings.FromMonth" Variant="Variant.Outlined" Style="max-width: 240px">
+                @foreach (var month in Months)
+                {
+                    <MudSelectItem Value="month">@Formats.Month(month)</MudSelectItem>
+                }
+            </MudSelect>
+        </div>
+        <MudTextField @bind-Value="_reason" Label="@UiStrings.Reason" HelperText="@UiStrings.ReasonHint" Variant="Variant.Outlined" Class="mt-3" MaxLength="500" Immediate="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()">@UiStrings.Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(_reason.Trim().Length < 3 || _period == 0)"
+                   OnClick="() => Dialog.Close(DialogResult.Ok(new Mantenio.Shared.Settings.ChangeApartmentFeeRequest(_amount, _period, _reason.Trim())))">
+            @UiStrings.Save
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private decimal? _amount;
+    private int _period;
+    private string _reason = "";
+
+    [CascadingParameter]
+    private IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public string ApartmentCode { get; set; } = "";
+
+    [Parameter]
+    public decimal? CurrentFee { get; set; }
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<int> Months { get; set; } = [];
+
+    protected override void OnInitialized()
+    {
+        _amount = CurrentFee;
+        _period = Months.FirstOrDefault();
+    }
+}

@@ -1,0 +1,64 @@
+@page "/notifications"
+@attribute [Authorize]
+@using Mantenio.Shared.Notifications
+@inherits BusyComponentBase
+@inject MantenioApi Api
+
+<PageTitle>@UiStrings.NotificationsTitle · @CondoProfile.Current.ShortName</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-6">
+    <div class="d-flex align-center justify-space-between flex-wrap gap-2 mb-4">
+        <MudText Typo="Typo.h5" HtmlTag="h1">@UiStrings.NotificationsTitle</MudText>
+        @if (_page is { UnreadCount: > 0 })
+        {
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="MarkAllReadAsync" Disabled="Busy">@UiStrings.MarkAllRead</MudButton>
+        }
+    </div>
+
+    @if (Error is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">@Error</MudAlert>
+    }
+
+    @if (_page is null)
+    {
+        <LoadingIndicator />
+    }
+    else if (_page.Items.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">@UiStrings.NoNotifications</MudAlert>
+    }
+    else
+    {
+        <MudStack Spacing="2">
+            @foreach (var notice in _page.Items)
+            {
+                <MudPaper Class="@($"pa-4 {(notice.ReadAt is null ? "notice-unread" : "")}")" Elevation="1">
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@(notice.Kind == NotificationKind.BankAccountsChanged ? Icons.Material.Filled.AccountBalance : Icons.Material.Filled.Payments)"
+                                 Color="Color.Primary" Size="Size.Small" />
+                        <MudText Typo="Typo.subtitle1"><b>@NoticeText.Title(notice)</b></MudText>
+                    </div>
+                    <MudText Class="mt-1">@NoticeText.Body(notice)</MudText>
+                    <MudText Typo="Typo.caption">@Formats.DateTime(notice.CreatedAt)</MudText>
+                </MudPaper>
+            }
+        </MudStack>
+    }
+</MudContainer>
+
+@code {
+    private NotificationPage? _page;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private Task LoadAsync() => RunAsync(async () => _page = await Api.ListNotificationsAsync());
+
+    private async Task MarkAllReadAsync()
+    {
+        if (await RunAsync(() => Api.MarkAllNotificationsReadAsync()))
+        {
+            await LoadAsync();
+        }
+    }
+}

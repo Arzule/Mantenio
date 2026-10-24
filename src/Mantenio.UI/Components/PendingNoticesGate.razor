@@ -1,0 +1,63 @@
+@inject MantenioApi Api
+@inject IDialogService Dialogs
+
+@*
+    Shows, one by one, the notices that must be acknowledged (e.g. a bank account change) as soon as a signed-in
+    user opens the app. They cannot be dismissed: only "Entendido" closes them, and that is recorded.
+*@
+
+@code {
+    private bool _checking;
+    private Guid? _checkedFor;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    /// <summary>Raised after notices were acknowledged, so the layout can refresh its unread count.</summary>
+    [Parameter]
+    public EventCallback OnAcknowledged { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (AuthenticationState is null || _checking)
+        {
+            return;
+        }
+
+        var user = (await AuthenticationState).User;
+        if (user.Identity?.IsAuthenticated != true || !Guid.TryParse(user.FindFirst(MantenioClaims.UserId)?.Value, out var userId)
+            || userId == _checkedFor || user.HasClaim(MantenioClaims.MustChangePassword, "true"))
+        {
+            return;
+        }
+
+        _checking = true;
+        try
+        {
+            _checkedFor = userId;
+            var pending = await Api.ListPendingNotificationsAsync();
+            foreach (var notice in pending)
+            {
+                var parameters = new DialogParameters<PendingNoticeDialog> { { d => d.Notice, notice } };
+                var options = new DialogOptions { BackdropClick = false, CloseOnEscapeKey = false, MaxWidth = MaxWidth.Small, FullWidth = true };
+                var dialog = await Dialogs.ShowAsync<PendingNoticeDialog>(UiStrings.PendingNoticeTitle, parameters, options);
+                await dialog.Result;
+                await Api.AcknowledgeNotificationAsync(notice.Id);
+            }
+
+            if (pending.Count > 0)
+            {
+                await OnAcknowledged.InvokeAsync();
+            }
+        }
+        catch (ApiException)
+        {
+            // Offline or the session expired: try again on the next start.
+            _checkedFor = null;
+        }
+        finally
+        {
+            _checking = false;
+        }
+    }
+}

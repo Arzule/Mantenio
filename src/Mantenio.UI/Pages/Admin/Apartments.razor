@@ -1,0 +1,178 @@
+@page "/admin/apartments"
+@attribute [Authorize(Policy = MantenioPolicies.AdminOnly)]
+@using Mantenio.Shared.Settings
+@inherits BusyComponentBase
+@inject MantenioApi Api
+@inject IDialogService Dialogs
+@inject ISnackbar Snackbar
+
+<PageTitle>@UiStrings.ApartmentsTitle · @CondoProfile.Current.ShortName</PageTitle>
+
+<div class="apartments-page">
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+    <div class="d-flex align-center justify-space-between flex-wrap gap-2 mb-4">
+        <MudText Typo="Typo.h5" HtmlTag="h1">@UiStrings.ApartmentsTitle</MudText>
+        <div class="d-flex gap-2 flex-wrap">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile" OnClick="ImportAsync">@UiStrings.ImportCsv</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="AddAsync">@UiStrings.AddApartment</MudButton>
+        </div>
+    </div>
+
+    @if (Error is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">@Error</MudAlert>
+    }
+
+    <MudTable T="ApartmentAdminItem" Items="_apartments" Hover="true" Elevation="1" Breakpoint="Breakpoint.Sm" Loading="Busy"
+              RowsPerPage="25" LoadingProgressColor="Color.Primary">
+        <ToolBarContent>
+            <div class="apartments-toolbar">
+                <MudTextField T="string" Value="_search" ValueChanged="OnSearchAsync" Placeholder="@UiStrings.ApartmentsSearch"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true"
+                              DebounceInterval="300" Clearable="true" Class="mt-0" />
+                <MudSwitch T="bool" Value="_onlyFrozen" ValueChanged="OnOnlyFrozenAsync" Label="@UiStrings.OnlyFrozen" Color="Color.Primary" />
+            </div>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>@UiStrings.Apartment</MudTh>
+            <MudTh>@UiStrings.ColumnResidents</MudTh>
+            <MudTh>@UiStrings.ColumnSpecialFee</MudTh>
+            <MudTh>@UiStrings.ColumnStatus</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@UiStrings.Apartment"><b>@context.Code</b></MudTd>
+            <MudTd DataLabel="@UiStrings.ColumnResidents">@context.ResidentCount</MudTd>
+            <MudTd DataLabel="@UiStrings.ColumnSpecialFee">@(context.SpecialFee is { } fee ? Formats.Money(fee) : "—")</MudTd>
+            <MudTd DataLabel="@UiStrings.ColumnStatus">
+                <div class="d-flex align-center justify-end gap-1">
+                    @if (context.IsFrozen)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Info" Icon="@Icons.Material.Filled.AcUnit">@UiStrings.Frozen</MudChip>
+                    }
+                    <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" AriaLabel="@UiStrings.ColumnActions"
+                             AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                        <MudMenuItem Icon="@Icons.Material.Filled.Payments" OnClick="() => SpecialFeeAsync(context)">@UiStrings.SpecialFee</MudMenuItem>
+                        @if (context.IsFrozen)
+                        {
+                            <MudMenuItem Icon="@Icons.Material.Filled.Whatshot" OnClick="() => FreezeAsync(context, false)">@UiStrings.Unfreeze</MudMenuItem>
+                        }
+                        else
+                        {
+                            <MudMenuItem Icon="@Icons.Material.Filled.AcUnit" OnClick="() => FreezeAsync(context, true)">@UiStrings.Freeze</MudMenuItem>
+                        }
+                        @if (context.ResidentCount == 0)
+                        {
+                            <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="() => DeleteAsync(context)">@UiStrings.Delete</MudMenuItem>
+                        }
+                    </MudMenu>
+                </div>
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent><MudText Class="pa-4">@UiStrings.NoData</MudText></NoRecordsContent>
+        <PagerContent>
+            <MudTablePager RowsPerPageString="@UiStrings.RowsPerPage" InfoFormat="@UiStrings.PagerInfo" PageSizeOptions="@(new[] { 25, 50, 100 })" />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+</div>
+
+@code {
+    private List<ApartmentAdminItem> _apartments = [];
+    private string? _search;
+    private bool _onlyFrozen;
+    private int[] _months = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+        await RunAsync(async () =>
+        {
+            var settings = await Api.GetSettingsAsync();
+            _months = Formats.NextMonths(settings.CurrentPeriod, 12).Where(m => m >= settings.TrackingStartPeriod).ToArray();
+        });
+    }
+
+    private Task LoadAsync() => RunAsync(async () => _apartments = await Api.ListApartmentsAsync(_search, _onlyFrozen ? true : null));
+
+    private Task OnSearchAsync(string? search)
+    {
+        _search = search;
+        return LoadAsync();
+    }
+
+    private Task OnOnlyFrozenAsync(bool value)
+    {
+        _onlyFrozen = value;
+        return LoadAsync();
+    }
+
+    private async Task FreezeAsync(ApartmentAdminItem apartment, bool freeze)
+    {
+        var dialog = await Dialogs.ShowAsync<UserActionDialog>(freeze ? UiStrings.Freeze : UiStrings.Unfreeze, new DialogParameters<UserActionDialog>
+        {
+            { d => d.Message, Formats.Format(freeze ? UiStrings.FreezeBody : UiStrings.UnfreezeBody, apartment.Code) },
+            { d => d.ConfirmText, freeze ? UiStrings.Freeze : UiStrings.Unfreeze },
+        }, new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        if (await dialog.Result is { Canceled: false, Data: UserActionResult result })
+        {
+            await SaveAsync(() => freeze ? Api.FreezeApartmentAsync(apartment.Id, result.Reason) : Api.UnfreezeApartmentAsync(apartment.Id, result.Reason));
+        }
+    }
+
+    private async Task SpecialFeeAsync(ApartmentAdminItem apartment)
+    {
+        var dialog = await Dialogs.ShowAsync<SpecialFeeDialog>(UiStrings.SpecialFee, new DialogParameters<SpecialFeeDialog>
+        {
+            { d => d.ApartmentCode, apartment.Code },
+            { d => d.CurrentFee, apartment.SpecialFee },
+            { d => d.Months, _months },
+        }, new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        if (await dialog.Result is { Canceled: false, Data: ChangeApartmentFeeRequest request })
+        {
+            await SaveAsync(() => Api.ChangeApartmentFeeAsync(apartment.Id, request));
+        }
+    }
+
+    private async Task DeleteAsync(ApartmentAdminItem apartment)
+    {
+        var dialog = await Dialogs.ShowAsync<UserActionDialog>(UiStrings.Delete, new DialogParameters<UserActionDialog>
+        {
+            { d => d.Message, UiStrings.DeleteApartmentBody },
+            { d => d.ConfirmText, UiStrings.Delete },
+            { d => d.ConfirmColor, Color.Error },
+        }, new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        if (await dialog.Result is { Canceled: false })
+        {
+            await SaveAsync(() => Api.DeleteApartmentAsync(apartment.Id));
+        }
+    }
+
+    private async Task AddAsync()
+    {
+        var dialog = await Dialogs.ShowAsync<AddApartmentDialog>(UiStrings.AddApartment, new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add(UiStrings.UserUpdated, Severity.Success);
+            await LoadAsync();
+        }
+    }
+
+    private async Task ImportAsync()
+    {
+        var dialog = await Dialogs.ShowAsync<ImportApartmentsDialog>(UiStrings.ImportCsv, new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        if (await dialog.Result is { Canceled: false, Data: ImportApartmentsResult result })
+        {
+            Snackbar.Add(Formats.Format(UiStrings.ImportDone, result.ApartmentsAdded), Severity.Success);
+            await LoadAsync();
+        }
+    }
+
+    private async Task SaveAsync(Func<Task> action)
+    {
+        if (await RunAsync(action))
+        {
+            Snackbar.Add(UiStrings.UserUpdated, Severity.Success);
+            await LoadAsync();
+        }
+    }
+}

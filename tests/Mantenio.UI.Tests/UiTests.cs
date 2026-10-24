@@ -21,6 +21,9 @@ public sealed class UiTests : BunitContext
     public UiTests()
     {
         Services.AddMudServices();
+        Services.AddSingleton<IHttpClientFactory>(new FakeApi()
+            .Returns("/api/fees/mine", new Mantenio.Shared.Settings.MyFeeResponse("H-102", 180m, 202611, new DateOnly(2026, 12, 1), null, null)));
+        Services.AddSingleton<MantenioApi>();
         JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
@@ -35,6 +38,9 @@ public sealed class UiTests : BunitContext
 
         cut.Find("h1").TextContent.ShouldContain(CondoProfile.Current.DisplayName);
         cut.Markup.ShouldContain(UiStrings.HomeGreeting.Replace("{0}", "Rosa", StringComparison.Ordinal));
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("S/"));
+        cut.Markup.ShouldContain("180.00");
+        cut.Markup.ShouldContain("01/12/2026");
     }
 
     [Fact]

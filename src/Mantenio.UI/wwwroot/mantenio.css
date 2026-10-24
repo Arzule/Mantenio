@@ -14,3 +14,8 @@ h1:focus {
     clip: rect(0 0 0 0);
     white-space: nowrap;
 }
+
+/* Unread notices stand out with the primary color on the left edge. */
+.notice-unread {
+    border-left: 4px solid var(--mud-palette-primary);
+}

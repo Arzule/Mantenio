@@ -1,0 +1,48 @@
+@using Mantenio.Shared.BankAccounts
+
+@* Bank, holder, account number and CCI only. Never passwords or keys. *@
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="_bank" Label="@UiStrings.BankName" Variant="Variant.Outlined" MaxLength="80" Immediate="true" />
+        <MudTextField @bind-Value="_holder" Label="@UiStrings.HolderName" Variant="Variant.Outlined" Class="mt-3" MaxLength="150" Immediate="true" />
+        <MudTextField @bind-Value="_number" Label="@UiStrings.AccountNumber" HelperText="@UiStrings.AccountNumberHint" Variant="Variant.Outlined" Class="mt-3" MaxLength="40" Immediate="true" />
+        <MudTextField @bind-Value="_cci" Label="@UiStrings.Cci" HelperText="@UiStrings.CciHint" Variant="Variant.Outlined" Class="mt-3" MaxLength="40" Immediate="true"
+                      InputMode="InputMode.numeric" />
+        <MudNumericField T="int" @bind-Value="_sortOrder" Label="@UiStrings.SortOrder" Variant="Variant.Outlined" Class="mt-3" Min="0" Style="max-width: 140px" />
+        <MudTextField @bind-Value="_reason" Label="@UiStrings.Reason" HelperText="@UiStrings.ReasonHint" Variant="Variant.Outlined" Class="mt-3" MaxLength="500" Immediate="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()">@UiStrings.Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="!CanSave" OnClick="Save">@UiStrings.Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private string _bank = "";
+    private string _holder = "";
+    private string _number = "";
+    private string _cci = "";
+    private int _sortOrder = 1;
+    private string _reason = "";
+
+    [CascadingParameter]
+    private IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter]
+    public BankAccountItem? Account { get; set; }
+
+    private bool CanSave =>
+        !string.IsNullOrWhiteSpace(_bank) && !string.IsNullOrWhiteSpace(_holder) && !string.IsNullOrWhiteSpace(_number)
+        && _cci.Count(char.IsAsciiDigit) == 20 && _reason.Trim().Length >= 3;
+
+    protected override void OnInitialized()
+    {
+        if (Account is { } account)
+        {
+            (_bank, _holder, _number, _cci, _sortOrder) = (account.BankName, account.HolderName, account.AccountNumber, account.Cci, account.SortOrder);
+        }
+    }
+
+    private void Save() =>
+        Dialog.Close(DialogResult.Ok(new SaveBankAccountRequest(_bank.Trim(), _holder.Trim(), _number.Trim(), _cci.Trim(), _sortOrder, _reason.Trim())));
+}

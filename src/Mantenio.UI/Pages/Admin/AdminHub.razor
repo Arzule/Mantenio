@@ -1,0 +1,26 @@
+@page "/admin"
+@attribute [Authorize(Policy = MantenioPolicies.AdminOnly)]
+
+<PageTitle>@UiStrings.AdminHubTitle · @CondoProfile.Current.ShortName</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-6">
+    <MudText Typo="Typo.h5" HtmlTag="h1">@UiStrings.AdminHubTitle</MudText>
+    <MudText Class="mt-2 mb-4">@UiStrings.AdminHubBody</MudText>
+
+    <MudGrid Spacing="2">
+        @foreach (var item in NavigationItems.AdminPages)
+        {
+            <MudItem xs="12" sm="6">
+                <MudPaper Class="pa-4 d-flex align-center gap-3" Elevation="1" Style="cursor: pointer" @onclick="() => Navigation.NavigateTo(item.Href)">
+                    <MudIcon Icon="@item.Icon" Color="Color.Primary" />
+                    <MudLink Href="@item.Href" Typo="Typo.subtitle1" Underline="Underline.None">@item.Title</MudLink>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+</MudContainer>
+
+@code {
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+}
