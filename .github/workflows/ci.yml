@@ -35,15 +35,11 @@ jobs:
 
   android:
     name: Build Android app
+    # Private condo deployment repos hit "Disk quota exceeded" installing the MAUI workload on hosted runners;
+    # the Android build is checked in the public base repo (deployment APKs are built locally).
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
-    env:
-      # The MAUI workload is large: install .NET under the home folder instead of the shared /usr/share/dotnet.
-      DOTNET_INSTALL_DIR: /home/runner/.dotnet
     steps:
-      - name: Free disk space
-        run: |
-          sudo rm -rf /usr/share/swift /usr/local/lib/node_modules /opt/ghc /usr/local/.ghcup /usr/local/share/boost /usr/share/dotnet || true
-          df -h /home/runner
 
       - uses: actions/checkout@v4
 
