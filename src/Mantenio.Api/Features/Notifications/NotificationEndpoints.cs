@@ -87,7 +87,7 @@ internal static class NotificationEndpoints
         using var data = JsonDocument.Parse(n.Data);
         return new NotificationItem(
             n.Id,
-            n.Type == NotificationType.BankAccountsChanged ? NotificationKind.BankAccountsChanged : NotificationKind.FeeChanged,
+            (NotificationKind)(int)n.Type,
             data.RootElement.Clone(),
             n.RequiresAcknowledgement,
             n.CreatedAt,

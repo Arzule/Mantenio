@@ -8,7 +8,13 @@ public enum NotificationKind
 {
     BankAccountsChanged,
     FeeChanged,
+    PaymentApproved,
+    PaymentRejected,
+    PaymentVoided,
 }
+
+/// <summary>Data of the payment notices. Reason: rejection or void reason.</summary>
+public sealed record PaymentNoticeData(Guid PaymentProofId, decimal Amount, string? ReceiptNumber, string? Reason);
 
 /// <summary>A notice; the UI writes the Spanish text from <see cref="Kind"/> and <see cref="Data"/>.</summary>
 public sealed record NotificationItem(

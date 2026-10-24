@@ -363,6 +363,9 @@ namespace Mantenio.Api.Infrastructure.Persistence.Migrations
                     b.Property<int>("DueMonthOffset")
                         .HasColumnType("integer");
 
+                    b.Property<long>("LastReceiptSequence")
+                        .HasColumnType("bigint");
+
                     b.Property<decimal>("LateFeePercent")
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)");
@@ -507,6 +510,222 @@ namespace Mantenio.Api.Infrastructure.Persistence.Migrations
                     b.HasIndex("UsedById");
 
                     b.ToTable("InvitationCodes", (string)null);
+                });
+
+            modelBuilder.Entity("Mantenio.Domain.Ledger.Charge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<Guid>("ApartmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("ParentChargeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Period")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentChargeId")
+                        .IsUnique()
+                        .HasFilter("\"ParentChargeId\" IS NOT NULL");
+
+                    b.HasIndex("ApartmentId", "Period");
+
+                    b.HasIndex("ApartmentId", "Period", "Type")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Charges_OneMaintenancePerMonth")
+                        .HasFilter("\"Type\" = 'Maintenance'");
+
+                    b.ToTable("Charges", (string)null);
+                });
+
+            modelBuilder.Entity("Mantenio.Domain.Ledger.PaymentAllocation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<Guid>("ChargeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PaymentProofId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ReversedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChargeId");
+
+                    b.HasIndex("PaymentProofId");
+
+                    b.ToTable("PaymentAllocations", (string)null);
+                });
+
+            modelBuilder.Entity("Mantenio.Domain.Ledger.PaymentProof", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ApartmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("ApprovedAmount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<decimal>("DeclaredAmount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<string>("ImageObjectKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateOnly>("OperationDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("OperationNumber")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ReviewedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTimeOffset>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SubmittedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("VoidReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTimeOffset?>("VoidedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("VoidedById")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApartmentId");
+
+                    b.HasIndex("SubmittedById");
+
+                    b.HasIndex("BankName", "OperationNumber")
+                        .IsUnique()
+                        .HasDatabaseName("IX_PaymentProofs_UniqueOperation")
+                        .HasFilter("\"Status\" <> 'Rejected'");
+
+                    b.HasIndex("Status", "SubmittedAt");
+
+                    b.ToTable("PaymentProofs", (string)null);
+                });
+
+            modelBuilder.Entity("Mantenio.Domain.Ledger.Receipt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("FolioPeriod")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("IssuedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("PaymentProofId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PdfObjectKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<long>("Sequence")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTimeOffset?>("VoidedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FolioPeriod");
+
+                    b.HasIndex("Number")
+                        .IsUnique();
+
+                    b.HasIndex("PaymentProofId")
+                        .IsUnique();
+
+                    b.HasIndex("Sequence")
+                        .IsUnique();
+
+                    b.ToTable("Receipts", (string)null);
                 });
 
             modelBuilder.Entity("Mantenio.Domain.Notifications.UserNotification", b =>
@@ -681,6 +900,59 @@ namespace Mantenio.Api.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("UsedById")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Mantenio.Domain.Ledger.Charge", b =>
+                {
+                    b.HasOne("Mantenio.Domain.Condo.Apartment", null)
+                        .WithMany()
+                        .HasForeignKey("ApartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Mantenio.Domain.Ledger.Charge", null)
+                        .WithMany()
+                        .HasForeignKey("ParentChargeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Mantenio.Domain.Ledger.PaymentAllocation", b =>
+                {
+                    b.HasOne("Mantenio.Domain.Ledger.Charge", null)
+                        .WithMany()
+                        .HasForeignKey("ChargeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Mantenio.Domain.Ledger.PaymentProof", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentProofId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Mantenio.Domain.Ledger.PaymentProof", b =>
+                {
+                    b.HasOne("Mantenio.Domain.Condo.Apartment", null)
+                        .WithMany()
+                        .HasForeignKey("ApartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Mantenio.Api.Infrastructure.Identity.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("SubmittedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Mantenio.Domain.Ledger.Receipt", b =>
+                {
+                    b.HasOne("Mantenio.Domain.Ledger.PaymentProof", null)
+                        .WithOne()
+                        .HasForeignKey("Mantenio.Domain.Ledger.Receipt", "PaymentProofId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>

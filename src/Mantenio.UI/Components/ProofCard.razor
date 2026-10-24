@@ -1,0 +1,76 @@
+@inject MantenioApi Api
+@inject IFileOpener Files
+@inject ISnackbar Snackbar
+
+@* One payment proof: amounts, bank operation, status, review and links to the screenshot and receipt. *@
+<MudPaper Class="pa-4" Elevation="1">
+    <div class="d-flex align-center justify-space-between flex-wrap gap-2">
+        <MudText Typo="Typo.h6">
+            @Formats.Money(Item.ApprovedAmount ?? Item.DeclaredAmount)
+            @if (ShowApartment)
+            {
+                <span> · @Item.ApartmentCode</span>
+            }
+        </MudText>
+        <MudChip T="string" Size="Size.Small" Color="@LedgerText.ProofColor(Item.Status)">@LedgerText.Proof(Item.Status)</MudChip>
+    </div>
+    <MudText Typo="Typo.body2" Class="mt-1">
+        @Item.BankName · @UiStrings.OperationNumber @Item.OperationNumber · @Formats.Date(Item.OperationDate)
+    </MudText>
+    @if (Item.ApprovedAmount is { } approved && approved != Item.DeclaredAmount)
+    {
+        <MudText Typo="Typo.body2">@UiStrings.DeclaredAmount: @Formats.Money(Item.DeclaredAmount)</MudText>
+    }
+    <MudText Typo="Typo.caption" Class="d-block mt-1">
+        @Formats.Format(UiStrings.SubmittedOn, Formats.DateTime(Item.SubmittedAt))
+        @if (ShowApartment)
+        {
+            <span> · @Formats.Format(UiStrings.SubmittedBy, Item.SubmittedByName)</span>
+        }
+    </MudText>
+    @if (Item is { ReviewedAt: { } reviewedAt, ReviewedByName: { } reviewer })
+    {
+        <MudText Typo="Typo.caption" Class="d-block">@Formats.Format(UiStrings.ReviewedBy, reviewer, Formats.DateTime(reviewedAt))</MudText>
+    }
+    @if (Item.RejectionReason is { } rejection)
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2">@Formats.Format(UiStrings.RejectionReason, rejection)</MudAlert>
+    }
+    @if (Item.VoidReason is { } voidReason)
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2">@Formats.Format(UiStrings.VoidReason, voidReason)</MudAlert>
+    }
+    <div class="d-flex flex-wrap gap-2 mt-3">
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Image"
+                   OnClick="() => OpenAsync(() => Api.GetPaymentImageAsync(Item.Id))">@UiStrings.ViewImage</MudButton>
+        @if (Item.ReceiptNumber is { } number)
+        {
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PictureAsPdf"
+                       OnClick="() => OpenAsync(() => Api.GetReceiptAsync(Item.Id))">@Formats.Format(UiStrings.ReceiptNumber, number)</MudButton>
+        }
+        @ChildContent
+    </div>
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public PaymentProofItem Item { get; set; } = default!;
+
+    [Parameter]
+    public bool ShowApartment { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private async Task OpenAsync(Func<Task<FileLink>> link)
+    {
+        try
+        {
+            await Files.OpenAsync((await link()).Url);
+        }
+        catch (ApiException ex)
+        {
+            Snackbar.Add(ErrorMessages.For(ex.Code), Severity.Error);
+        }
+    }
+}

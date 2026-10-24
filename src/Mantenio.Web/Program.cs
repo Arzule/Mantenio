@@ -2,6 +2,7 @@ using System.Globalization;
 using Mantenio.Client;
 using Mantenio.Client.Auth;
 using Mantenio.Shared.Condos;
+using Mantenio.UI.Platform;
 using Mantenio.Web;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -22,6 +23,7 @@ var apiBaseUrl = builder.Configuration["ApiBaseUrl"] is { Length: > 0 } configur
 
 builder.Services.AddMudServices();
 builder.Services.AddSingleton<ITokenStore, BrowserTokenStore>();
+builder.Services.AddSingleton<IFileOpener, BrowserFileOpener>();
 builder.Services.AddSingleton(new ClientPreferences(KeepSignedInByDefault: false));
 builder.Services.AddMantenioClient(new Uri(apiBaseUrl));
 

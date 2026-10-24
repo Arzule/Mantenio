@@ -44,4 +44,11 @@ public static class ErrorCodes
     public const string TowerNotFound = "tower_not_found";
     public const string ApartmentExists = "apartment_exists";
     public const string InvalidCsv = "invalid_csv";
+
+    // Ledger
+    public const string DuplicateOperationNumber = "duplicate_operation_number";
+    public const string OwnApartmentReview = "own_apartment_review";
+    public const string InvalidImage = "invalid_image";
+    public const string ProofNotPending = "proof_not_pending";
+    public const string ProofNotApproved = "proof_not_approved";
 }

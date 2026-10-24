@@ -23,11 +23,16 @@ public static class NavigationItems
     public static IReadOnlyList<NavigationItem> All { get; } =
     [
         new("", UiStrings.NavHome, Icons.Material.Filled.Home, NavLinkMatch.All),
-        new("bank-accounts", UiStrings.NavBankAccounts, Icons.Material.Filled.AccountBalance),
+        new("payments", UiStrings.NavPayments, Icons.Material.Filled.ReceiptLong),
+
+        // Also linked from the payments page ("Ver cuentas para pagar"), so it leaves room in the bottom bar.
+        new("bank-accounts", UiStrings.NavBankAccounts, Icons.Material.Filled.AccountBalance, InBottomBar: false),
         new("notifications", UiStrings.NavNotifications, Icons.Material.Filled.Notifications),
 
         // Phones get one "Administración" entry (a hub page); the desktop drawer lists every admin page.
         new("admin", UiStrings.NavAdmin, Icons.Material.Filled.AdminPanelSettings, NavLinkMatch.All, AdminOnly: true, InDrawer: false),
+        new("admin/payments", UiStrings.NavPaymentReview, Icons.Material.Filled.FactCheck, AdminOnly: true, InBottomBar: false),
+        new("admin/charges", UiStrings.NavCharges, Icons.Material.Filled.RequestQuote, AdminOnly: true, InBottomBar: false),
         new("admin/users", UiStrings.NavUsers, Icons.Material.Filled.People, AdminOnly: true, InBottomBar: false),
         new("admin/invitations", UiStrings.NavInvitations, Icons.Material.Filled.PersonAdd, AdminOnly: true, InBottomBar: false),
         new("admin/apartments", UiStrings.NavApartments, Icons.Material.Filled.Apartment, AdminOnly: true, InBottomBar: false),

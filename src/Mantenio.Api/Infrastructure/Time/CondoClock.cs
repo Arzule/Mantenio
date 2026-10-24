@@ -14,6 +14,8 @@ public sealed class CondoClock(TimeProvider time)
 
     public Period CurrentPeriod => Period.FromDate(Today);
 
+    public static DateTimeOffset ToLocal(DateTimeOffset utc) => TimeZoneInfo.ConvertTime(utc, Zone);
+
     private static TimeZoneInfo FindZone(string id)
     {
         try

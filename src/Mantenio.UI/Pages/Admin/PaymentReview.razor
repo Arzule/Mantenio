@@ -1,0 +1,172 @@
+﻿@page "/admin/payments"
+@attribute [Authorize(Policy = MantenioPolicies.AdminOnly)]
+@inherits BusyComponentBase
+@inject MantenioApi Api
+@inject IDialogService Dialogs
+@inject ISnackbar Snackbar
+@inject IFileOpener Files
+
+<PageTitle>@UiStrings.ReviewTitle · @CondoProfile.Current.ShortName</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-6">
+    <MudText Typo="Typo.h5" HtmlTag="h1">@UiStrings.ReviewTitle</MudText>
+    <MudText Class="mt-2 mb-3">@UiStrings.ReviewBody</MudText>
+
+    @if (Error is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">@Error</MudAlert>
+    }
+
+    <MudTabs Elevation="0" ApplyEffectsToContainer="true" TabPanelsClass="pt-3" ActivePanelIndexChanged="OnTabAsync">
+        <MudTabPanel Text="@UiStrings.TabPending" BadgeData="@(_pending?.Count > 0 ? _pending.Count : null)" BadgeColor="Color.Warning">
+            @if (_pending is null)
+            {
+                <LoadingIndicator />
+            }
+            else if (_pending.Count == 0)
+            {
+                <MudAlert Severity="Severity.Success">@UiStrings.NoPendingProofs</MudAlert>
+            }
+            else
+            {
+                <MudStack Spacing="3">
+                    @foreach (var proof in _pending)
+                    {
+                        <div>
+                            @if (_images.TryGetValue(proof.Id, out var image))
+                            {
+                                <img src="@image" alt="@UiStrings.ViewImage" @onclick="() => Files.OpenAsync(new Uri(image))"
+                                     style="max-width: 100%; max-height: 420px; border-radius: 4px; cursor: zoom-in; display: block; margin-bottom: 8px" />
+                            }
+                            <ProofCard Item="proof" ShowApartment="true">
+                                <MudSpacer />
+                                <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Error" OnClick="() => RejectAsync(proof)">@UiStrings.Reject</MudButton>
+                                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" OnClick="() => ApproveAsync(proof)">@UiStrings.Approve</MudButton>
+                            </ProofCard>
+                        </div>
+                    }
+                </MudStack>
+            }
+        </MudTabPanel>
+        <MudTabPanel Text="@UiStrings.TabHistory">
+            @if (_history is null)
+            {
+                <LoadingIndicator />
+            }
+            else if (_history.Count == 0)
+            {
+                <MudText>@UiStrings.NoProofHistory</MudText>
+            }
+            else
+            {
+                <MudStack Spacing="2">
+                    @foreach (var proof in _history)
+                    {
+                        <ProofCard Item="proof" ShowApartment="true">
+                            @if (proof.Status == ProofStatus.Approved)
+                            {
+                                <MudSpacer />
+                                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error" OnClick="() => VoidAsync(proof)">@UiStrings.Void</MudButton>
+                            }
+                        </ProofCard>
+                    }
+                </MudStack>
+            }
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+
+@code {
+    private List<PaymentProofItem>? _pending;
+    private List<PaymentProofItem>? _history;
+    private readonly Dictionary<Guid, string> _images = [];
+
+    protected override Task OnInitializedAsync() => LoadPendingAsync();
+
+    private async Task LoadPendingAsync()
+    {
+        await RunAsync(async () => _pending = await Api.ListPaymentsAsync(ProofStatus.Pending));
+        foreach (var proof in _pending ?? [])
+        {
+            try
+            {
+                _images[proof.Id] = (await Api.GetPaymentImageAsync(proof.Id)).Url.AbsoluteUri;
+                StateHasChanged();
+            }
+            catch (ApiException)
+            {
+                // The card still has its "Ver captura" button.
+            }
+        }
+    }
+
+    private async Task OnTabAsync(int index)
+    {
+        if (index == 1)
+        {
+            await RunAsync(async () => _history = (await Api.ListPaymentsAsync(null)).Where(p => p.Status != ProofStatus.Pending).ToList());
+        }
+    }
+
+    private async Task ApproveAsync(PaymentProofItem proof)
+    {
+        if (await AskAsync(Formats.Format(UiStrings.ApproveTitle, proof.ApartmentCode), UiStrings.ApproveBody, UiStrings.Approve, proof.DeclaredAmount) is decimal amount)
+        {
+            PaymentProofItem? approved = null;
+            if (await RunAsync(async () => approved = await Api.ApprovePaymentAsync(proof.Id, new ApproveProofRequest(amount, proof.RowVersion))))
+            {
+                Snackbar.Add(Formats.Format(UiStrings.ProofApproved, approved!.ReceiptNumber), Severity.Success);
+            }
+
+            await AfterReviewAsync();
+        }
+    }
+
+    private async Task RejectAsync(PaymentProofItem proof)
+    {
+        if (await AskAsync(Formats.Format(UiStrings.RejectTitle, proof.ApartmentCode), UiStrings.RejectBody, UiStrings.Reject, null) is string reason)
+        {
+            if (await RunAsync(() => Api.RejectPaymentAsync(proof.Id, new RejectProofRequest(reason, proof.RowVersion))))
+            {
+                Snackbar.Add(UiStrings.ProofRejected, Severity.Info);
+            }
+
+            await AfterReviewAsync();
+        }
+    }
+
+    private async Task VoidAsync(PaymentProofItem proof)
+    {
+        if (await AskAsync(Formats.Format(UiStrings.VoidTitle, proof.ApartmentCode), UiStrings.VoidBody, UiStrings.Void, null) is string reason)
+        {
+            if (await RunAsync(() => Api.VoidPaymentAsync(proof.Id, new VoidProofRequest(reason))))
+            {
+                Snackbar.Add(UiStrings.ProofVoided, Severity.Info);
+            }
+
+            await OnTabAsync(1);
+        }
+    }
+
+    /// <summary>Reloads the queue (also after a conflict: another admin may have reviewed it).</summary>
+    private async Task AfterReviewAsync()
+    {
+        var error = Error;
+        await LoadPendingAsync();
+        Error ??= error;
+    }
+
+    private async Task<object?> AskAsync(string title, string body, string confirm, decimal? amount)
+    {
+        var parameters = new DialogParameters<ReviewDialog>
+        {
+            { d => d.Title, title },
+            { d => d.Body, body },
+            { d => d.ConfirmText, confirm },
+            { d => d.Amount, amount },
+        };
+        var dialog = await Dialogs.ShowAsync<ReviewDialog>(title, parameters, new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        var result = await dialog.Result;
+        return result is { Canceled: false } ? result.Data : null;
+    }
+}

@@ -1,0 +1,98 @@
+@page "/admin/charges"
+@attribute [Authorize(Policy = MantenioPolicies.AdminOnly)]
+@inherits BusyComponentBase
+@inject MantenioApi Api
+@inject ISnackbar Snackbar
+
+<PageTitle>@UiStrings.ChargesTitle · @CondoProfile.Current.ShortName</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-6">
+    <MudText Typo="Typo.h5" HtmlTag="h1">@UiStrings.ChargesTitle</MudText>
+    <MudText Class="mt-2 mb-4">@UiStrings.ChargesBody</MudText>
+
+    @if (Error is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">@Error</MudAlert>
+    }
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.subtitle1" Class="mb-2">@UiStrings.GenerateCharges</MudText>
+        <AuthorizeView Policy="@MantenioPolicies.FounderOnly">
+            <Authorized>
+                <MudText Typo="Typo.body2" Class="mb-3">@UiStrings.GenerateChargesBody</MudText>
+                <div class="d-flex flex-wrap align-center gap-3">
+                    <MudSelect T="int" @bind-Value="_period" Label="@UiStrings.Month" Variant="Variant.Outlined" Style="max-width: 240px">
+                        @foreach (var month in _months)
+                        {
+                            <MudSelectItem Value="month">@Formats.Month(month)</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Busy" OnClick="GenerateAsync">@UiStrings.Generate</MudButton>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <MudText Typo="Typo.body2">@UiStrings.GenerateChargesFounderOnly</MudText>
+            </NotAuthorized>
+        </AuthorizeView>
+    </MudPaper>
+
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudText Typo="Typo.subtitle1" Class="mb-2">@UiStrings.OpeningDebt</MudText>
+        <MudText Typo="Typo.body2" Class="mb-3">@UiStrings.OpeningDebtBody</MudText>
+        <MudTextField @bind-Value="_csv" Lines="8" Variant="Variant.Outlined" Placeholder="H-102,2026-09,180.00" Immediate="true" />
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-3" Disabled="@(Busy || _csv.Trim().Length == 0)" OnClick="ImportAsync">
+            @UiStrings.ImportApply
+        </MudButton>
+        @if (_openingErrors.Count > 0)
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-3">
+                @UiStrings.OpeningErrors
+                <ul class="mt-1">
+                    @foreach (var error in _openingErrors)
+                    {
+                        <li>@LedgerText.OpeningError(error)</li>
+                    }
+                </ul>
+            </MudAlert>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private int[] _months = [];
+    private int _period;
+    private string _csv = "";
+    private IReadOnlyList<string> _openingErrors = [];
+
+    protected override void OnInitialized()
+    {
+        var now = CondoTime.ToLocal(DateTimeOffset.UtcNow);
+        var current = (now.Year * 100) + now.Month;
+        var previous = now.Month == 1 ? ((now.Year - 1) * 100) + 12 : current - 1;
+        _months = Formats.NextMonths(previous, 3).Prepend(previous).ToArray();
+        _period = current;
+    }
+
+    private async Task GenerateAsync()
+    {
+        GenerateChargesResult? result = null;
+        if (await RunAsync(async () => result = await Api.GenerateChargesAsync(_period)))
+        {
+            Snackbar.Add(Formats.Format(UiStrings.ChargesGenerated, result!.Created, result.AlreadyExisting, result.SkippedFrozen), Severity.Success);
+        }
+    }
+
+    private async Task ImportAsync()
+    {
+        ImportOpeningDebtResult? result = null;
+        if (await RunAsync(async () => result = await Api.ImportOpeningDebtAsync(_csv)))
+        {
+            _openingErrors = result!.Errors;
+            if (result.Errors.Count == 0)
+            {
+                Snackbar.Add(Formats.Format(UiStrings.OpeningImported, result.Created), Severity.Success);
+                _csv = "";
+            }
+        }
+    }
+}

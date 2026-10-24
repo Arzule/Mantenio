@@ -1,0 +1,60 @@
+@* Admin: everything that happened to one charge (creation, payments applied, reversals). *@
+@inherits BusyComponentBase
+@inject MantenioApi Api
+
+<MudDialog>
+    <TitleContent><MudText Typo="Typo.h6">@Formats.Format(UiStrings.ChargeHistoryTitle, Title)</MudText></TitleContent>
+    <DialogContent>
+        @if (_entries is null)
+        {
+            @if (Error is not null)
+            {
+                <MudAlert Severity="Severity.Error">@Error</MudAlert>
+            }
+            else
+            {
+                <LoadingIndicator />
+            }
+        }
+        else if (_entries.Count == 0)
+        {
+            <MudText>@UiStrings.NoTimeline</MudText>
+        }
+        else
+        {
+            <MudTimeline TimelinePosition="TimelinePosition.Start">
+                @foreach (var entry in _entries)
+                {
+                    <MudTimelineItem Size="Size.Small" Color="@(entry.Action == "PaymentReversed" ? Color.Warning : Color.Primary)">
+                        <MudText Typo="Typo.subtitle2">@LedgerText.TimelineAction(entry.Action)</MudText>
+                        <MudText Typo="Typo.caption" Class="d-block">
+                            @Formats.DateTime(entry.At) · @(entry.ActorName ?? UiStrings.TimelineSource_System)
+                        </MudText>
+                        @if (entry.Reason is { } reason)
+                        {
+                            <MudText Typo="Typo.body2">@UiStrings.Reason: @reason</MudText>
+                        }
+                    </MudTimelineItem>
+                }
+            </MudTimeline>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Close()">@UiStrings.Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<TimelineEntry>? _entries;
+
+    [CascadingParameter]
+    private IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public Guid ChargeId { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = "";
+
+    protected override Task OnInitializedAsync() => RunAsync(async () => _entries = await Api.GetChargeTimelineAsync(ChargeId));
+}

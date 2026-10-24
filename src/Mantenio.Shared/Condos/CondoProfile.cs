@@ -40,6 +40,11 @@ public sealed record CondoProfile
     /// <summary>The condo logo as an SVG data URI, usable directly in an <c>img</c> tag.</summary>
     public static string LogoDataUri => LazyLogo.Value;
 
+    /// <summary>The condo logo as SVG markup (for PDFs).</summary>
+    public static string LogoSvg => LazyLogoSvg.Value;
+
+    private static readonly Lazy<string> LazyLogoSvg = new(() => System.Text.Encoding.UTF8.GetString(ReadResourceBytes("condo-logo.svg")));
+
     private static readonly Lazy<string> LazyLogo = new(() =>
         "data:image/svg+xml;base64," + Convert.ToBase64String(ReadResourceBytes("condo-logo.svg")));
 

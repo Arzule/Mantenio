@@ -7,5 +7,6 @@
   "communicationService": "acs-mantenio-yourcondo",
   "emailService": "email-mantenio-yourcondo",
   "pagesProject": "mantenio-yourcondo",
+  "storageBucket": "mantenio-yourcondo-files",
   "corsOrigins": [ "https://mantenio-yourcondo.pages.dev" ]
 }

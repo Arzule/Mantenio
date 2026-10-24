@@ -59,6 +59,7 @@
                     }
                     <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" AriaLabel="@UiStrings.ColumnActions"
                              AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                        <MudMenuItem Icon="@Icons.Material.Filled.ReceiptLong" Href="@($"apartments/{context.Id}/statement")">@UiStrings.ViewStatement</MudMenuItem>
                         <MudMenuItem Icon="@Icons.Material.Filled.Payments" OnClick="() => SpecialFeeAsync(context)">@UiStrings.SpecialFee</MudMenuItem>
                         @if (context.IsFrozen)
                         {

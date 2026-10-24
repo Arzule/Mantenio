@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Mantenio.Shared.Apartments;
 using Mantenio.Shared.BankAccounts;
@@ -5,6 +7,7 @@ using Mantenio.Shared.Notifications;
 using Mantenio.Shared.Settings;
 using Mantenio.Shared.Auth;
 using Mantenio.Shared.Invitations;
+using Mantenio.Shared.Ledger;
 using Mantenio.Shared.Users;
 
 namespace Mantenio.Client;
@@ -182,6 +185,59 @@ public sealed class MantenioApi(IHttpClientFactory httpClientFactory)
 
     public Task MarkAllNotificationsReadAsync(CancellationToken cancellationToken = default) =>
         SendAsync(HttpMethod.Post, "/api/notifications/read-all", new { }, cancellationToken);
+
+    // Payments and account statement
+    public async Task<PaymentProofItem> SubmitPaymentProofAsync(
+        decimal amount, DateOnly operationDate, string bankName, string operationNumber, byte[] image, string contentType,
+        CancellationToken cancellationToken = default)
+    {
+        using var form = new MultipartFormDataContent
+        {
+            { new StringContent(amount.ToString(CultureInfo.InvariantCulture)), "amount" },
+            { new StringContent(operationDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)), "operationDate" },
+            { new StringContent(bankName), "bankName" },
+            { new StringContent(operationNumber), "operationNumber" },
+        };
+        var file = new ByteArrayContent(image);
+        file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        form.Add(file, "image", "proof" + (contentType == "image/png" ? ".png" : ".jpg"));
+        using var client = httpClientFactory.CreateClient(MantenioHttpClients.Authenticated);
+        using var response = await client.PostAsync(new Uri("/api/payments", UriKind.Relative), form, cancellationToken).SendSafeAsync();
+        return await response.ReadAsync<PaymentProofItem>(cancellationToken);
+    }
+
+    public Task<List<PaymentProofItem>> ListMyPaymentsAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<List<PaymentProofItem>>("/api/payments/mine", cancellationToken);
+
+    public Task<FileLink> GetPaymentImageAsync(Guid proofId, CancellationToken cancellationToken = default) =>
+        GetAsync<FileLink>($"/api/payments/{proofId}/image", cancellationToken);
+
+    public Task<FileLink> GetReceiptAsync(Guid proofId, CancellationToken cancellationToken = default) =>
+        GetAsync<FileLink>($"/api/payments/{proofId}/receipt", cancellationToken);
+
+    public Task<AccountStatement> GetStatementAsync(Guid apartmentId, CancellationToken cancellationToken = default) =>
+        GetAsync<AccountStatement>($"/api/apartments/{apartmentId}/statement", cancellationToken);
+
+    public Task<List<PaymentProofItem>> ListPaymentsAsync(ProofStatus? status, CancellationToken cancellationToken = default) =>
+        GetAsync<List<PaymentProofItem>>(status is null ? "/api/admin/payments" : $"/api/admin/payments?status={status}", cancellationToken);
+
+    public Task<PaymentProofItem> ApprovePaymentAsync(Guid proofId, ApproveProofRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync<PaymentProofItem>(HttpMethod.Post, $"/api/admin/payments/{proofId}/approve", request, cancellationToken);
+
+    public Task<PaymentProofItem> RejectPaymentAsync(Guid proofId, RejectProofRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync<PaymentProofItem>(HttpMethod.Post, $"/api/admin/payments/{proofId}/reject", request, cancellationToken);
+
+    public Task<PaymentProofItem> VoidPaymentAsync(Guid proofId, VoidProofRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync<PaymentProofItem>(HttpMethod.Post, $"/api/admin/payments/{proofId}/void", request, cancellationToken);
+
+    public Task<List<TimelineEntry>> GetChargeTimelineAsync(Guid chargeId, CancellationToken cancellationToken = default) =>
+        GetAsync<List<TimelineEntry>>($"/api/admin/charges/{chargeId}/timeline", cancellationToken);
+
+    public Task<GenerateChargesResult> GenerateChargesAsync(int period, CancellationToken cancellationToken = default) =>
+        SendAsync<GenerateChargesResult>(HttpMethod.Post, "/api/admin/charges/generate", new GenerateChargesRequest(period), cancellationToken);
+
+    public Task<ImportOpeningDebtResult> ImportOpeningDebtAsync(string csv, CancellationToken cancellationToken = default) =>
+        SendAsync<ImportOpeningDebtResult>(HttpMethod.Post, "/api/admin/charges/opening", new ImportOpeningDebtRequest(csv), cancellationToken);
 
     private async Task<T> GetAsync<T>(string path, CancellationToken cancellationToken)
     {

@@ -1,0 +1,48 @@
+@* Approve (confirm the amount), reject or void (reason required). Returns the amount or the reason. *@
+<MudDialog>
+    <TitleContent><MudText Typo="Typo.h6">@Title</MudText></TitleContent>
+    <DialogContent>
+        <MudText>@Body</MudText>
+        @if (AskAmount)
+        {
+            <MudNumericField T="decimal?" @bind-Value="_amount" Label="@UiStrings.ApprovedAmount" Min="0" Format="N2" Variant="Variant.Outlined" Class="mt-3" Style="max-width: 220px" />
+        }
+        else
+        {
+            <MudTextField @bind-Value="_reason" Label="@UiStrings.Reason" HelperText="@UiStrings.ReasonHint" Variant="Variant.Outlined" Class="mt-3" MaxLength="500" Immediate="true" />
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()">@UiStrings.Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="@(AskAmount ? Color.Success : Color.Error)" Disabled="@(!Valid)" OnClick="Confirm">@ConfirmText</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private decimal? _amount;
+    private string _reason = "";
+
+    [CascadingParameter]
+    private IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = "";
+
+    [Parameter, EditorRequired]
+    public string Body { get; set; } = "";
+
+    [Parameter, EditorRequired]
+    public string ConfirmText { get; set; } = "";
+
+    /// <summary>Approve: ask for the amount (prefilled) instead of a reason.</summary>
+    [Parameter]
+    public decimal? Amount { get; set; }
+
+    private bool AskAmount => Amount is not null;
+
+    private bool Valid => AskAmount ? _amount > 0 : _reason.Trim().Length >= 3;
+
+    protected override void OnInitialized() => _amount = Amount;
+
+    private void Confirm() => Dialog.Close(DialogResult.Ok<object>(AskAmount ? _amount!.Value : _reason.Trim()));
+}

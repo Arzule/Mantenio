@@ -46,6 +46,9 @@ public sealed class CondoSettings
     /// <summary>First period (yyyymm) tracked by the system; older debt is loaded as opening balance.</summary>
     public int TrackingStartPeriod { get; private set; }
 
+    /// <summary>Last receipt number issued. Only incremented in SQL inside the approval transaction (gap-free).</summary>
+    public long LastReceiptSequence { get; private set; }
+
     /// <summary>Active admins (founder included) can never exceed <see cref="MaxAdmins"/>.</summary>
     public bool HasAdminSeat(int activeAdmins) => activeAdmins < MaxAdmins;
 

@@ -290,4 +290,111 @@
   <data name="Error_tower_not_found" xml:space="preserve"><value>La torre elegida no existe.</value></data>
   <data name="Error_apartment_exists" xml:space="preserve"><value>Ese departamento ya existe.</value></data>
   <data name="Error_invalid_csv" xml:space="preserve"><value>El archivo no tiene el formato torre,número.</value></data>
+  <!-- Phase 4: payments, account statement and review -->
+  <data name="NavPayments" xml:space="preserve"><value>Pagos</value></data>
+  <data name="NavPaymentReview" xml:space="preserve"><value>Comprobantes</value></data>
+  <data name="NavCharges" xml:space="preserve"><value>Cargos</value></data>
+  <data name="PaymentsTitle" xml:space="preserve"><value>Mis pagos</value></data>
+  <data name="PaymentsNoApartment" xml:space="preserve"><value>Tu cuenta no está vinculada a un departamento. Pide a la administración que te asigne uno.</value></data>
+  <data name="TabStatement" xml:space="preserve"><value>Estado de cuenta</value></data>
+  <data name="TabProofs" xml:space="preserve"><value>Comprobantes</value></data>
+  <data name="UploadProof" xml:space="preserve"><value>Subir comprobante</value></data>
+  <data name="UploadProofTitle" xml:space="preserve"><value>Subir comprobante de pago</value></data>
+  <data name="UploadProofBody" xml:space="preserve"><value>Sube la captura de tu transferencia. La administración la revisará y te enviará el recibo.</value></data>
+  <data name="SeeBankAccounts" xml:space="preserve"><value>Ver cuentas para pagar</value></data>
+  <data name="OperationDate" xml:space="preserve"><value>Fecha de la operación</value></data>
+  <data name="OtherBank" xml:space="preserve"><value>Otro banco</value></data>
+  <data name="OperationNumber" xml:space="preserve"><value>N.º de operación</value></data>
+  <data name="ChooseImage" xml:space="preserve"><value>Elegir captura</value></data>
+  <data name="ImageChosen" xml:space="preserve"><value>Captura lista ({0})</value></data>
+  <data name="ImageTooBig" xml:space="preserve"><value>La imagen es demasiado grande. Elige otra captura.</value></data>
+  <data name="Send" xml:space="preserve"><value>Enviar</value></data>
+  <data name="ProofSent" xml:space="preserve"><value>Comprobante enviado. Te avisaremos cuando lo revisen.</value></data>
+  <data name="NoProofs" xml:space="preserve"><value>Todavía no has subido comprobantes.</value></data>
+  <data name="ProofStatus_Pending" xml:space="preserve"><value>En revisión</value></data>
+  <data name="ProofStatus_Approved" xml:space="preserve"><value>Aprobado</value></data>
+  <data name="ProofStatus_Rejected" xml:space="preserve"><value>Rechazado</value></data>
+  <data name="ProofStatus_Voided" xml:space="preserve"><value>Anulado</value></data>
+  <data name="DebtStatus_Pending" xml:space="preserve"><value>Pendiente</value></data>
+  <data name="DebtStatus_PartiallyPaid" xml:space="preserve"><value>Pago parcial</value></data>
+  <data name="DebtStatus_Paid" xml:space="preserve"><value>Pagado</value></data>
+  <data name="ChargeType_Opening" xml:space="preserve"><value>Deuda anterior</value></data>
+  <data name="ChargeType_Maintenance" xml:space="preserve"><value>Cuota de mantenimiento</value></data>
+  <data name="ChargeType_LateFee" xml:space="preserve"><value>Recargo por mora</value></data>
+  <data name="Overdue" xml:space="preserve"><value>Vencido</value></data>
+  <data name="DueOn" xml:space="preserve"><value>Vence el {0}</value></data>
+  <data name="PaidOf" xml:space="preserve"><value>Pagado {0} de {1}</value></data>
+  <data name="TotalOutstanding" xml:space="preserve"><value>Total pendiente</value></data>
+  <data name="OverdueDebt" xml:space="preserve"><value>Deuda vencida</value></data>
+  <data name="Credit" xml:space="preserve"><value>Saldo a favor</value></data>
+  <data name="NoCharges" xml:space="preserve"><value>No hay cargos registrados.</value></data>
+  <data name="ApartmentFrozen" xml:space="preserve"><value>Este departamento está congelado: no se generan cargos nuevos.</value></data>
+  <data name="DeclaredAmount" xml:space="preserve"><value>Monto declarado</value></data>
+  <data name="ApprovedAmount" xml:space="preserve"><value>Monto aprobado</value></data>
+  <data name="SubmittedOn" xml:space="preserve"><value>Enviado el {0}</value></data>
+  <data name="SubmittedBy" xml:space="preserve"><value>Enviado por {0}</value></data>
+  <data name="ReviewedBy" xml:space="preserve"><value>Revisado por {0} el {1}</value></data>
+  <data name="ViewImage" xml:space="preserve"><value>Ver captura</value></data>
+  <data name="ViewReceipt" xml:space="preserve"><value>Ver recibo</value></data>
+  <data name="ReceiptNumber" xml:space="preserve"><value>Recibo {0}</value></data>
+  <data name="RejectionReason" xml:space="preserve"><value>Motivo del rechazo: {0}</value></data>
+  <data name="VoidReason" xml:space="preserve"><value>Motivo de la anulación: {0}</value></data>
+  <data name="ReviewTitle" xml:space="preserve"><value>Revisión de comprobantes</value></data>
+  <data name="ReviewBody" xml:space="preserve"><value>Compara la captura con los datos y confirma el monto que realmente se transfirió. Al aprobar se aplica el pago a las deudas más antiguas del departamento y se envía el recibo.</value></data>
+  <data name="TabPending" xml:space="preserve"><value>Pendientes</value></data>
+  <data name="TabHistory" xml:space="preserve"><value>Historial</value></data>
+  <data name="NoPendingProofs" xml:space="preserve"><value>No hay comprobantes pendientes.</value></data>
+  <data name="NoProofHistory" xml:space="preserve"><value>Todavía no hay comprobantes revisados.</value></data>
+  <data name="Approve" xml:space="preserve"><value>Aprobar</value></data>
+  <data name="Reject" xml:space="preserve"><value>Rechazar</value></data>
+  <data name="Void" xml:space="preserve"><value>Anular</value></data>
+  <data name="ApproveTitle" xml:space="preserve"><value>Aprobar comprobante de {0}</value></data>
+  <data name="ApproveBody" xml:space="preserve"><value>Confirma el monto que figura en la captura. Si es mayor que la deuda, el resto queda como saldo a favor.</value></data>
+  <data name="RejectTitle" xml:space="preserve"><value>Rechazar comprobante de {0}</value></data>
+  <data name="RejectBody" xml:space="preserve"><value>El residente verá el motivo y podrá subir otro comprobante.</value></data>
+  <data name="VoidTitle" xml:space="preserve"><value>Anular el pago de {0}</value></data>
+  <data name="VoidBody" xml:space="preserve"><value>Las deudas que cubría vuelven a quedar pendientes y el recibo se marca como ANULADO. La devolución del dinero se hace fuera del sistema.</value></data>
+  <data name="ProofApproved" xml:space="preserve"><value>Comprobante aprobado. Recibo {0}.</value></data>
+  <data name="ProofRejected" xml:space="preserve"><value>Comprobante rechazado.</value></data>
+  <data name="ProofVoided" xml:space="preserve"><value>Pago anulado.</value></data>
+  <data name="ChargeHistory" xml:space="preserve"><value>Historial</value></data>
+  <data name="ChargeHistoryTitle" xml:space="preserve"><value>Historial de {0}</value></data>
+  <data name="NoTimeline" xml:space="preserve"><value>Sin movimientos.</value></data>
+  <data name="Timeline_ChargeCreated" xml:space="preserve"><value>Cargo creado</value></data>
+  <data name="Timeline_PaymentApplied" xml:space="preserve"><value>Pago aplicado</value></data>
+  <data name="Timeline_PaymentReversed" xml:space="preserve"><value>Pago revertido por anulación</value></data>
+  <data name="TimelineSource_System" xml:space="preserve"><value>Sistema</value></data>
+  <data name="Close" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="ViewStatement" xml:space="preserve"><value>Estado de cuenta</value></data>
+  <data name="StatementOf" xml:space="preserve"><value>Estado de cuenta de {0}</value></data>
+  <data name="ChargesTitle" xml:space="preserve"><value>Cargos</value></data>
+  <data name="ChargesBody" xml:space="preserve"><value>Los cargos mensuales se generan automáticamente cada mes. Aquí puedes generarlos manualmente o cargar la deuda anterior al sistema.</value></data>
+  <data name="GenerateCharges" xml:space="preserve"><value>Generar cargos del mes</value></data>
+  <data name="GenerateChargesBody" xml:space="preserve"><value>Crea la cuota de cada departamento no congelado para el mes elegido. Si ya existen, no se duplican.</value></data>
+  <data name="GenerateChargesFounderOnly" xml:space="preserve"><value>Solo el admin fundador puede generar cargos manualmente.</value></data>
+  <data name="Generate" xml:space="preserve"><value>Generar</value></data>
+  <data name="ChargesGenerated" xml:space="preserve"><value>Se crearon {0} cargos. Ya existían {1}; congelados: {2}.</value></data>
+  <data name="OpeningDebt" xml:space="preserve"><value>Deuda anterior</value></data>
+  <data name="OpeningDebtBody" xml:space="preserve"><value>Una línea por departamento y mes: departamento,mes,monto (por ejemplo H-102,2026-09,180.00). Si hay un error no se importa nada.</value></data>
+  <data name="OpeningImported" xml:space="preserve"><value>Se importaron {0} cargos de deuda anterior.</value></data>
+  <data name="OpeningErrors" xml:space="preserve"><value>No se importó nada. Revisa estas líneas:</value></data>
+  <data name="OpeningError_columns" xml:space="preserve"><value>Línea {0}: debe tener departamento, mes y monto.</value></data>
+  <data name="OpeningError_apartment" xml:space="preserve"><value>Línea {0}: el departamento no existe.</value></data>
+  <data name="OpeningError_period" xml:space="preserve"><value>Línea {0}: el mes no es válido.</value></data>
+  <data name="OpeningError_amount" xml:space="preserve"><value>Línea {0}: el monto no es válido.</value></data>
+  <data name="OpeningError_duplicate" xml:space="preserve"><value>Línea {0}: ese mes ya tiene deuda anterior cargada.</value></data>
+  <data name="OpeningError_empty" xml:space="preserve"><value>El texto está vacío.</value></data>
+  <data name="Month" xml:space="preserve"><value>Mes</value></data>
+  <data name="NoticePaymentApprovedTitle" xml:space="preserve"><value>Pago aprobado</value></data>
+  <data name="NoticePaymentApproved" xml:space="preserve"><value>Tu pago de {0} fue aprobado. Recibo {1}.</value></data>
+  <data name="NoticePaymentRejectedTitle" xml:space="preserve"><value>Comprobante rechazado</value></data>
+  <data name="NoticePaymentRejected" xml:space="preserve"><value>Tu comprobante de {0} fue rechazado. Puedes subir otro.</value></data>
+  <data name="NoticePaymentVoidedTitle" xml:space="preserve"><value>Pago anulado</value></data>
+  <data name="NoticePaymentVoided" xml:space="preserve"><value>Tu pago de {0} (recibo {1}) fue anulado.</value></data>
+  <!-- API error codes added in Phase 4 -->
+  <data name="Error_duplicate_operation_number" xml:space="preserve"><value>Ese número de operación ya fue registrado en otro comprobante.</value></data>
+  <data name="Error_own_apartment_review" xml:space="preserve"><value>No puedes revisar comprobantes de tu propio departamento: debe hacerlo otro admin.</value></data>
+  <data name="Error_invalid_image" xml:space="preserve"><value>El archivo no es una imagen válida. Sube una captura en JPG o PNG.</value></data>
+  <data name="Error_proof_not_pending" xml:space="preserve"><value>Este comprobante ya fue revisado.</value></data>
+  <data name="Error_proof_not_approved" xml:space="preserve"><value>Solo se pueden anular pagos aprobados.</value></data>
 </root>

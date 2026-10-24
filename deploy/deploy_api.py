@@ -5,8 +5,8 @@ Usage (from the repo root of a condo deployment repo):
     python deploy/deploy_api.py [--skip-build]
 
 Needs: `az login` (Azure), `gh auth login` (pushes the image with your GitHub token), Docker running,
-deploy/deployment.json (resource names) and secrets.json (AppDbConnectionString, GhcrReadToken; JwtSigningKey is
-generated on the first run). Secrets go to Container Apps secrets and are never printed.
+deploy/deployment.json (resource names, storageBucket) and secrets.json (AppDbConnectionString, GhcrReadToken,
+R2AccountId, R2AccessKeyId, R2SecretAccessKey; JwtSigningKey is generated on the first run). Secrets go to Container Apps secrets and are never printed.
 """
 import json
 import os
@@ -64,6 +64,8 @@ app_secrets = {
     "db-connection": store["AppDbConnectionString"],
     "jwt-signing-key": store["JwtSigningKey"],
     "acs-connection": acs_connection,
+    "r2-access-key-id": store["R2AccessKeyId"],
+    "r2-secret-access-key": store["R2SecretAccessKey"],
 }
 env_vars = {
     "ASPNETCORE_FORWARDEDHEADERS_ENABLED": "true",
@@ -72,6 +74,12 @@ env_vars = {
     "Jwt__SigningKey": "secretref:jwt-signing-key",
     "Email__AcsConnectionString": "secretref:acs-connection",
     "Email__FromAddress": f"DoNotReply@{sender_domain}",
+    # Payment-proof screenshots and receipt PDFs (private bucket, read through presigned URLs).
+    "Storage__Provider": "R2",
+    "Storage__Bucket": config["storageBucket"],
+    "Storage__R2AccountId": store["R2AccountId"],
+    "Storage__R2AccessKeyId": "secretref:r2-access-key-id",
+    "Storage__R2SecretAccessKey": "secretref:r2-secret-access-key",
 }
 for i, origin in enumerate(config["corsOrigins"]):
     env_vars[f"Cors__AllowedOrigins__{i}"] = origin

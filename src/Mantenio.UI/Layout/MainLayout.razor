@@ -6,6 +6,8 @@
 <ThemeProviders />
 <PendingNoticesGate OnAcknowledged="RefreshUnreadAsync" />
 
+@* Plain root element so the scoped ::deep rules in MainLayout.razor.css reach MudMainContent. *@
+<div class="layout-root">
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
@@ -70,6 +72,7 @@
         </MudHidden>
     }
 </MudLayout>
+</div>
 
 @code {
     private static readonly CondoProfile Profile = CondoProfile.Current;

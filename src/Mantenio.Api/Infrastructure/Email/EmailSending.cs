@@ -8,7 +8,9 @@ using MimeKit;
 
 namespace Mantenio.Api.Infrastructure.Email;
 
-public sealed record EmailMessage(string To, string ToName, string Subject, string TextBody);
+public sealed record EmailAttachment(string FileName, string ContentType, byte[] Content);
+
+public sealed record EmailMessage(string To, string ToName, string Subject, string TextBody, IReadOnlyList<EmailAttachment>? Attachments = null);
 
 public interface IEmailSender
 {
@@ -47,7 +49,13 @@ internal sealed class SmtpEmailSender(IOptions<EmailOptions> options) : IEmailSe
         mime.From.Add(new MailboxAddress(settings.FromName ?? CondoProfile.Current.DisplayName, settings.FromAddress));
         mime.To.Add(new MailboxAddress(message.ToName, message.To));
         mime.Subject = message.Subject;
-        mime.Body = new TextPart("plain") { Text = message.TextBody };
+        var body = new BodyBuilder { TextBody = message.TextBody };
+        foreach (var attachment in message.Attachments ?? [])
+        {
+            body.Attachments.Add(attachment.FileName, attachment.Content, ContentType.Parse(attachment.ContentType));
+        }
+
+        mime.Body = body.ToMessageBody();
 
         using var client = new SmtpClient();
         await client.ConnectAsync(settings.Host, settings.Port, settings.Security, cancellationToken);
@@ -71,6 +79,11 @@ internal sealed class AcsEmailSender(IOptions<EmailOptions> options) : IEmailSen
         var content = new EmailContent(message.Subject) { PlainText = message.TextBody };
         var recipients = new EmailRecipients([new EmailAddress(message.To, message.ToName)]);
         var email = new Azure.Communication.Email.EmailMessage(options.Value.FromAddress, recipients, content);
+        foreach (var attachment in message.Attachments ?? [])
+        {
+            email.Attachments.Add(new Azure.Communication.Email.EmailAttachment(
+                attachment.FileName, attachment.ContentType, BinaryData.FromBytes(attachment.Content)));
+        }
 
         // Returns once ACS accepts the message (not on delivery); a rejection throws RequestFailedException.
         await _client.SendAsync(WaitUntil.Started, email, cancellationToken);

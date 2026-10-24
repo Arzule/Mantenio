@@ -2,6 +2,7 @@ using System.Globalization;
 using Mantenio.Client;
 using Mantenio.Client.Auth;
 using Mantenio.Shared.Condos;
+using Mantenio.UI.Platform;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
 
@@ -21,10 +22,16 @@ public static class MauiProgram
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddMudServices();
         builder.Services.AddSingleton<ITokenStore, SecureTokenStore>();
+        builder.Services.AddSingleton<IFileOpener, LauncherFileOpener>();
         builder.Services.AddSingleton(new ClientPreferences(KeepSignedInByDefault: true));
         builder.Services.AddMantenioClient(ApiBaseAddress());
 
 #if DEBUG
+#if ANDROID
+        // Debug only: screenshots come from http://localhost:5013 (adb reverse) into the https app origin.
+        Microsoft.AspNetCore.Components.WebView.Maui.BlazorWebViewHandler.BlazorWebViewMapper.AppendToMapping("MixedContent", (handler, _) =>
+            handler.PlatformView.Settings.MixedContentMode = Android.Webkit.MixedContentHandling.AlwaysAllow);
+#endif
         builder.Services.AddBlazorWebViewDeveloperTools();
         builder.Logging.AddDebug();
 #endif

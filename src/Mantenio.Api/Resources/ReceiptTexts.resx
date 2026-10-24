@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- Receipt PDF (same layout as the paper receipt) -->
+  <data name="Title" xml:space="preserve"><value>RECIBO DE PAGO</value></data>
+  <data name="Date" xml:space="preserve"><value>Fecha: </value></data>
+  <data name="ReceivedFrom" xml:space="preserve"><value>Recibí de: </value></data>
+  <data name="Apartment" xml:space="preserve"><value>Departamento: </value></data>
+  <data name="AmountOf" xml:space="preserve"><value>El importe de: </value></data>
+  <data name="Concept" xml:space="preserve"><value>Por concepto de: </value></data>
+  <data name="Months" xml:space="preserve"><value>Cuota correspondiente al mes de: </value></data>
+  <data name="Credit" xml:space="preserve"><value>Saldo a favor: </value></data>
+  <data name="BankDate" xml:space="preserve"><value>Fecha banco: </value></data>
+  <data name="OperationNumber" xml:space="preserve"><value>Nº oper. banc.: </value></data>
+  <data name="Paid" xml:space="preserve"><value>CANCELADO</value></data>
+  <data name="Voided" xml:space="preserve"><value>ANULADO</value></data>
+  <data name="ApprovedBy" xml:space="preserve"><value>Aprobado por: {0}</value></data>
+  <data name="Footer" xml:space="preserve"><value>Recibo electrónico emitido por Mantenio · {0}</value></data>
+  <!-- Email with the receipt attached. {0} = first name, {1} = condo, {2} = receipt number, {3} = amount -->
+  <data name="EmailSubject" xml:space="preserve"><value>Tu recibo {2} de {1}</value></data>
+  <data name="EmailBody" xml:space="preserve"><value>Hola, {0}:
+
+Tu pago de {3} fue aprobado. Adjuntamos el recibo {2} de {1}.
+
+También puedes verlo en la app, en "Mis pagos".</value></data>
+  <data name="AttachmentName" xml:space="preserve"><value>recibo-{0}.pdf</value></data>
+</root>

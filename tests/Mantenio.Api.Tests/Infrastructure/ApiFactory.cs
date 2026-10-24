@@ -27,6 +27,9 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     private readonly string _databaseName = "test_" + Guid.NewGuid().ToString("N");
     private string _connectionString = "";
 
+    /// <summary>Payment-proof images and receipt PDFs of this factory (a temp folder).</summary>
+    public string StoragePath { get; } = Path.Combine(Path.GetTempPath(), "mantenio-tests", Guid.NewGuid().ToString("N"));
+
     public FakeTimeProvider Time { get; } = new(DateTimeOffset.UtcNow);
     public CapturingEmailSender Emails { get; } = new();
 
@@ -46,6 +49,8 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseEnvironment("Testing");
         builder.UseSetting($"ConnectionStrings:{AppDbContext.ConnectionName}", _connectionString);
         builder.UseSetting("Database:MigrateOnStartup", "true");
+        builder.UseSetting("Storage:Provider", "Local");
+        builder.UseSetting("Storage:LocalPath", StoragePath);
         builder.UseSetting("Jwt:SigningKey", "test-signing-key-that-is-long-enough-0123456789");
         foreach (var name in new[] { "AuthPerMinute", "EmailPer15Minutes", "InvitationPerMinute", "RefreshPerMinute" })
         {

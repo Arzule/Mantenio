@@ -7,6 +7,10 @@ public enum NotificationType
 
     /// <summary>The global fee or the apartment's own fee changes from a period on.</summary>
     FeeChanged = 1,
+
+    PaymentApproved = 2,
+    PaymentRejected = 3,
+    PaymentVoided = 4,
 }
 
 /// <summary>

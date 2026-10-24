@@ -4,6 +4,7 @@ using Mantenio.Domain.Banking;
 using Mantenio.Domain.Condo;
 using Mantenio.Domain.Fees;
 using Mantenio.Domain.Identity;
+using Mantenio.Domain.Ledger;
 using Mantenio.Domain.Notifications;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : Ident
     public DbSet<ApartmentFreeze> ApartmentFreezes => Set<ApartmentFreeze>();
     public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
     public DbSet<UserNotification> Notifications => Set<UserNotification>();
+    public DbSet<Charge> Charges => Set<Charge>();
+    public DbSet<PaymentProof> PaymentProofs => Set<PaymentProof>();
+    public DbSet<PaymentAllocation> PaymentAllocations => Set<PaymentAllocation>();
+    public DbSet<Receipt> Receipts => Set<Receipt>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

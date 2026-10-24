@@ -10,7 +10,14 @@ public static class NoticeText
     public static string Title(NotificationItem notice)
     {
         ArgumentNullException.ThrowIfNull(notice);
-        return notice.Kind == NotificationKind.BankAccountsChanged ? UiStrings.NoticeBankTitle : UiStrings.NoticeFeeTitle;
+        return notice.Kind switch
+        {
+            NotificationKind.BankAccountsChanged => UiStrings.NoticeBankTitle,
+            NotificationKind.PaymentApproved => UiStrings.NoticePaymentApprovedTitle,
+            NotificationKind.PaymentRejected => UiStrings.NoticePaymentRejectedTitle,
+            NotificationKind.PaymentVoided => UiStrings.NoticePaymentVoidedTitle,
+            _ => UiStrings.NoticeFeeTitle,
+        };
     }
 
     public static string Body(NotificationItem notice)
@@ -28,6 +35,18 @@ public static class NoticeText
                 _ => UiStrings.NoticeBank_updated,
             };
             return $"{Formats.Format(template, Text(data, "bankName"))} {reason} {UiStrings.NoticeBankCheck}";
+        }
+
+        if (notice.Kind is NotificationKind.PaymentApproved or NotificationKind.PaymentRejected or NotificationKind.PaymentVoided)
+        {
+            var amount = Formats.Money(Amount(data, "amount") ?? 0);
+            var receipt = Text(data, "receiptNumber");
+            return notice.Kind switch
+            {
+                NotificationKind.PaymentApproved => Formats.Format(UiStrings.NoticePaymentApproved, amount, receipt),
+                NotificationKind.PaymentRejected => $"{Formats.Format(UiStrings.NoticePaymentRejected, amount)} {reason}",
+                _ => $"{Formats.Format(UiStrings.NoticePaymentVoided, amount, receipt)} {reason}",
+            };
         }
 
         var month = Formats.Month(data.GetProperty("effectivePeriod").GetInt32());

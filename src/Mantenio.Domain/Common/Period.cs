@@ -24,6 +24,14 @@ public readonly record struct Period : IComparable<Period>
 
     public static Period FromValue(int value) => new(value / 100, value % 100);
 
+    public static bool TryFromValue(int value, out Period period)
+    {
+        var (year, month) = (value / 100, value % 100);
+        var valid = year is >= 2000 and <= 9999 && month is >= 1 and <= 12;
+        period = valid ? new Period(year, month) : default;
+        return valid;
+    }
+
     public static Period FromDate(DateOnly date) => new(date.Year, date.Month);
 
     public Period Next() => Month == 12 ? new(Year + 1, 1) : new(Year, Month + 1);

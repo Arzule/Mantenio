@@ -16,6 +16,9 @@ internal static class AuditEntities
     public const string Tower = "Tower";
     public const string Apartment = "Apartment";
     public const string BankAccount = "BankAccount";
+    public const string Charge = "Charge";
+    public const string PaymentProof = "PaymentProof";
+    public const string Receipt = "Receipt";
 }
 
 internal static class AuditLog
