@@ -15,6 +15,7 @@ import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # wrangler prints emoji; the Windows console does not
 config = json.load(open(os.path.join(ROOT, "deploy", "deployment.json"), encoding="utf-8"))
 store = json.load(open(os.path.join(ROOT, "secrets.json"), encoding="utf-8"))
 env = dict(os.environ, CLOUDFLARE_API_TOKEN=store["CloudflareApiToken"], CLOUDFLARE_ACCOUNT_ID=store["R2AccountId"],

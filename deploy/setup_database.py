@@ -15,6 +15,7 @@ import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # wrangler prints emoji; the Windows console does not
 parser = argparse.ArgumentParser()
 parser.add_argument("--email", required=True)
 parser.add_argument("--first-name", required=True)
