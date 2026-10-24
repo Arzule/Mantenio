@@ -105,6 +105,10 @@ public sealed class SettingsTests(ApiFactory factory) : IClassFixture<ApiFactory
         var response = await founder.PutAsJsonAsync("/api/admin/settings/late-fee", new ChangeLateFeeRequest(5m, "Acuerdo de asamblea"), Ct);
         await response.ShouldBeAsync(HttpStatusCode.NoContent);
         (await founder.GetJsonAsync<CondoSettingsResponse>(factory, "/api/admin/settings"))!.LateFeePercent.ShouldBe(5m);
+
+        // Back to the default: the other tests of this class share the database and expect 0 %.
+        await (await founder.PutAsJsonAsync("/api/admin/settings/late-fee", new ChangeLateFeeRequest(0m, "Fin de la prueba"), Ct))
+            .ShouldBeAsync(HttpStatusCode.NoContent);
     }
 
     [Fact]
