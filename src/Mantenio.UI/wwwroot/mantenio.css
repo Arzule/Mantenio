@@ -1,0 +1,6 @@
+/* Global app styles shared by web and mobile hosts. */
+
+/* Blazor focuses the page h1 after navigation (screen readers); hide the outline for mouse/touch users. */
+h1:focus {
+    outline: none;
+}

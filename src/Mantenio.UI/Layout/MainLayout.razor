@@ -1,0 +1,56 @@
+@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="_theme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                           Color="Color.Inherit"
+                           Edge="Edge.Start"
+                           aria-label="@UiStrings.ToggleMenu"
+                           OnClick="ToggleDrawer" />
+        </MudHidden>
+        <img class="appbar-logo" src="@CondoProfile.LogoDataUri" alt="@string.Format(UiStrings.LogoAlt, Profile.DisplayName)" />
+        <MudText Typo="Typo.h6" Class="ml-3 appbar-title">@Profile.ShortName</MudText>
+        <MudSpacer />
+    </MudAppBar>
+
+    <MudHidden Breakpoint="Breakpoint.SmAndDown">
+        <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="1" Variant="DrawerVariant.Responsive">
+            <MudNavMenu Class="pt-2">
+                @foreach (var item in NavigationItems.All)
+                {
+                    <MudNavLink Href="@item.Href" Match="item.Match" Icon="@item.Icon">@item.Title</MudNavLink>
+                }
+            </MudNavMenu>
+        </MudDrawer>
+    </MudHidden>
+
+    <MudMainContent Class="main-content">
+        @Body
+    </MudMainContent>
+
+    <MudHidden Breakpoint="Breakpoint.MdAndUp">
+        <nav class="bottom-nav mud-elevation-4" aria-label="@UiStrings.AppName">
+            @foreach (var item in NavigationItems.All)
+            {
+                <NavLink class="bottom-nav-item" href="@item.Href" Match="item.Match">
+                    <MudIcon Icon="@item.Icon" />
+                    <span>@item.Title</span>
+                </NavLink>
+            }
+        </nav>
+    </MudHidden>
+</MudLayout>
+
+@code {
+    private static readonly CondoProfile Profile = CondoProfile.Current;
+    private readonly MudTheme _theme = Mantenio.UI.Theme.CondoThemeFactory.Create(Profile);
+    private bool _drawerOpen = true;
+
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+}

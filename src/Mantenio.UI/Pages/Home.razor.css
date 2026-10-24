@@ -1,0 +1,22 @@
+.home-hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 24px;
+}
+
+.home-logo {
+    width: 96px;
+    height: 96px;
+    flex: 0 0 auto;
+}
+
+.home-text {
+    flex: 1 1 260px;
+    min-width: 0;
+}
+
+::deep .home-title {
+    font-size: clamp(1.5rem, 5vw, 2.125rem);
+    overflow-wrap: anywhere;
+}

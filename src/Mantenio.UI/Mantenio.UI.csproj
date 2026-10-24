@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <!-- UiStrings.resx is the Spanish (es-PE) text; there are no satellite translations. -->
+    <NeutralLanguage>es-PE</NeutralLanguage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+    <PackageReference Include="MudBlazor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Mantenio.Client\Mantenio.Client.csproj" />
+    <ProjectReference Include="..\Mantenio.Shared\Mantenio.Shared.csproj" />
+  </ItemGroup>
+
+  <!-- All user-facing text (Spanish) lives here, exposed as a strongly typed class. -->
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\UiStrings.resx"
+                      StronglyTypedLanguage="CSharp"
+                      StronglyTypedNamespace="Mantenio.UI.Resources"
+                      StronglyTypedClassName="UiStrings"
+                      StronglyTypedFileName="$(IntermediateOutputPath)UiStrings.Designer.cs"
+                      PublicClass="true" />
+  </ItemGroup>
+
+</Project>

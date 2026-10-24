@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <!-- Android only for now; iOS can be added later from this same project (requires a Mac). -->
+    <TargetFrameworks>net10.0-android</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Mantenio.Mobile</RootNamespace>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <!-- Disable MAUI CSS handling so Blazor can handle it -->
+    <EnableDefaultCssItems>false</EnableDefaultCssItems>
+    <MauiXamlInflator>SourceGen</MauiXamlInflator>
+
+    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+    <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
+  <!-- App name, id and assets come from the condo profile (condos/<slug>/). -->
+  <PropertyGroup>
+    <_CondoJson>$([System.IO.File]::ReadAllText('$(CondoDir)condo.json'))</_CondoJson>
+    <ApplicationTitle>$([System.Text.RegularExpressions.Regex]::Match($(_CondoJson), '"appTitle"\s*:\s*"([^"]+)"').Groups[1].Value)</ApplicationTitle>
+    <ApplicationId>$([System.Text.RegularExpressions.Regex]::Match($(_CondoJson), '"applicationId"\s*:\s*"([^"]+)"').Groups[1].Value)</ApplicationId>
+    <CondoPrimaryColor>$([System.Text.RegularExpressions.Regex]::Match($(_CondoJson), '"primary"\s*:\s*"([^"]+)"').Groups[1].Value)</CondoPrimaryColor>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <MauiIcon Include="$(CondoDir)icon.svg" Color="$(CondoPrimaryColor)" />
+    <MauiSplashScreen Include="$(CondoDir)splash.svg" Color="$(CondoPrimaryColor)" BaseSize="160,160" />
+    <MauiImage Include="Resources\Images\*" />
+    <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- MAUI packages follow the installed workload version. -->
+    <PackageReference Include="Microsoft.Maui.Controls" VersionOverride="$(MauiVersion)" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" VersionOverride="$(MauiVersion)" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" />
+    <PackageReference Include="MudBlazor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Mantenio.UI\Mantenio.UI.csproj" />
+    <ProjectReference Include="..\Mantenio.Client\Mantenio.Client.csproj" />
+    <ProjectReference Include="..\Mantenio.Shared\Mantenio.Shared.csproj" />
+  </ItemGroup>
+
+  <Target Name="ValidateCondoAndroidSettings" BeforeTargets="BeforeBuild">
+    <Error Condition="'$(ApplicationId)' == '' or '$(ApplicationTitle)' == ''"
+           Text="condo.json for '$(Condo)' must define android.applicationId and android.appTitle" />
+  </Target>
+
+</Project>

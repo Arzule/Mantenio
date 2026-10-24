@@ -1,0 +1,10 @@
+@Mantenio.Api_HostAddress = http://localhost:5013
+
+GET {{Mantenio.Api_HostAddress}}/api/system/info
+Accept: application/json
+
+###
+
+GET {{Mantenio.Api_HostAddress}}/health
+
+###

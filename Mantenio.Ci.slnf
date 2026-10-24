@@ -1,0 +1,18 @@
+{
+  "solution": {
+    "path": "Mantenio.slnx",
+    "projects": [
+      "src/Mantenio.Api/Mantenio.Api.csproj",
+      "src/Mantenio.AppHost/Mantenio.AppHost.csproj",
+      "src/Mantenio.Client/Mantenio.Client.csproj",
+      "src/Mantenio.Domain/Mantenio.Domain.csproj",
+      "src/Mantenio.ServiceDefaults/Mantenio.ServiceDefaults.csproj",
+      "src/Mantenio.Shared/Mantenio.Shared.csproj",
+      "src/Mantenio.UI/Mantenio.UI.csproj",
+      "src/Mantenio.Web/Mantenio.Web.csproj",
+      "tests/Mantenio.Api.Tests/Mantenio.Api.Tests.csproj",
+      "tests/Mantenio.Domain.Tests/Mantenio.Domain.Tests.csproj",
+      "tests/Mantenio.UI.Tests/Mantenio.UI.Tests.csproj"
+    ]
+  }
+}

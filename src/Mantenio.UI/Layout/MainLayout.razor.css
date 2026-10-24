@@ -1,0 +1,53 @@
+.appbar-logo {
+    height: 40px;
+    width: 40px;
+    border-radius: 50%;
+    background: #fff;
+}
+
+::deep .appbar-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Leave room for the bottom bar on phones. */
+::deep .main-content {
+    padding-bottom: 72px;
+}
+
+@media (min-width: 960px) {
+    ::deep .main-content {
+        padding-bottom: 0;
+    }
+}
+
+.bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1100;
+    display: flex;
+    justify-content: space-around;
+    height: 64px;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--mud-palette-surface);
+}
+
+::deep .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+    text-decoration: none;
+}
+
+::deep .bottom-nav-item.active {
+    color: var(--mud-palette-primary);
+    font-weight: 600;
+}

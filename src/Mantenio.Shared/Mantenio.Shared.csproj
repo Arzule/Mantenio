@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <!-- The selected condo profile is embedded so the API, web and mobile hosts all read the same values. -->
+  <ItemGroup>
+    <EmbeddedResource Include="$(CondoDir)condo.json" LogicalName="condo.json" />
+    <EmbeddedResource Include="$(CondoDir)logo.svg" LogicalName="condo-logo.svg" />
+  </ItemGroup>
+
+</Project>

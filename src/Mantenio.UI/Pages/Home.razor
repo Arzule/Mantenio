@@ -1,0 +1,27 @@
+@page "/"
+
+<PageTitle>@UiStrings.NavHome · @Profile.ShortName</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-6">
+    <MudPaper Class="pa-6" Elevation="1">
+        <div class="home-hero">
+            <img class="home-logo" src="@CondoProfile.LogoDataUri" alt="@string.Format(UiStrings.LogoAlt, Profile.DisplayName)" />
+            <div class="home-text">
+                <MudText Typo="Typo.h4" HtmlTag="h1" Color="Color.Primary" Class="home-title">
+                    @string.Format(UiStrings.HomeWelcomeTitle, Profile.DisplayName)
+                </MudText>
+                <MudText Class="mt-2">@UiStrings.HomeWelcomeBody</MudText>
+                @if (!string.IsNullOrWhiteSpace(Profile.Address))
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">
+                        <b>@UiStrings.HomeAddressLabel:</b> @Profile.Address
+                    </MudText>
+                }
+            </div>
+        </div>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private static readonly CondoProfile Profile = CondoProfile.Current;
+}

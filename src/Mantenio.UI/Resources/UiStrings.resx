@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- Layout / navigation -->
+  <data name="AppName" xml:space="preserve"><value>Mantenio</value></data>
+  <data name="NavHome" xml:space="preserve"><value>Inicio</value></data>
+  <data name="ToggleMenu" xml:space="preserve"><value>Abrir o cerrar el menú</value></data>
+  <data name="LogoAlt" xml:space="preserve"><value>Logo de {0}</value></data>
+
+  <!-- Home -->
+  <data name="HomeWelcomeTitle" xml:space="preserve"><value>Bienvenido a {0}</value></data>
+  <data name="HomeWelcomeBody" xml:space="preserve"><value>Aquí podrás registrar tus pagos de mantenimiento, revisar tu estado de cuenta y consultar las cuentas bancarias del condominio.</value></data>
+  <data name="HomeAddressLabel" xml:space="preserve"><value>Dirección</value></data>
+
+  <!-- Not found -->
+  <data name="NotFoundTitle" xml:space="preserve"><value>Página no encontrada</value></data>
+  <data name="NotFoundBody" xml:space="preserve"><value>La página que buscas no existe o fue movida.</value></data>
+  <data name="NotFoundBack" xml:space="preserve"><value>Volver al inicio</value></data>
+
+  <!-- API error codes (Mantenio.Shared.Errors.ErrorCodes) → "Error_" + code -->
+  <data name="Error_internal_error" xml:space="preserve"><value>Ocurrió un error inesperado. Inténtalo nuevamente en unos minutos.</value></data>
+  <data name="Error_validation_failed" xml:space="preserve"><value>Revisa los datos ingresados.</value></data>
+  <data name="Error_not_found" xml:space="preserve"><value>No encontramos lo que buscabas.</value></data>
+  <data name="Error_unauthorized" xml:space="preserve"><value>Tu sesión expiró. Vuelve a iniciar sesión.</value></data>
+  <data name="Error_forbidden" xml:space="preserve"><value>No tienes permiso para realizar esta acción.</value></data>
+  <data name="Error_concurrency_conflict" xml:space="preserve"><value>Otro usuario modificó este registro. Actualiza la página e inténtalo de nuevo.</value></data>
+  <data name="Error_database_unavailable" xml:space="preserve"><value>El sistema no está disponible en este momento. La administración ya fue notificada.</value></data>
+</root>

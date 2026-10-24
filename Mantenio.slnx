@@ -1,0 +1,28 @@
+<Solution>
+  <Folder Name="/condos/" />
+  <Folder Name="/condos/pradosj/">
+    <File Path="condos/pradosj/condo.json" />
+    <File Path="condos/pradosj/icon.svg" />
+    <File Path="condos/pradosj/logo.svg" />
+    <File Path="condos/pradosj/splash.svg" />
+  </Folder>
+  <Folder Name="/condos/pradosj/reference/">
+    <File Path="condos/pradosj/reference/receipt-sample.jpeg" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Mantenio.Api/Mantenio.Api.csproj" />
+    <Project Path="src/Mantenio.AppHost/Mantenio.AppHost.csproj" />
+    <Project Path="src/Mantenio.Client/Mantenio.Client.csproj" />
+    <Project Path="src/Mantenio.Domain/Mantenio.Domain.csproj" />
+    <Project Path="src/Mantenio.Mobile/Mantenio.Mobile.csproj" />
+    <Project Path="src/Mantenio.ServiceDefaults/Mantenio.ServiceDefaults.csproj" />
+    <Project Path="src/Mantenio.Shared/Mantenio.Shared.csproj" />
+    <Project Path="src/Mantenio.UI/Mantenio.UI.csproj" />
+    <Project Path="src/Mantenio.Web/Mantenio.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Mantenio.Api.Tests/Mantenio.Api.Tests.csproj" />
+    <Project Path="tests/Mantenio.Domain.Tests/Mantenio.Domain.Tests.csproj" />
+    <Project Path="tests/Mantenio.UI.Tests/Mantenio.UI.Tests.csproj" />
+  </Folder>
+</Solution>
