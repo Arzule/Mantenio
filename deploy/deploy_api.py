@@ -20,7 +20,8 @@ ENV = dict(os.environ, MSYS_NO_PATHCONV="1")
 
 
 def run(args, *, capture=False, secret_values=()):
-    result = subprocess.run(args, cwd=ROOT, env=ENV, capture_output=True, text=True, shell=os.name == "nt")
+    result = subprocess.run(args, cwd=ROOT, env=ENV, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                            shell=os.name == "nt")
     if result.returncode != 0:
         message = (result.stderr or result.stdout)
         for value in secret_values:

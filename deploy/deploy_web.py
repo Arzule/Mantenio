@@ -23,7 +23,7 @@ shell = os.name == "nt"
 
 
 def run(args, check=True):
-    result = subprocess.run(args, cwd=ROOT, env=env, capture_output=True, text=True, shell=shell)
+    result = subprocess.run(args, cwd=ROOT, env=env, capture_output=True, text=True, encoding="utf-8", errors="replace", shell=shell)
     if check and result.returncode != 0:
         sys.exit(f"Command failed: {' '.join(args[:3])}\n{(result.stderr or result.stdout)[-1500:]}")
     return result
@@ -37,7 +37,8 @@ site = os.path.join(out, "wwwroot")
 project = config["pagesProject"]
 listing = run(["npx", "--yes", "wrangler@4", "pages", "project", "list"], check=False)
 if project not in listing.stdout:
-    run(["npx", "--yes", "wrangler@4", "pages", "project", "create", project, "--production-branch", "main"])
+    # --force: create a classic Pages project (newer wrangler would otherwise turn it into a Worker).
+    run(["npx", "--yes", "wrangler@4", "pages", "project", "create", project, "--production-branch", "main", "--force"])
     print(f"Created Pages project {project}")
 
 result = run(["npx", "--yes", "wrangler@4", "pages", "deploy", site, "--project-name", project, "--branch", "main",

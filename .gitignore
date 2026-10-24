@@ -497,3 +497,6 @@ secrets.json
 
 # Claude Code personal settings
 .claude/settings.local.json
+
+# Wrangler (Cloudflare) local cache
+.wrangler/
