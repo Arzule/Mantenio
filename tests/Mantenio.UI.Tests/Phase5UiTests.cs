@@ -120,6 +120,15 @@ public sealed class Phase5UiTests : BunitContext
     }
 
     [Fact]
+    public void The_help_page_shows_admin_topics_only_to_admins()
+    {
+        var cut = Render<Pages.Help>();
+
+        cut.Markup.ShouldContain(UiStrings.HelpPayTitle);
+        cut.Markup.ShouldContain(UiStrings.HelpWalkInTitle);
+    }
+
+    [Fact]
     public void Every_audit_action_the_api_writes_has_a_spanish_label()
     {
         string[] actions =

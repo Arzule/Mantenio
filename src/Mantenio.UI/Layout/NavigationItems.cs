@@ -28,6 +28,7 @@ public static class NavigationItems
         // Also linked from the payments page ("Ver cuentas para pagar"), so it leaves room in the bottom bar.
         new("bank-accounts", UiStrings.NavBankAccounts, Icons.Material.Filled.AccountBalance, InBottomBar: false),
         new("notifications", UiStrings.NavNotifications, Icons.Material.Filled.Notifications),
+        new("help", UiStrings.NavHelp, Icons.Material.Filled.HelpOutline, InBottomBar: false),
 
         // Phones get one "Administración" entry (a hub page with the dashboard); the desktop drawer also lists every admin page.
         new("admin", UiStrings.NavAdmin, Icons.Material.Filled.AdminPanelSettings, NavLinkMatch.All, AdminOnly: true),

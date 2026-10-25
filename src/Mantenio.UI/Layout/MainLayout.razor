@@ -37,6 +37,7 @@
                     <MudText Typo="Typo.caption">@RoleLabel(context.User)</MudText>
                 </div>
                 <MudDivider />
+                <MudMenuItem Icon="@Icons.Material.Filled.HelpOutline" Href="help">@UiStrings.NavHelp</MudMenuItem>
                 <MudMenuItem Icon="@Icons.Material.Filled.Key" Href="account/password">@UiStrings.ChangePasswordMenu</MudMenuItem>
                 <MudMenuItem Icon="@Icons.Material.Filled.Logout" OnClick="SignOutAsync">@UiStrings.SignOut</MudMenuItem>
             </MudMenu>

@@ -1,0 +1,51 @@
+@page "/help"
+@attribute [Authorize]
+
+<PageTitle>@UiStrings.HelpTitle · @CondoProfile.Current.ShortName</PageTitle>
+
+@* Short manual: resident topics for everyone, admin topics only for admins. Texts in UiStrings.resx (Help*). *@
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-6">
+    <MudText Typo="Typo.h5" HtmlTag="h1">@UiStrings.HelpTitle</MudText>
+    <MudText Class="mt-2 mb-4">@UiStrings.HelpIntro</MudText>
+
+    <MudText Typo="Typo.h6" HtmlTag="h2" Class="mb-2">@UiStrings.HelpResidents</MudText>
+    @Topics(ResidentTopics)
+
+    <AuthorizeView Policy="@MantenioPolicies.AdminOnly">
+        <MudText Typo="Typo.h6" HtmlTag="h2" Class="mt-6 mb-2">@UiStrings.HelpAdmins</MudText>
+        @Topics(AdminTopics)
+    </AuthorizeView>
+</MudContainer>
+
+@code {
+    private static readonly (string Title, string Body)[] ResidentTopics =
+    [
+        (UiStrings.HelpRegisterTitle, UiStrings.HelpRegisterBody),
+        (UiStrings.HelpPayTitle, UiStrings.HelpPayBody),
+        (UiStrings.HelpStatementTitle, UiStrings.HelpStatementBody),
+        (UiStrings.HelpNoticesTitle, UiStrings.HelpNoticesBody),
+        (UiStrings.HelpRejectedTitle, UiStrings.HelpRejectedBody),
+    ];
+
+    private static readonly (string Title, string Body)[] AdminTopics =
+    [
+        (UiStrings.HelpReviewTitle, UiStrings.HelpReviewBody),
+        (UiStrings.HelpWalkInTitle, UiStrings.HelpWalkInBody),
+        (UiStrings.HelpVoidTitle, UiStrings.HelpVoidBody),
+        (UiStrings.HelpReportsTitle, UiStrings.HelpReportsBody),
+        (UiStrings.HelpSettingsTitle, UiStrings.HelpSettingsBody),
+        (UiStrings.HelpSecurityTitle, UiStrings.HelpSecurityBody),
+    ];
+
+    private static RenderFragment Topics((string Title, string Body)[] topics) => __builder =>
+    {
+        <MudExpansionPanels MultiExpansion="true" Elevation="1">
+            @foreach (var (title, body) in topics)
+            {
+                <MudExpansionPanel Text="@title">
+                    <MudText Typo="Typo.body2" Style="white-space: pre-line">@body</MudText>
+                </MudExpansionPanel>
+            }
+        </MudExpansionPanels>
+    };
+}

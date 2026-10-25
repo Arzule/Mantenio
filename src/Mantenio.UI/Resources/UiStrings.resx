@@ -504,4 +504,58 @@
   <data name="ReceiptReadyBody" xml:space="preserve"><value>Envíale el recibo al residente por WhatsApp o descárgalo para imprimirlo.</value></data>
   <data name="PhotoError" xml:space="preserve"><value>No se pudo obtener la imagen. Revisa el permiso de la cámara o elige una de la galería.</value></data>
   <data name="AuditAction_RegisteredByAdmin" xml:space="preserve"><value>Registrado por administración</value></data>
+  <!-- Help page (short manual for residents and admins) -->
+  <data name="NavHelp" xml:space="preserve"><value>Ayuda</value></data>
+  <data name="HelpTitle" xml:space="preserve"><value>Ayuda</value></data>
+  <data name="HelpIntro" xml:space="preserve"><value>Guía rápida para usar la app. Toca un tema para ver los pasos.</value></data>
+  <data name="HelpResidents" xml:space="preserve"><value>Para residentes</value></data>
+  <data name="HelpAdmins" xml:space="preserve"><value>Para administradores</value></data>
+  <data name="HelpRegisterTitle" xml:space="preserve"><value>Crear tu cuenta</value></data>
+  <data name="HelpRegisterBody" xml:space="preserve"><value>1. Pide a la administración un código de invitación.
+2. En la pantalla de inicio toca "Crear cuenta", escribe el código, tus datos y elige tu departamento.
+3. Te llegará un código de 6 dígitos a tu correo para confirmarlo.
+Si varias personas viven en el mismo departamento, cada una puede tener su cuenta.</value></data>
+  <data name="HelpPayTitle" xml:space="preserve"><value>Pagar la cuota</value></data>
+  <data name="HelpPayBody" xml:space="preserve"><value>1. En Pagos toca "Ver cuentas para pagar" y copia la cuenta o el CCI.
+2. Haz la transferencia desde tu banco y toma una captura de la constancia.
+3. En Pagos toca "Subir comprobante": escribe el monto, la fecha, el banco y el número de operación, y adjunta la captura.
+4. La administración lo revisa. Cuando lo aprueba te llega un aviso y el recibo en PDF a tu correo.
+Si prefieres, puedes entregar tu voucher en persona: el administrador o el guardia de turno lo registra por ti.</value></data>
+  <data name="HelpStatementTitle" xml:space="preserve"><value>Ver tu estado de cuenta y recibos</value></data>
+  <data name="HelpStatementBody" xml:space="preserve"><value>En Pagos verás:
+• Estado de cuenta: cada mes con su estado (pendiente, pago parcial, pagado o vencido) y su fecha de vencimiento.
+• Comprobantes: lo que subiste, su estado y el botón para ver el recibo.
+Los pagos se aplican primero a las deudas más antiguas. Si pagas de más, queda como saldo a favor y se usa automáticamente en el siguiente mes.</value></data>
+  <data name="HelpNoticesTitle" xml:space="preserve"><value>Avisos y notificaciones</value></data>
+  <data name="HelpNoticesBody" xml:space="preserve"><value>La campana muestra tus avisos: pagos aprobados o rechazados, cambios de cuota, cambios de cuentas bancarias y recordatorios.
+En el celular también llegan como notificación (acepta el permiso la primera vez).
+Importante: si cambia una cuenta bancaria del condominio verás un aviso que debes confirmar. Antes de transferir, revisa siempre las cuentas en la app.</value></data>
+  <data name="HelpRejectedTitle" xml:space="preserve"><value>Si rechazan tu comprobante</value></data>
+  <data name="HelpRejectedBody" xml:space="preserve"><value>Verás el motivo en el aviso y en Pagos → Comprobantes. Corrige lo indicado (por ejemplo, una captura que no se lee) y sube el comprobante otra vez. Tu deuda no cambia hasta que un comprobante se aprueba.</value></data>
+  <data name="HelpReviewTitle" xml:space="preserve"><value>Revisar comprobantes</value></data>
+  <data name="HelpReviewBody" xml:space="preserve"><value>En Administración → Comprobantes, pestaña Pendientes:
+1. Compara la captura con el monto, la fecha y el número de operación.
+2. "Aprobar": confirma el monto que realmente se transfirió. Se aplica a las deudas más antiguas del departamento y se emite el recibo.
+3. "Rechazar": escribe el motivo; el residente lo verá y podrá subir otro.
+No puedes revisar comprobantes de tu propio departamento: debe hacerlo otro administrador. Si el mismo número de operación ya existe, la app lo bloquea.</value></data>
+  <data name="HelpWalkInTitle" xml:space="preserve"><value>Registrar el pago de un residente (guardia de turno)</value></data>
+  <data name="HelpWalkInBody" xml:space="preserve"><value>Para quien entrega su voucher en persona o no tiene la app:
+1. En Comprobantes toca "Registrar comprobante de un residente".
+2. Elige o escribe el edificio y el departamento, quién paga ("Recibí de"), el monto, la fecha, el banco y el número de operación.
+3. Toma una foto del voucher o elígela de la galería (es obligatoria).
+4. Revisa la confirmación: al aceptar, el pago queda aprobado y se emite el recibo.
+5. Toca "Enviar por WhatsApp" y elige al residente, o descarga el recibo para imprimirlo.</value></data>
+  <data name="HelpVoidTitle" xml:space="preserve"><value>Anular un pago</value></data>
+  <data name="HelpVoidBody" xml:space="preserve"><value>Si un pago se aprobó por error (por ejemplo, era de otro departamento): en Comprobantes → Historial toca "Anular" y escribe el motivo. Las deudas que cubría vuelven a quedar pendientes y el recibo se marca como ANULADO. La devolución del dinero se hace fuera de la app.</value></data>
+  <data name="HelpReportsTitle" xml:space="preserve"><value>Reportes e historial</value></data>
+  <data name="HelpReportsBody" xml:space="preserve"><value>• Administración → Reportes: morosidad por edificio a cualquier fecha (Excel o PDF) y el folio mensual de recibos en PDF.
+• Administración → Historial: todo cambio queda registrado con fecha, quién lo hizo y el motivo.
+• La página Administración muestra un resumen: comprobantes por revisar, deuda vencida y lo recaudado en el mes.</value></data>
+  <data name="HelpSettingsTitle" xml:space="preserve"><value>Cuota, cuentas bancarias y departamentos</value></data>
+  <data name="HelpSettingsBody" xml:space="preserve"><value>• Cuota y vencimiento: los cambios de cuota aplican desde un mes futuro y avisan a todos los residentes.
+• Cuentas bancarias: cualquier cambio envía un aviso que todos deben confirmar.
+• Departamentos: puedes poner una cuota especial o congelar un departamento desocupado (no genera cargos mientras esté congelado).
+• Cargos: se generan solos el día 1 de cada mes. Aquí también se carga la deuda anterior al sistema.</value></data>
+  <data name="HelpSecurityTitle" xml:space="preserve"><value>Seguridad de la cuenta</value></data>
+  <data name="HelpSecurityBody" xml:space="preserve"><value>Los administradores entran con contraseña y un código de 6 dígitos que llega al correo. Nunca compartas tu contraseña ni los códigos. Para agregar residentes o administradores, crea un código de invitación en Administración → Códigos; vence en pocos días y solo se usa una vez.</value></data>
 </root>
