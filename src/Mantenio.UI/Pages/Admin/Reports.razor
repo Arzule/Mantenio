@@ -70,7 +70,7 @@
                                 }
                             </tbody>
                         </MudSimpleTable>
-                        <MudText Typo="Typo.body2" Align="Align.Right" Class="mt-2"><b>@Formats.Format(UiStrings.TowerTotal, Formats.Money(tower.Total))</b></MudText>
+                        <MudText Typo="Typo.body2" Align="Align.Right" Class="mt-2"><b>@Formats.Format(UiStrings.TowerTotal, $"{CondoProfile.Current.TowerLabel} {tower.Name}", Formats.Money(tower.Total))</b></MudText>
                     </MudTabPanel>
                 }
             </MudTabs>

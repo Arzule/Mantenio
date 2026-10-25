@@ -141,7 +141,7 @@ public static class ReportFiles
                             table.Cell().PaddingVertical(2).AlignRight().Text(Money(item.Amount));
                         }
                     });
-                    column.Item().AlignRight().Text(Format(ReportTexts.TowerTotal, tower.Name, tower.Rows.Count, Money(tower.Total))).SemiBold();
+                    column.Item().AlignRight().Text(Format(ReportTexts.TowerTotal, $"{profile.TowerLabel} {tower.Name}", tower.Rows.Count, Money(tower.Total))).SemiBold();
                 }
 
                 column.Item().PaddingTop(6).BorderTop(1).PaddingTop(4)

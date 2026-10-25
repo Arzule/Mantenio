@@ -34,7 +34,7 @@
     </MudGrid>
 
     <MudPaper Class="pa-4 mb-4" Elevation="1">
-        <MudText Typo="Typo.subtitle1" Class="mb-2">@UiStrings.DashboardByTower</MudText>
+        <MudText Typo="Typo.subtitle1" Class="mb-2">@Formats.Format(UiStrings.DashboardByTower, CondoProfile.Current.TowerLabel)</MudText>
         @if (d.Towers.Count == 0)
         {
             <MudText Typo="Typo.body2">@UiStrings.DashboardNoDebt</MudText>

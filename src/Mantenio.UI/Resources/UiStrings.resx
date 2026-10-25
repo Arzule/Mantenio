@@ -405,7 +405,7 @@
   <data name="DashboardDelinquent" xml:space="preserve"><value>Departamentos con deuda</value></data>
   <data name="DashboardCollected" xml:space="preserve"><value>Recaudado en {0}</value></data>
   <data name="DashboardReceipts" xml:space="preserve"><value>{0} recibos emitidos</value></data>
-  <data name="DashboardByTower" xml:space="preserve"><value>Deuda vencida por torre</value></data>
+  <data name="DashboardByTower" xml:space="preserve"><value>Deuda vencida por {0}</value></data>
   <data name="DashboardTowerLine" xml:space="preserve"><value>{0} de {1} departamentos · {2}</value></data>
   <data name="DashboardNoDebt" xml:space="preserve"><value>Ningún departamento tiene deuda vencida.</value></data>
   <data name="ReportsTitle" xml:space="preserve"><value>Reportes</value></data>
@@ -416,7 +416,7 @@
   <data name="ExportPdf" xml:space="preserve"><value>PDF</value></data>
   <data name="OverdueMonths" xml:space="preserve"><value>Meses vencidos</value></data>
   <data name="DelinquencyTotal" xml:space="preserve"><value>{0} departamentos con deuda vencida · {1}</value></data>
-  <data name="TowerTotal" xml:space="preserve"><value>Total de la torre: {0}</value></data>
+  <data name="TowerTotal" xml:space="preserve"><value>Total {0}: {1}</value></data>
   <data name="NoDelinquency" xml:space="preserve"><value>No hay departamentos con deuda vencida en esa fecha.</value></data>
   <data name="FolioTitle" xml:space="preserve"><value>Folio mensual</value></data>
   <data name="FolioBody" xml:space="preserve"><value>PDF con todos los recibos emitidos en el mes, incluidos los anulados.</value></data>
