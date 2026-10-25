@@ -16,6 +16,7 @@ import secrets
 import string
 import subprocess
 import sys
+import unicodedata
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 secrets_path = os.path.join(ROOT, "secrets.json")
@@ -33,12 +34,14 @@ if os.path.exists(path) or store.get("AndroidKeystorePath"):
     sys.exit(f"A keystore already exists ({store.get('AndroidKeystorePath') or path}); not creating another one.")
 
 os.makedirs(os.path.dirname(path), exist_ok=True)
+# ASCII only: Windows mangles accents on the way to keytool (and the certificate keeps them forever).
+name = unicodedata.normalize("NFKD", profile["displayName"]).encode("ascii", "ignore").decode().replace(",", " ")
 password = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
 java_home = os.environ.get("JAVA_HOME") or r"C:\Program Files\Java\jdk-21"
 keytool = os.path.join(java_home, "bin", "keytool")
 result = subprocess.run([keytool, "-genkeypair", "-keystore", path, "-alias", "mantenio", "-keyalg", "RSA", "-keysize", "2048",
                          "-validity", "10000", "-storepass", password, "-keypass", password,
-                         "-dname", f"CN={profile['displayName']}, O={profile['displayName']}, C=PE"],
+                         "-dname", f"CN={name}, O={name}, C=PE"],
                         capture_output=True, text=True)
 if result.returncode != 0:
     sys.exit("keytool failed: " + result.stderr[-500:].replace(password, "***"))
