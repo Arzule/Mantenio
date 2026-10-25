@@ -7,7 +7,7 @@ Creates/updates the scheduled jobs (Azure Container Apps Jobs, cron in UTC; Lima
     cleanup           daily, 03:30 Lima   30 8 * * *
     backup            daily, 03:00 Lima   0 8 * * *   (own image: deploy/backup, pg_dump -> R2)
 
-Usage (after deploy/deploy_api.py, which pushed the API image of this commit):
+Usage (after deploy/deploy_api.py; the jobs run the image the API app is running):
     python deploy/deploy_jobs.py [--skip-backup-build]
 
 Needs what deploy_api.py needs, plus deploy/deployment.json "backupBucket" and "jobsEnvironment": a Container Apps
@@ -31,10 +31,10 @@ BACKUP_CRON = "0 8 * * *"
 config, store = load()
 rg, slug = config["resourceGroup"], config["apiApp"].removeprefix("api-")
 env_name = config.get("jobsEnvironment", config["containerEnvironment"])
-tag = git_tag()
-api_image = f"ghcr.io/{config['image']}:{tag}"
+api_image = run(["az", "containerapp", "show", "-n", config["apiApp"], "-g", rg,
+                 "--query", "properties.template.containers[0].image", "-o", "tsv"], capture=True)
 backup_repo = config["image"].removesuffix("-api") + "-backup"
-backup_image = f"ghcr.io/{backup_repo}:{tag}"
+backup_image = f"ghcr.io/{backup_repo}:{git_tag()}"
 
 
 def libpq(npgsql):
@@ -81,7 +81,10 @@ for job, cron in JOBS.items():
     deploy(f"job-{slug}-{job}", api_image, cron, app_secrets, env_vars, ["job", job], hidden)
 
 # Nightly backup: its own small image with pg_dump and the AWS CLI (R2 speaks S3).
-if "--skip-backup-build" not in sys.argv:
+if "--skip-backup-build" in sys.argv and exists(f"job-{slug}-backup"):
+    backup_image = run(["az", "containerapp", "job", "show", "-n", f"job-{slug}-backup", "-g", rg,
+                        "--query", "properties.template.containers[0].image", "-o", "tsv"], capture=True)
+else:
     github_token = run(["gh", "auth", "token"], capture=True)
     login = subprocess.run(["docker", "login", "ghcr.io", "-u", config["githubUser"], "--password-stdin"],
                            input=github_token, env=ENV, capture_output=True, text=True)
