@@ -44,7 +44,7 @@ def api_origin():
     props = os.path.join(ROOT, "Condo.props")
     slug = "demo"
     if os.path.exists(props):
-        match = re.search(r"<Condo>\s*([^<\s]+)\s*</Condo>", open(props, encoding="utf-8").read())
+        match = re.search(r"<Condo\b[^>]*>\s*([^<\s]+)\s*</Condo>", open(props, encoding="utf-8").read())
         slug = match.group(1) if match else slug
     profile = json.load(open(os.path.join(ROOT, "condos", slug, "condo.json"), encoding="utf-8"))
     return (profile.get("apiBaseUrl") or "").rstrip("/")
