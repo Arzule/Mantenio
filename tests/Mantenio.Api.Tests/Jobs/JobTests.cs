@@ -65,7 +65,9 @@ public sealed class JobTests(ApiFactory factory) : IClassFixture<ApiFactory>
         await JobAsync(j => j.ApplyLateFeesAsync(Ct));
         (await JobAsync(j => j.ApplyLateFeesAsync(Ct))).ShouldBe(0); // once
 
-        var fees = await factory.WithDbAsync(db => db.Charges.Where(c => c.Type == ChargeType.LateFee).ToListAsync(Ct));
+        // Only this test's apartments: other tests of the class leave overdue fees elsewhere.
+        Guid[] mine = [overdue, paid, frozen];
+        var fees = await factory.WithDbAsync(db => db.Charges.Where(c => c.Type == ChargeType.LateFee && mine.Contains(c.ApartmentId)).ToListAsync(Ct));
         var fee = fees.ShouldHaveSingleItem(); // not on the opening debt, the paid month or the frozen apartment
         fee.ParentChargeId.ShouldBe(overdueCharge);
         fee.Amount.ShouldBe(9m);
