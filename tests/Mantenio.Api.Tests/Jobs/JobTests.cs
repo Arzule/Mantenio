@@ -150,7 +150,7 @@ public sealed class JobTests(ApiFactory factory) : IClassFixture<ApiFactory>
     {
         var html = EmailLayout.Html("Tu código", "Hola, Ana:\n\nTu código es:\n\n123456\n\nVence en unos minutos <pronto>.");
 
-        html.ShouldContain(Shared.Condos.CondoProfile.Current.DisplayName);
+        html.ShouldContain(System.Net.WebUtility.HtmlEncode(Shared.Condos.CondoProfile.Current.DisplayName));
         html.ShouldContain("font-size:32px");
         html.ShouldContain("&lt;pronto&gt;");
     }
