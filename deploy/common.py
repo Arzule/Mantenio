@@ -77,6 +77,13 @@ def app_settings(config, store):
         "Storage__R2SecretAccessKey": "secretref:r2-secret-access-key",
     }
 
+    # Telemetry (Application Insights, capped workspace) and who is told when the database is down.
+    if store.get("AppInsightsConnectionString"):
+        app_secrets["appinsights-connection"] = store["AppInsightsConnectionString"]
+        env_vars["APPLICATIONINSIGHTS_CONNECTION_STRING"] = "secretref:appinsights-connection"
+    if store.get("AlertEmail"):
+        env_vars["Alerts__Email"] = store["AlertEmail"]
+
     service_account = firebase_service_account(store)
     if service_account:
         # Base64: the key is multi-line JSON and goes through the command line.

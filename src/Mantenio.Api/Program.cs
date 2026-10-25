@@ -48,6 +48,7 @@ builder.AddNpgsqlDbContext<AppDbContext>(AppDbContext.ConnectionName, settings =
 
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddMantenioProblemDetails();
+builder.Services.AddExceptionHandler<DatabaseUnavailableHandler>();
 builder.Services.AddValidation();
 builder.Services.AddOpenApi();
 builder.Services.AddMantenioAuth();

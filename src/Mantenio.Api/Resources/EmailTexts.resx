@@ -46,4 +46,11 @@ Te recordamos que el departamento {2} tiene un saldo pendiente de {3} ({4} meses
 Puedes revisar el detalle y subir tu comprobante en la app, sección Pagos. Si ya pagaste, puedes ignorar este mensaje.</value></data>
   <!-- HTML layout of every email -->
   <data name="Footer" xml:space="preserve"><value>Este correo fue enviado por {0} a través de Mantenio. No respondas a este mensaje.</value></data>
+  <!-- Alert to the admin when the database cannot be reached. {0} = condo, {1} = UTC time -->
+  <data name="DatabaseDownSubject" xml:space="preserve"><value>Alerta: la base de datos de {0} no responde</value></data>
+  <data name="DatabaseDownBody" xml:space="preserve"><value>La app de {0} no pudo conectarse a la base de datos ({1} UTC).
+
+Si el servicio gratuito de Aiven se apagó por inactividad, entra a https://console.aiven.io y enciéndelo (Power on). Mientras tanto, la app muestra un mensaje de "sistema no disponible".
+
+Recibirás como máximo una alerta por hora.</value></data>
 </root>
