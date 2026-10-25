@@ -10,7 +10,9 @@ Creates/updates the scheduled jobs (Azure Container Apps Jobs, cron in UTC; Lima
 Usage (after deploy/deploy_api.py, which pushed the API image of this commit):
     python deploy/deploy_jobs.py [--skip-backup-build]
 
-Needs what deploy_api.py needs, plus deploy/deployment.json "backupBucket".
+Needs what deploy_api.py needs, plus deploy/deployment.json "backupBucket" and "jobsEnvironment": a Container Apps
+environment in WorkloadProfiles mode (Express environments, like the one the API may run in, do not support jobs):
+    az containerapp env create -n <name> -g <rg> --location <region> --logs-destination none --environment-mode WorkloadProfiles
 """
 import re
 import subprocess
@@ -27,7 +29,8 @@ JOBS = {
 BACKUP_CRON = "0 8 * * *"
 
 config, store = load()
-rg, env_name, slug = config["resourceGroup"], config["containerEnvironment"], config["apiApp"].removeprefix("api-")
+rg, slug = config["resourceGroup"], config["apiApp"].removeprefix("api-")
+env_name = config.get("jobsEnvironment", config["containerEnvironment"])
 tag = git_tag()
 api_image = f"ghcr.io/{config['image']}:{tag}"
 backup_repo = config["image"].removesuffix("-api") + "-backup"

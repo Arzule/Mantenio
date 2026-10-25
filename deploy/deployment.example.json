@@ -3,6 +3,7 @@
   "image": "your-github-user/mantenio-yourcondo-api",
   "resourceGroup": "rg-mantenio-yourcondo",
   "containerEnvironment": "cae-mantenio-yourcondo",
+  "jobsEnvironment": "cae-jobs-yourcondo",
   "apiApp": "api-yourcondo",
   "communicationService": "acs-mantenio-yourcondo",
   "emailService": "email-mantenio-yourcondo",
