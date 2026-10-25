@@ -41,7 +41,13 @@ result = subprocess.run([
 if result.returncode != 0:
     sys.exit("Build failed:\n" + (result.stdout + result.stderr)[-2500:])
 
-files = [f for f in glob.glob(os.path.join(out, "*")) if f.endswith(("-Signed.apk", "-Signed.aab"))]
+# publish copies only the AAB; the signed APK stays in the build folder.
+for apk in glob.glob(os.path.join(ROOT, "src", "Mantenio.Mobile", "bin", "Release", "net10.0-android", "*-Signed.apk")):
+    shutil.copy2(apk, out)
+for leftover in glob.glob(os.path.join(out, "*")):
+    if not leftover.endswith(("-Signed.apk", "-Signed.aab")):
+        os.remove(leftover)
+files = sorted(glob.glob(os.path.join(out, "*-Signed.*")))
 for f in files:
     print(f"{os.path.relpath(f, ROOT)}  ({os.path.getsize(f) // 1024} KB)")
 print(f"Version code {version_code}.")
