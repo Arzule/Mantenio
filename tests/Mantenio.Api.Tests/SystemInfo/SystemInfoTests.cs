@@ -53,13 +53,19 @@ public sealed class SystemInfoTests(ApiFactory factory) : IClassFixture<ApiFacto
     [Fact]
     public async Task Unknown_routes_return_problem_details_with_a_code()
     {
-        using var client = factory.CreateClient();
+        var ct = TestContext.Current.CancellationToken;
 
-        var response = await client.GetAsync(new Uri("/api/does-not-exist", UriKind.Relative), TestContext.Current.CancellationToken);
+        // Deny by default: without a session nobody can probe which routes exist.
+        using var anonymous = factory.CreateClient();
+        var probe = await anonymous.GetAsync(new Uri("/api/does-not-exist", UriKind.Relative), ct);
+        probe.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+
+        using var client = factory.CreateClient(await factory.SignInFounderAsync());
+        var response = await client.GetAsync(new Uri("/api/does-not-exist", UriKind.Relative), ct);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
-        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadAsStringAsync(ct);
         body.ShouldContain("\"code\":\"not_found\"");
     }
 }
