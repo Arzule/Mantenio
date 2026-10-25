@@ -1,0 +1,86 @@
+@inject IImagePicker Picker
+
+@* The voucher photo: camera or gallery on Android (system pickers), a file input on the web. Shrinks big images. *@
+<div class="d-flex flex-wrap align-center gap-2">
+    @if (Picker.IsSupported)
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PhotoCamera" OnClick="CaptureAsync">@UiStrings.TakePhoto</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PhotoLibrary" OnClick="PickAsync">@UiStrings.FromGallery</MudButton>
+    }
+    else
+    {
+        <label for="@_inputId" class="mud-button-root mud-button mud-button-outlined mud-button-outlined-primary mud-button-outlined-size-medium" style="cursor: pointer">
+            <span class="mud-button-label">@(Image is null ? UiStrings.ChooseImage : UiStrings.PhotoReady)</span>
+        </label>
+        <InputFile id="@_inputId" OnChange="OnFileAsync" accept="image/*" style="display: none" />
+    }
+</div>
+@if (Image is { } image)
+{
+    <img src="@($"data:{image.ContentType};base64,{Convert.ToBase64String(image.Content)}")" alt="@UiStrings.ViewImage"
+         style="max-width: 100%; max-height: 240px; margin-top: 12px; border-radius: 4px; display: block" />
+}
+@if (_error is not null)
+{
+    <MudText Typo="Typo.body2" Color="Color.Error" Class="mt-2">@_error</MudText>
+}
+
+@code {
+    private const long MaxImageBytes = 10 * 1024 * 1024;
+    private readonly string _inputId = "proof-file-" + Guid.NewGuid().ToString("N")[..8];
+    private string? _error;
+
+    [Parameter]
+    public PickedImage? Image { get; set; }
+
+    [Parameter]
+    public EventCallback<PickedImage?> ImageChanged { get; set; }
+
+    private Task CaptureAsync() => SetAsync(Picker.CaptureAsync);
+
+    private Task PickAsync() => SetAsync(Picker.PickAsync);
+
+    private async Task SetAsync(Func<Task<PickedImage?>> pick)
+    {
+        _error = null;
+        try
+        {
+            if (await pick() is { } picked)
+            {
+                await ChangeAsync(picked);
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Camera permission denied, no camera, unreadable file: the user can try the other option.
+            _error = UiStrings.PhotoError;
+        }
+    }
+
+    private async Task OnFileAsync(InputFileChangeEventArgs e)
+    {
+        _error = null;
+        try
+        {
+            // Shrunk on the device first so uploads stay small on mobile data; the server re-encodes it anyway.
+            var resized = await e.File.RequestImageFileAsync("image/jpeg", 1600, 1600);
+            using var buffer = new MemoryStream();
+            await using (var stream = resized.OpenReadStream(MaxImageBytes))
+            {
+                await stream.CopyToAsync(buffer);
+            }
+
+            await ChangeAsync(new PickedImage(buffer.ToArray(), "image/jpeg", e.File.Name));
+        }
+        catch (IOException)
+        {
+            _error = UiStrings.ImageTooBig;
+        }
+    }
+
+    private async Task ChangeAsync(PickedImage image)
+    {
+        Image = image;
+        await ImageChanged.InvokeAsync(image);
+    }
+}

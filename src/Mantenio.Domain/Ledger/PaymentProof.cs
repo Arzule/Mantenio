@@ -18,7 +18,7 @@ public sealed class PaymentProof
 
     public PaymentProof(
         Guid apartmentId, Guid submittedById, decimal declaredAmount, DateOnly operationDate, string bankName, string operationNumber,
-        string imageObjectKey, DateTimeOffset now)
+        string imageObjectKey, DateTimeOffset now, string? payerName = null)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(declaredAmount);
         ArgumentException.ThrowIfNullOrWhiteSpace(bankName);
@@ -34,6 +34,19 @@ public sealed class PaymentProof
         ImageObjectKey = imageObjectKey;
         Status = PaymentProofStatus.Pending;
         SubmittedAt = now;
+        PayerName = string.IsNullOrWhiteSpace(payerName) ? null : payerName.Trim();
+    }
+
+    /// <summary>
+    /// An admin (e.g. the guard on duty) registered it for a resident who brought the voucher in person.
+    /// <see cref="PayerName"/> is then who the receipt is made out to; otherwise it is the user who uploaded it.
+    /// </summary>
+    public static PaymentProof RegisteredByAdmin(
+        Guid apartmentId, Guid adminId, string payerName, decimal amount, DateOnly operationDate, string bankName, string operationNumber,
+        string imageObjectKey, DateTimeOffset now)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(payerName);
+        return new PaymentProof(apartmentId, adminId, amount, operationDate, bankName, operationNumber, imageObjectKey, now, payerName);
     }
 
     public Guid Id { get; private set; }
@@ -48,6 +61,11 @@ public sealed class PaymentProof
     public string BankName { get; private set; } = "";
     public string OperationNumber { get; private set; } = "";
     public string ImageObjectKey { get; private set; } = "";
+
+    /// <summary>Set when an admin registered the proof for a resident (see <see cref="RegisteredByAdmin"/>).</summary>
+    public string? PayerName { get; private set; }
+
+    public bool IsRegisteredByAdmin => PayerName is not null;
     public PaymentProofStatus Status { get; private set; }
     public DateTimeOffset SubmittedAt { get; private set; }
     public Guid? ReviewedById { get; private set; }

@@ -207,6 +207,35 @@ public sealed class MantenioApi(IHttpClientFactory httpClientFactory)
         return await response.ReadAsync<PaymentProofItem>(cancellationToken);
     }
 
+    /// <summary>Admin: registers the voucher a resident brought in person; it comes back approved, with its receipt.</summary>
+    public async Task<PaymentProofItem> RegisterPaymentProofAsync(
+        Guid apartmentId, string payerName, decimal amount, DateOnly operationDate, string bankName, string operationNumber, byte[] image,
+        string contentType, CancellationToken cancellationToken = default)
+    {
+        using var form = new MultipartFormDataContent
+        {
+            { new StringContent(apartmentId.ToString()), "apartmentId" },
+            { new StringContent(payerName), "payerName" },
+            { new StringContent(amount.ToString(CultureInfo.InvariantCulture)), "amount" },
+            { new StringContent(operationDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)), "operationDate" },
+            { new StringContent(bankName), "bankName" },
+            { new StringContent(operationNumber), "operationNumber" },
+        };
+        var file = new ByteArrayContent(image);
+        file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        form.Add(file, "image", "voucher" + (contentType == "image/png" ? ".png" : ".jpg"));
+        using var client = httpClientFactory.CreateClient(MantenioHttpClients.Authenticated);
+        using var response = await client.PostAsync(new Uri("/api/admin/payments/register", UriKind.Relative), form, cancellationToken).SendSafeAsync();
+        return await response.ReadAsync<PaymentProofItem>(cancellationToken);
+    }
+
+    public Task<List<string>> ListApartmentResidentsAsync(Guid apartmentId, CancellationToken cancellationToken = default) =>
+        GetAsync<List<string>>($"/api/admin/apartments/{apartmentId}/residents", cancellationToken);
+
+    /// <summary>The receipt PDF (to share it by WhatsApp).</summary>
+    public Task<DownloadedFile> DownloadReceiptAsync(Guid proofId, CancellationToken cancellationToken = default) =>
+        DownloadAsync($"/api/payments/{proofId}/receipt/pdf", cancellationToken);
+
     public Task<List<PaymentProofItem>> ListMyPaymentsAsync(CancellationToken cancellationToken = default) =>
         GetAsync<List<PaymentProofItem>>("/api/payments/mine", cancellationToken);
 

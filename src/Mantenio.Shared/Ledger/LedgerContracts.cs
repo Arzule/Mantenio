@@ -20,6 +20,7 @@ public enum DebtStatus
     Paid,
 }
 
+/// <param name="PayerName">Who the receipt is made out to when an admin registered the proof; null when the resident uploaded it.</param>
 public sealed record PaymentProofItem(
     Guid Id,
     Guid ApartmentId,
@@ -37,7 +38,12 @@ public sealed record PaymentProofItem(
     string? RejectionReason,
     string? VoidReason,
     string? ReceiptNumber,
-    int RowVersion);
+    int RowVersion,
+    string? PayerName = null)
+{
+    /// <summary>An admin registered it for the resident (see PayerName); SubmittedByName is that admin.</summary>
+    public bool RegisteredByAdmin => PayerName is not null;
+}
 
 /// <summary>Short-lived link (about 5 minutes) to a private file.</summary>
 public sealed record FileLink(Uri Url);

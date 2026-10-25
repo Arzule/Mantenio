@@ -1,0 +1,206 @@
+@* Admin (e.g. the guard on duty): registers the voucher a resident brought in person. Three steps: the form, a
+   confirmation with every detail (it is approved at once) and the receipt, ready to send by WhatsApp. *@
+@using Mantenio.Shared.Apartments
+@inherits BusyComponentBase
+@inject MantenioApi Api
+@inject IFileOpener Files
+
+<MudDialog>
+    <TitleContent><MudText Typo="Typo.h6">@UiStrings.RegisterProof</MudText></TitleContent>
+    <DialogContent>
+        @if (_step == Step.Form)
+        {
+            <MudText Typo="Typo.body2" Class="mb-3">@UiStrings.RegisterProofBody</MudText>
+            <div class="d-flex gap-2">
+                <MudAutocomplete T="string" Value="_tower" ValueChanged="OnTowerAsync" SearchFunc="SearchTowers" Label="@CondoProfile.Current.TowerLabel"
+                                 CoerceText="false" CoerceValue="true" Clearable="true" Variant="Variant.Outlined" Style="flex: 1" />
+                <MudAutocomplete T="string" Value="_number" ValueChanged="OnNumberAsync" SearchFunc="SearchNumbers" Label="@UiStrings.ApartmentNumber"
+                                 CoerceText="false" CoerceValue="true" Clearable="true" Variant="Variant.Outlined" Style="flex: 1" />
+            </div>
+            @if (_tower is not null && _number is not null && Apartment is null)
+            {
+                <MudText Typo="Typo.body2" Color="Color.Error" Class="mt-1">@UiStrings.ApartmentUnknown</MudText>
+            }
+            <MudAutocomplete T="string" @bind-Value="_payer" SearchFunc="SearchPayers" Label="@UiStrings.PayerName" HelperText="@UiStrings.PayerHint"
+                             CoerceText="false" CoerceValue="true" MaxLength="120" Variant="Variant.Outlined" Class="mt-3" />
+            <MudNumericField T="decimal?" @bind-Value="_amount" Label="@UiStrings.Amount" Min="0" Format="N2" Variant="Variant.Outlined" Class="mt-3" />
+            <MudDatePicker @bind-Date="_date" Label="@UiStrings.OperationDate" MaxDate="DateTime.Today" DateFormat="dd/MM/yyyy" Variant="Variant.Outlined" Class="mt-3" />
+            <MudSelect T="string" @bind-Value="_bank" Label="@UiStrings.BankName" Variant="Variant.Outlined" Class="mt-3">
+                @foreach (var bank in _banks)
+                {
+                    <MudSelectItem Value="bank">@bank</MudSelectItem>
+                }
+                <MudSelectItem Value="OtherBank">@UiStrings.OtherBank</MudSelectItem>
+            </MudSelect>
+            @if (_bank == OtherBank)
+            {
+                <MudTextField @bind-Value="_otherBank" Label="@UiStrings.OtherBank" Variant="Variant.Outlined" MaxLength="80" Immediate="true" Class="mt-3" />
+            }
+            <MudTextField @bind-Value="_operation" Label="@UiStrings.OperationNumber" Variant="Variant.Outlined" MaxLength="40" Immediate="true" Class="mt-3" />
+            <div class="mt-4"><ProofImageInput @bind-Image="_image" /></div>
+            @if (_image is null)
+            {
+                <MudText Typo="Typo.caption" Class="mt-1 d-block">@UiStrings.PhotoRequired</MudText>
+            }
+        }
+        else if (_step == Step.Confirm)
+        {
+            <MudText Typo="Typo.subtitle1"><b>@UiStrings.ConfirmRegisterTitle</b></MudText>
+            <MudText Typo="Typo.body2" Class="mb-3">@UiStrings.ConfirmRegisterBody</MudText>
+            <MudSimpleTable Dense="true" Elevation="0">
+                <tbody>
+                    <tr><td>@UiStrings.Apartment</td><td><b>@Apartment!.Code</b></td></tr>
+                    <tr><td>@UiStrings.PayerName</td><td><b>@_payer</b></td></tr>
+                    <tr><td>@UiStrings.Amount</td><td><b>@Formats.Money(_amount!.Value)</b></td></tr>
+                    <tr><td>@UiStrings.OperationDate</td><td>@Formats.Date(DateOnly.FromDateTime(_date!.Value))</td></tr>
+                    <tr><td>@UiStrings.BankName</td><td>@BankName</td></tr>
+                    <tr><td>@UiStrings.OperationNumber</td><td>@_operation.Trim()</td></tr>
+                </tbody>
+            </MudSimpleTable>
+            <img src="@($"data:{_image!.ContentType};base64,{Convert.ToBase64String(_image.Content)}")" alt="@UiStrings.ViewImage"
+                 style="max-width: 100%; max-height: 200px; margin-top: 12px; border-radius: 4px; display: block" />
+        }
+        else if (_registered is { } done)
+        {
+            <MudAlert Severity="Severity.Success">@Formats.Format(UiStrings.ProofRegistered, done.ReceiptNumber)</MudAlert>
+            <MudText Typo="Typo.body2" Class="mt-3">@UiStrings.ReceiptReadyBody</MudText>
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Custom.Brands.WhatsApp" Disabled="Busy" OnClick="WhatsAppAsync">@UiStrings.SendWhatsApp</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PictureAsPdf" Disabled="Busy" OnClick="DownloadAsync">@UiStrings.DownloadReceipt</MudButton>
+            </div>
+        }
+        @if (Error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-3">@Error</MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        @switch (_step)
+        {
+            case Step.Form:
+                <MudButton OnClick="() => Dialog.Cancel()">@UiStrings.Cancel</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!CanContinue)" OnClick="() => _step = Step.Confirm">@UiStrings.Continue</MudButton>
+                break;
+            case Step.Confirm:
+                <MudButton Disabled="Busy" OnClick="() => _step = Step.Form">@UiStrings.Back</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Success" Disabled="Busy" OnClick="RegisterAsync">@UiStrings.ConfirmAndApprove</MudButton>
+                break;
+            default:
+                <MudButton OnClick="() => Dialog.Close(DialogResult.Ok(_registered))">@UiStrings.Close</MudButton>
+                break;
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private const string OtherBank = "\u0000other";
+
+    private enum Step
+    {
+        Form,
+        Confirm,
+        Done,
+    }
+
+    private Step _step = Step.Form;
+    private List<ApartmentAdminItem> _apartments = [];
+    private List<string> _banks = [];
+    private List<string> _residents = [];
+    private string? _tower;
+    private string? _number;
+    private string? _payer;
+    private decimal? _amount;
+    private DateTime? _date = DateTime.Today;
+    private string _bank = "";
+    private string _otherBank = "";
+    private string _operation = "";
+    private PickedImage? _image;
+    private PaymentProofItem? _registered;
+
+    [CascadingParameter]
+    private IMudDialogInstance Dialog { get; set; } = default!;
+
+    /// <summary>The apartment typed or picked; null while the tower and number do not match a real one.</summary>
+    private ApartmentAdminItem? Apartment => _apartments.FirstOrDefault(a =>
+        string.Equals(a.Tower, _tower?.Trim(), StringComparison.OrdinalIgnoreCase)
+        && string.Equals(a.Number, _number?.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    private string BankName => (_bank == OtherBank ? _otherBank : _bank).Trim();
+
+    private bool CanContinue => Apartment is not null && !string.IsNullOrWhiteSpace(_payer) && _amount > 0 && _date is not null
+        && BankName.Length > 0 && _operation.Trim().Length > 0 && _image is not null;
+
+    protected override Task OnInitializedAsync() => RunAsync(async () =>
+    {
+        _apartments = await Api.ListApartmentsAsync(null, null);
+        _banks = (await Api.ListBankAccountsAsync()).Select(b => b.BankName).Distinct().ToList();
+        _bank = _banks.FirstOrDefault() ?? OtherBank;
+    });
+
+    private Task<IEnumerable<string>> SearchTowers(string? text, CancellationToken cancellationToken) =>
+        Task.FromResult(_apartments.Select(a => a.Tower).Distinct()
+            .Where(t => string.IsNullOrWhiteSpace(text) || t.Contains(text.Trim(), StringComparison.OrdinalIgnoreCase)));
+
+    private Task<IEnumerable<string>> SearchNumbers(string? text, CancellationToken cancellationToken) =>
+        Task.FromResult(_apartments
+            .Where(a => _tower is null || string.Equals(a.Tower, _tower.Trim(), StringComparison.OrdinalIgnoreCase))
+            .Select(a => a.Number).Distinct()
+            .Where(n => string.IsNullOrWhiteSpace(text) || n.StartsWith(text.Trim(), StringComparison.OrdinalIgnoreCase)));
+
+    private Task<IEnumerable<string>> SearchPayers(string? text, CancellationToken cancellationToken) =>
+        Task.FromResult(_residents.Where(r => string.IsNullOrWhiteSpace(text) || r.Contains(text.Trim(), StringComparison.OrdinalIgnoreCase)));
+
+    private async Task OnTowerAsync(string? tower)
+    {
+        _tower = tower;
+        await LoadResidentsAsync();
+    }
+
+    private async Task OnNumberAsync(string? number)
+    {
+        _number = number;
+        await LoadResidentsAsync();
+    }
+
+    /// <summary>Suggests the apartment's residents as "Recibí de" (any name can still be typed).</summary>
+    private async Task LoadResidentsAsync()
+    {
+        _residents = [];
+        if (Apartment is { } apartment)
+        {
+            await RunAsync(async () => _residents = await Api.ListApartmentResidentsAsync(apartment.Id));
+            if (_residents.Count == 1 && string.IsNullOrWhiteSpace(_payer))
+            {
+                _payer = _residents[0];
+            }
+        }
+    }
+
+    private async Task RegisterAsync()
+    {
+        if (await RunAsync(async () => _registered = await Api.RegisterPaymentProofAsync(
+                Apartment!.Id, _payer!.Trim(), _amount!.Value, DateOnly.FromDateTime(_date!.Value), BankName, _operation.Trim(),
+                _image!.Content, _image.ContentType)))
+        {
+            _step = Step.Done;
+        }
+        else
+        {
+            _step = Step.Form;
+        }
+    }
+
+    private Task WhatsAppAsync() => RunAsync(async () =>
+    {
+        var file = await Api.DownloadReceiptAsync(_registered!.Id);
+        var message = Formats.Format(UiStrings.WhatsAppMessage, _registered.ReceiptNumber, CondoProfile.Current.DisplayName,
+            Formats.Money(_registered.ApprovedAmount ?? _registered.DeclaredAmount));
+        await Files.ShareToWhatsAppAsync(file.FileName, file.ContentType, file.Content, message);
+    });
+
+    private Task DownloadAsync() => RunAsync(async () =>
+    {
+        var file = await Api.DownloadReceiptAsync(_registered!.Id);
+        await Files.SaveAsync(file.FileName, file.ContentType, file.Content);
+    });
+}

@@ -483,4 +483,25 @@
   <data name="PushChannelDescription" xml:space="preserve"><value>Pagos aprobados o rechazados, cambios de cuota o de cuentas bancarias y recordatorios.</value></data>
   <data name="NoticeReminderTitle" xml:space="preserve"><value>Recordatorio de pago</value></data>
   <data name="NoticeReminder" xml:space="preserve"><value>El departamento {0} tiene un saldo pendiente de {1} ({2} meses). Puedes revisar el detalle y subir tu comprobante en Pagos. Si ya pagaste, ignora este aviso.</value></data>
+  <!-- Admin registers a resident's voucher (walk-in) and sends the receipt by WhatsApp -->
+  <data name="RegisterProof" xml:space="preserve"><value>Registrar comprobante de un residente</value></data>
+  <data name="RegisterProofBody" xml:space="preserve"><value>Para quien entrega su voucher en persona. El pago se aprueba al registrarlo y se emite el recibo.</value></data>
+  <data name="PayerName" xml:space="preserve"><value>Recibí de</value></data>
+  <data name="PayerHint" xml:space="preserve"><value>Nombre de quien paga, tal como saldrá en el recibo.</value></data>
+  <data name="TakePhoto" xml:space="preserve"><value>Tomar foto</value></data>
+  <data name="FromGallery" xml:space="preserve"><value>Galería</value></data>
+  <data name="PhotoRequired" xml:space="preserve"><value>Adjunta una foto o captura del voucher.</value></data>
+  <data name="PhotoReady" xml:space="preserve"><value>Imagen lista</value></data>
+  <data name="ApartmentUnknown" xml:space="preserve"><value>Ese departamento no existe.</value></data>
+  <data name="ConfirmRegisterTitle" xml:space="preserve"><value>Confirma el pago</value></data>
+  <data name="ConfirmRegisterBody" xml:space="preserve"><value>Se aprobará de inmediato y se emitirá el recibo. Revisa que los datos coincidan con el voucher.</value></data>
+  <data name="ConfirmAndApprove" xml:space="preserve"><value>Confirmar y aprobar</value></data>
+  <data name="ProofRegistered" xml:space="preserve"><value>Pago registrado. Recibo {0}.</value></data>
+  <data name="SendWhatsApp" xml:space="preserve"><value>Enviar por WhatsApp</value></data>
+  <data name="DownloadReceipt" xml:space="preserve"><value>Descargar recibo</value></data>
+  <data name="WhatsAppMessage" xml:space="preserve"><value>Hola, te enviamos tu recibo {0} de {1} por {2}. Gracias por tu pago.</value></data>
+  <data name="RegisteredFor" xml:space="preserve"><value>Registrado por {0} a nombre de {1}</value></data>
+  <data name="ReceiptReadyBody" xml:space="preserve"><value>Envíale el recibo al residente por WhatsApp o descárgalo para imprimirlo.</value></data>
+  <data name="PhotoError" xml:space="preserve"><value>No se pudo obtener la imagen. Revisa el permiso de la cámara o elige una de la galería.</value></data>
+  <data name="AuditAction_RegisteredByAdmin" xml:space="preserve"><value>Registrado por administración</value></data>
 </root>

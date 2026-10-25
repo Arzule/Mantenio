@@ -9,7 +9,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Mantenio.Api.Features.Ledger;
 
-/// <summary>Sends the receipt PDF to whoever uploaded the proof. Failures are logged, never thrown.</summary>
+/// <summary>
+/// Sends the receipt PDF to whoever uploaded the proof or, when an admin registered it for a resident, to the
+/// apartment's active users with an email (the admin can also send it by WhatsApp). Failures are logged, never thrown.
+/// </summary>
 internal sealed partial class ReceiptEmails(AppDbContext db, IFileStorage storage, IEmailSender sender, ILogger<ReceiptEmails> logger)
 {
     private static readonly CultureInfo Culture = CultureInfo.GetCultureInfo(CondoProfile.Current.Culture);
@@ -18,26 +21,30 @@ internal sealed partial class ReceiptEmails(AppDbContext db, IFileStorage storag
     {
         try
         {
-            var data = await (
-                    from p in db.PaymentProofs.AsNoTracking()
-                    join u in db.Users on p.SubmittedById equals u.Id
-                    where p.Id == receipt.PaymentProofId
-                    select new { u.Email, u.FirstName, u.LastName, p.ApprovedAmount })
-                .SingleAsync(cancellationToken);
+            var proof = await db.PaymentProofs.AsNoTracking().SingleAsync(p => p.Id == receipt.PaymentProofId, cancellationToken);
+            var recipients = await db.Users.AsNoTracking()
+                .Where(u => u.Email != null && (proof.PayerName == null
+                    ? u.Id == proof.SubmittedById
+                    : u.IsActive && u.ApartmentId == proof.ApartmentId))
+                .Select(u => new { u.Email, u.FirstName, u.LastName })
+                .ToListAsync(cancellationToken);
             var pdf = receipt.PdfObjectKey is null ? null : await storage.GetAsync(receipt.PdfObjectKey, cancellationToken);
-            if (data.Email is null || pdf is null)
+            if (recipients.Count == 0 || pdf is null)
             {
                 return;
             }
 
             var condo = CondoProfile.Current.DisplayName;
-            var amount = (data.ApprovedAmount ?? 0).ToString("C2", Culture);
-            await sender.SendAsync(new EmailMessage(
-                data.Email,
-                $"{data.FirstName} {data.LastName}",
-                Format(ReceiptTexts.EmailSubject, data.FirstName, condo, receipt.Number, amount),
-                Format(ReceiptTexts.EmailBody, data.FirstName, condo, receipt.Number, amount),
-                [new EmailAttachment(Format(ReceiptTexts.AttachmentName, receipt.Number), "application/pdf", pdf)]), cancellationToken);
+            var amount = (proof.ApprovedAmount ?? 0).ToString("C2", Culture);
+            foreach (var recipient in recipients)
+            {
+                await sender.SendAsync(new EmailMessage(
+                    recipient.Email!,
+                    $"{recipient.FirstName} {recipient.LastName}",
+                    Format(ReceiptTexts.EmailSubject, recipient.FirstName, condo, receipt.Number, amount),
+                    Format(ReceiptTexts.EmailBody, recipient.FirstName, condo, receipt.Number, amount),
+                    [new EmailAttachment(LedgerService.ReceiptFileName(receipt.Number), "application/pdf", pdf)]), cancellationToken);
+            }
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

@@ -36,6 +36,8 @@ internal sealed class PaymentProofConfiguration : IEntityTypeConfiguration<Payme
         builder.Property(x => x.BankName).HasMaxLength(80);
         builder.Property(x => x.OperationNumber).HasMaxLength(40);
         builder.Property(x => x.ImageObjectKey).HasMaxLength(200);
+        builder.Property(x => x.PayerName).HasMaxLength(120);
+        builder.Ignore(x => x.IsRegisteredByAdmin);
         builder.Property(x => x.RejectionReason).HasMaxLength(500);
         builder.Property(x => x.VoidReason).HasMaxLength(500);
         builder.Property<uint>("RowVersion").IsRowVersion();

@@ -93,6 +93,33 @@ public sealed class Phase5UiTests : BunitContext
     }
 
     [Fact]
+    public void Admins_send_a_receipt_by_whatsapp_and_see_who_registered_it()
+    {
+        var proof = new Shared.Ledger.PaymentProofItem(Guid.NewGuid(), Guid.NewGuid(), "H-102", "Guardia Turno", 180m, 180m, new DateOnly(2026, 11, 2),
+            "BCP", "00123", Shared.Ledger.ProofStatus.Approved, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, "Guardia Turno", null, null,
+            "0003-000007", 3, "Rosa Quispe");
+        _api.ReturnsFile($"/api/payments/{proof.Id}/receipt/pdf", "recibo-0003-000007.pdf");
+
+        var cut = Render<ProofCard>(p => p.Add(c => c.Item, proof).Add(c => c.ShowWhatsApp, true));
+
+        cut.Markup.ShouldContain(Formats.Format(UiStrings.RegisteredFor, "Guardia Turno", "Rosa Quispe"));
+        cut.FindAll("button").First(b => b.TextContent.Trim() == UiStrings.SendWhatsApp).Click();
+        cut.WaitForAssertion(() => _files.SharedToWhatsApp.ShouldHaveSingleItem().FileName.ShouldBe("recibo-0003-000007.pdf"));
+        _files.SharedToWhatsApp[0].Message.ShouldContain("0003-000007");
+    }
+
+    [Fact]
+    public void Residents_do_not_get_the_whatsapp_button()
+    {
+        var proof = new Shared.Ledger.PaymentProofItem(Guid.NewGuid(), Guid.NewGuid(), "H-102", "Rosa", 180m, 180m, new DateOnly(2026, 11, 2),
+            "BCP", "00124", Shared.Ledger.ProofStatus.Approved, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, "Admin", null, null, "0003-000008", 3);
+
+        var cut = Render<ProofCard>(p => p.Add(c => c.Item, proof));
+
+        cut.Markup.ShouldNotContain(UiStrings.SendWhatsApp);
+    }
+
+    [Fact]
     public void Every_audit_action_the_api_writes_has_a_spanish_label()
     {
         string[] actions =
@@ -100,7 +127,7 @@ public sealed class Phase5UiTests : BunitContext
             "ApartmentChanged", "ApartmentFeeChanged", "Approved", "ChargeCreated", "Created", "CreatedFromProfile", "Deactivated",
             "Deleted", "DueRuleChanged", "FounderSeeded", "Frozen", "GlobalFeeChanged", "Imported", "Issued", "LateFeeChanged",
             "PasswordChanged", "PasswordReset", "PaymentApplied", "PaymentReversed", "Reactivated", "Registered", "Rejected",
-            "Submitted", "Unfrozen", "Updated", "Voided", "LateFeeCreated", "ReminderSent",
+            "Submitted", "Unfrozen", "Updated", "Voided", "LateFeeCreated", "ReminderSent", "RegisteredByAdmin",
         ];
 
         actions.Where(a => LedgerText.AuditAction(a) == a).ShouldBeEmpty();

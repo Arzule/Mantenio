@@ -39,4 +39,17 @@ public sealed class ReceiptTests
         proof.Void("Pago duplicado", Guid.NewGuid(), now);
         proof.Status.ShouldBe(PaymentProofStatus.Voided);
     }
+
+    [Fact]
+    public void A_proof_an_admin_registers_is_made_out_to_the_payer()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var registered = PaymentProof.RegisteredByAdmin(Guid.NewGuid(), Guid.NewGuid(), "  Rosa Quispe ", 180m, new DateOnly(2026, 11, 2), "BCP", "00-123", "k", now);
+        var uploaded = new PaymentProof(Guid.NewGuid(), Guid.NewGuid(), 180m, new DateOnly(2026, 11, 2), "BCP", "00124", "k", now);
+
+        registered.PayerName.ShouldBe("Rosa Quispe");
+        registered.IsRegisteredByAdmin.ShouldBeTrue();
+        uploaded.IsRegisteredByAdmin.ShouldBeFalse();
+        Should.Throw<ArgumentException>(() => PaymentProof.RegisteredByAdmin(Guid.NewGuid(), Guid.NewGuid(), " ", 1m, default, "BCP", "1", "k", now));
+    }
 }

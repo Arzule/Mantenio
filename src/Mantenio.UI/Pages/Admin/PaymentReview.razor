@@ -9,7 +9,10 @@
 <PageTitle>@UiStrings.ReviewTitle · @CondoProfile.Current.ShortName</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="py-6">
-    <MudText Typo="Typo.h5" HtmlTag="h1">@UiStrings.ReviewTitle</MudText>
+    <div class="d-flex align-center justify-space-between flex-wrap gap-2">
+        <MudText Typo="Typo.h5" HtmlTag="h1">@UiStrings.ReviewTitle</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddAPhoto" OnClick="RegisterAsync">@UiStrings.RegisterProof</MudButton>
+    </div>
     <MudText Class="mt-2 mb-3">@UiStrings.ReviewBody</MudText>
 
     @if (Error is not null)
@@ -62,7 +65,7 @@
                 <MudStack Spacing="2">
                     @foreach (var proof in _history)
                     {
-                        <ProofCard Item="proof" ShowApartment="true">
+                        <ProofCard Item="proof" ShowApartment="true" ShowWhatsApp="true">
                             @if (proof.Status == ProofStatus.Approved)
                             {
                                 <MudSpacer />
@@ -105,6 +108,17 @@
         if (index == 1)
         {
             await RunAsync(async () => _history = (await Api.ListPaymentsAsync(null)).Where(p => p.Status != ProofStatus.Pending).ToList());
+        }
+    }
+
+    private async Task RegisterAsync()
+    {
+        var dialog = await Dialogs.ShowAsync<RegisterProofDialog>(UiStrings.RegisterProof,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, BackdropClick = false });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: PaymentProofItem })
+        {
+            await OnTabAsync(1);
         }
     }
 

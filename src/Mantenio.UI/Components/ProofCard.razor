@@ -28,6 +28,10 @@
             <span> · @Formats.Format(UiStrings.SubmittedBy, Item.SubmittedByName)</span>
         }
     </MudText>
+    @if (Item.PayerName is { } payer)
+    {
+        <MudText Typo="Typo.caption" Class="d-block">@Formats.Format(UiStrings.RegisteredFor, Item.SubmittedByName, payer)</MudText>
+    }
     @if (Item is { ReviewedAt: { } reviewedAt, ReviewedByName: { } reviewer })
     {
         <MudText Typo="Typo.caption" Class="d-block">@Formats.Format(UiStrings.ReviewedBy, reviewer, Formats.DateTime(reviewedAt))</MudText>
@@ -48,6 +52,11 @@
             <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PictureAsPdf"
                        OnClick="() => OpenAsync(() => Api.GetReceiptAsync(Item.Id))">@Formats.Format(UiStrings.ReceiptNumber, number)</MudButton>
         }
+        @if (ShowWhatsApp && Item is { Status: ProofStatus.Approved, ReceiptNumber: not null })
+        {
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Success" StartIcon="@Icons.Custom.Brands.WhatsApp"
+                       OnClick="WhatsAppAsync">@UiStrings.SendWhatsApp</MudButton>
+        }
         @ChildContent
     </div>
 </MudPaper>
@@ -61,6 +70,25 @@
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Admins: send the receipt PDF to the resident by WhatsApp.</summary>
+    [Parameter]
+    public bool ShowWhatsApp { get; set; }
+
+    private async Task WhatsAppAsync()
+    {
+        try
+        {
+            var file = await Api.DownloadReceiptAsync(Item.Id);
+            var message = Formats.Format(UiStrings.WhatsAppMessage, Item.ReceiptNumber, CondoProfile.Current.DisplayName,
+                Formats.Money(Item.ApprovedAmount ?? Item.DeclaredAmount));
+            await Files.ShareToWhatsAppAsync(file.FileName, file.ContentType, file.Content, message);
+        }
+        catch (ApiException ex)
+        {
+            Snackbar.Add(ErrorMessages.For(ex.Code), Severity.Error);
+        }
+    }
 
     private async Task OpenAsync(Func<Task<FileLink>> link)
     {

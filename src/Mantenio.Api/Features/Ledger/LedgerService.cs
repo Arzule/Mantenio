@@ -1,5 +1,7 @@
+using System.Globalization;
 using Mantenio.Api.Features.Settings;
 using Mantenio.Api.Infrastructure.Persistence;
+using Mantenio.Api.Resources;
 using Mantenio.Api.Infrastructure.Storage;
 using Mantenio.Api.Infrastructure.Time;
 using Mantenio.Domain.Audit;
@@ -119,7 +121,9 @@ internal sealed class LedgerService(AppDbContext db, TimeProvider time, IFileSto
     public async Task<string> StoreReceiptPdfAsync(Receipt receipt, PaymentProof proof, bool voided, CancellationToken cancellationToken)
     {
         var apartment = await db.Apartments.AsNoTracking().Include(a => a.Tower).SingleAsync(a => a.Id == proof.ApartmentId, cancellationToken);
-        var payer = await db.Users.Where(u => u.Id == proof.SubmittedById).Select(u => u.FirstName + " " + u.LastName).SingleAsync(cancellationToken);
+        // Registered by an admin: made out to the resident who paid, not to the admin who typed it in.
+        var payer = proof.PayerName
+            ?? await db.Users.Where(u => u.Id == proof.SubmittedById).Select(u => u.FirstName + " " + u.LastName).SingleAsync(cancellationToken);
         var approver = await db.Users.Where(u => u.Id == proof.ReviewedById).Select(u => u.FirstName + " " + u.LastName).SingleOrDefaultAsync(cancellationToken);
 
         // Months this payment paid when it was issued (reversed allocations included, so a voided receipt still says what it covered).
@@ -154,6 +158,11 @@ internal sealed class LedgerService(AppDbContext db, TimeProvider time, IFileSto
     }
 
     public static string ReceiptNumber(long sequence) => Receipt.FormatNumber(CondoProfile.Current.Receipt.Series, sequence);
+
+    /// <summary>"recibo-0003-000001.pdf" (Resources/ReceiptTexts.resx).</summary>
+    public static string ReceiptFileName(string number) => Format(ReceiptTexts.AttachmentName, number);
+
+    private static string Format(string template, params object[] args) => string.Format(CultureInfo.InvariantCulture, template, args);
 
     private async Task<List<Guid>> ApartmentsWithCreditAsync(List<Guid> apartmentIds, CancellationToken cancellationToken)
     {

@@ -25,8 +25,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<IFileOpener, LauncherFileOpener>();
 #if ANDROID
         builder.Services.AddSingleton<IPushRegistration, AndroidPushRegistration>();
+        builder.Services.AddSingleton<IImagePicker, MediaImagePicker>();
 #else
         builder.Services.AddSingleton<IPushRegistration, NoPushRegistration>();
+        builder.Services.AddSingleton<IImagePicker, NoImagePicker>();
 #endif
         builder.Services.AddSingleton(new ClientPreferences(KeepSignedInByDefault: true));
         builder.Services.AddMantenioClient(ApiBaseAddress());

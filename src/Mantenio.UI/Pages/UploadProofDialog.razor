@@ -22,16 +22,7 @@
         }
         <MudTextField @bind-Value="_operation" Label="@UiStrings.OperationNumber" Variant="Variant.Outlined" MaxLength="40" Immediate="true" Class="mt-3" />
 
-        <div class="mt-4">
-            <label for="proof-file" class="mud-button-root mud-button mud-button-outlined mud-button-outlined-primary mud-button-outlined-size-medium" style="cursor: pointer">
-                <span class="mud-button-label">@(_image is null ? UiStrings.ChooseImage : Formats.Format(UiStrings.ImageChosen, _imageName))</span>
-            </label>
-            <InputFile id="proof-file" OnChange="OnImageAsync" accept="image/*" style="display: none" />
-        </div>
-        @if (_preview is not null)
-        {
-            <img src="@_preview" alt="@UiStrings.ViewImage" style="max-width: 100%; max-height: 240px; margin-top: 12px; border-radius: 4px" />
-        }
+        <div class="mt-4"><ProofImageInput @bind-Image="_image" /></div>
         @if (Error is not null)
         {
             <MudAlert Severity="Severity.Error" Class="mt-3">@Error</MudAlert>
@@ -45,7 +36,6 @@
 
 @code {
     private const string OtherBank = "\u0000other";
-    private const long MaxImageBytes = 10 * 1024 * 1024;
 
     private List<string> _banks = [];
     private decimal? _amount;
@@ -53,9 +43,7 @@
     private string _bank = "";
     private string _otherBank = "";
     private string _operation = "";
-    private byte[]? _image;
-    private string _imageName = "";
-    private string? _preview;
+    private PickedImage? _image;
 
     [CascadingParameter]
     private IMudDialogInstance Dialog { get; set; } = default!;
@@ -73,36 +61,11 @@
         });
     }
 
-    private async Task OnImageAsync(InputFileChangeEventArgs e)
-    {
-        Error = null;
-        try
-        {
-            // Shrunk on the device first so uploads stay small on mobile data; the server re-encodes it anyway.
-            var resized = await e.File.RequestImageFileAsync("image/jpeg", 1600, 1600);
-            using var buffer = new MemoryStream();
-            await using (var stream = resized.OpenReadStream(MaxImageBytes))
-            {
-                await stream.CopyToAsync(buffer);
-            }
-
-            _image = buffer.ToArray();
-            _imageName = e.File.Name;
-            _preview = "data:image/jpeg;base64," + Convert.ToBase64String(_image);
-        }
-        catch (IOException)
-        {
-            _image = null;
-            _preview = null;
-            Error = UiStrings.ImageTooBig;
-        }
-    }
-
     private async Task SendAsync()
     {
         PaymentProofItem? sent = null;
         if (await RunAsync(async () => sent = await Api.SubmitPaymentProofAsync(
-                _amount!.Value, DateOnly.FromDateTime(_date!.Value), BankName, _operation.Trim(), _image!, "image/jpeg")))
+                _amount!.Value, DateOnly.FromDateTime(_date!.Value), BankName, _operation.Trim(), _image!.Content, _image.ContentType)))
         {
             Dialog.Close(DialogResult.Ok(sent));
         }
