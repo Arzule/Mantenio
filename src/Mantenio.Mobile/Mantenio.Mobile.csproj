@@ -11,7 +11,7 @@
     <EnableDefaultCssItems>false</EnableDefaultCssItems>
     <MauiXamlInflator>SourceGen</MauiXamlInflator>
 
-    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+    <ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
     <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
   </PropertyGroup>
