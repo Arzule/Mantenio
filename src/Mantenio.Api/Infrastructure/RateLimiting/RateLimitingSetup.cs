@@ -18,6 +18,9 @@ public sealed class RateLimitSettings
     public int InvitationPerMinute { get; set; } = 5;
 
     public int RefreshPerMinute { get; set; } = 30;
+
+    /// <summary>Payment-proof uploads per signed-in user (images are the heaviest requests).</summary>
+    public int UploadsPerHour { get; set; } = 30;
 }
 
 public static class RateLimitPolicies
@@ -26,6 +29,7 @@ public static class RateLimitPolicies
     public const string Email = "email";
     public const string Invitation = "invitation";
     public const string Refresh = "refresh";
+    public const string Upload = "upload";
 }
 
 internal static class RateLimitingSetup
@@ -60,6 +64,9 @@ internal static class RateLimitingSetup
             options.AddPolicy(RateLimitPolicies.Email, http => PerClient(http, settings.EmailPer15Minutes, TimeSpan.FromMinutes(15)));
             options.AddPolicy(RateLimitPolicies.Invitation, http => PerClient(http, settings.InvitationPerMinute, TimeSpan.FromMinutes(1)));
             options.AddPolicy(RateLimitPolicies.Refresh, http => PerClient(http, settings.RefreshPerMinute, TimeSpan.FromMinutes(1)));
+            options.AddPolicy(RateLimitPolicies.Upload, http => RateLimitPartition.GetFixedWindowLimiter(
+                http.User.FindFirst(Mantenio.Shared.Auth.MantenioClaims.UserId)?.Value ?? http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = settings.UploadsPerHour, Window = TimeSpan.FromHours(1), QueueLimit = 0 }));
         });
 
         return services;

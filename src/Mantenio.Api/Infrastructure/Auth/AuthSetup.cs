@@ -54,6 +54,8 @@ internal static class AuthSetup
 
         services.AddAuthorizationBuilder()
             .SetDefaultPolicy(Policy(_ => { }))
+            // Deny by default: endpoints must opt out with AllowAnonymous (see AuthorizationCoverageTests).
+            .SetFallbackPolicy(Policy(_ => { }))
             .AddPolicy(MantenioPolicies.SignedIn, p => p.RequireAuthenticatedUser())
             .AddPolicy(MantenioPolicies.AdminOnly, Policy(p => p.RequireClaim(MantenioClaims.Role, nameof(AccountRole.Admin))))
             .AddPolicy(MantenioPolicies.FounderOnly, Policy(p => p

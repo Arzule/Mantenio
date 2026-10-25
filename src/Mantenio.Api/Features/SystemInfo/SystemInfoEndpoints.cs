@@ -18,7 +18,8 @@ internal static class SystemInfoEndpoints
                 profile.DisplayName,
                 typeof(SystemInfoEndpoints).Assembly.GetName().Version?.ToString() ?? "0.0.0"));
         })
-        .WithName("GetSystemInfo");
+        .WithName("GetSystemInfo")
+        .AllowAnonymous();
 
         return app;
     }

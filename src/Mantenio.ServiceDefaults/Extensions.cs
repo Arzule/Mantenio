@@ -113,13 +113,13 @@ public static class Extensions
         // See https://aka.ms/aspire/healthchecks
 
         // All health checks (including the database) must pass for the app to accept traffic
-        app.MapHealthChecks(HealthEndpointPath);
+        app.MapHealthChecks(HealthEndpointPath).AllowAnonymous();
 
         // Only health checks tagged with the "live" tag must pass for app to be considered alive
         app.MapHealthChecks(AlivenessEndpointPath, new HealthCheckOptions
         {
             Predicate = r => r.Tags.Contains("live")
-        });
+        }).AllowAnonymous();
 
         return app;
     }

@@ -33,6 +33,18 @@ jobs:
       - name: Test
         run: dotnet test --solution Mantenio.Ci.slnf --no-build -c Release
 
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Whole history; exceptions are in .gitleaks.toml.
+      - name: gitleaks
+        run: docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.21.2 git /repo --config /repo/.gitleaks.toml --redact --no-banner
+
   android:
     name: Build Android app
     # Private condo deployment repos hit "Disk quota exceeded" installing the MAUI workload on hosted runners;

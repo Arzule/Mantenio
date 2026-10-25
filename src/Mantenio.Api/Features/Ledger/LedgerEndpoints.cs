@@ -4,6 +4,7 @@ using Mantenio.Api.Infrastructure.Auth;
 using Mantenio.Api.Infrastructure.Errors;
 using Mantenio.Api.Infrastructure.Notifications;
 using Mantenio.Api.Infrastructure.Persistence;
+using Mantenio.Api.Infrastructure.Security;
 using Mantenio.Api.Infrastructure.Storage;
 using Mantenio.Api.Infrastructure.Time;
 using Mantenio.Domain.Audit;
@@ -31,7 +32,7 @@ internal static class LedgerEndpoints
     public static IEndpointRouteBuilder MapLedgerEndpoints(this IEndpointRouteBuilder app)
     {
         var payments = app.MapGroup("/api/payments").WithTags("Payments").RequireAuthorization();
-        payments.MapPost("/", SubmitAsync).DisableAntiforgery().Produces<PaymentProofItem>();
+        payments.MapPost("/", SubmitAsync).DisableAntiforgery().WithUploadLimits().Produces<PaymentProofItem>();
         payments.MapGet("/mine", MineAsync).Produces<IReadOnlyList<PaymentProofItem>>();
         payments.MapGet("/{id:guid}/image", ImageAsync).Produces<FileLink>();
         payments.MapGet("/{id:guid}/receipt", ReceiptAsync).Produces<FileLink>();
@@ -42,7 +43,7 @@ internal static class LedgerEndpoints
 
         var admin = app.MapGroup("/api/admin").WithTags("Payments").RequireAuthorization(MantenioPolicies.AdminOnly);
         admin.MapGet("/payments", ListAsync).Produces<IReadOnlyList<PaymentProofItem>>();
-        admin.MapPost("/payments/register", RegisterAsync).DisableAntiforgery().Produces<PaymentProofItem>();
+        admin.MapPost("/payments/register", RegisterAsync).DisableAntiforgery().WithUploadLimits().Produces<PaymentProofItem>();
         admin.MapGet("/apartments/{id:guid}/residents", ResidentsAsync).Produces<IReadOnlyList<string>>();
         admin.MapPost("/payments/{id:guid}/approve", ApproveAsync).Produces<PaymentProofItem>();
         admin.MapPost("/payments/{id:guid}/reject", RejectAsync).Produces<PaymentProofItem>();

@@ -1,0 +1,10 @@
+# gitleaks configuration (CI "Secret scan" job). Default rules plus a narrow exception.
+[extend]
+useDefault = true
+
+[allowlist]
+# The Firebase Android client API key in condos/<slug>/condo.json ships inside the app by design (Google: it is not a
+# secret); it is restricted to the Android app in Google Cloud. Only that exact line shape is allowed.
+description = "Firebase Android client config"
+regexTarget = "line"
+regexes = ['''"apiKey": "AIza[0-9A-Za-z_\-]{35}"''']

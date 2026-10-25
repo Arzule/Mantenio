@@ -18,6 +18,7 @@ using Mantenio.Api.Infrastructure.Notifications;
 using Mantenio.Api.Infrastructure.Persistence;
 using Mantenio.Api.Infrastructure.Push;
 using Mantenio.Api.Infrastructure.RateLimiting;
+using Mantenio.Api.Infrastructure.Security;
 using Mantenio.Api.Infrastructure.Storage;
 using Mantenio.Api.Infrastructure.Time;
 using Mantenio.Api.Jobs;
@@ -81,6 +82,7 @@ if (command is not null)
 }
 
 app.UseExceptionHandler();
+app.UseMantenioSecurityHeaders();
 app.UseStatusCodePages();
 app.UseCors();
 app.UseAuthentication();
@@ -89,8 +91,8 @@ app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapOpenApi().AllowAnonymous();
+    app.MapScalarApiReference().AllowAnonymous();
 }
 
 if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
