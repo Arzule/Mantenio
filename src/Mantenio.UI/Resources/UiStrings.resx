@@ -557,5 +557,5 @@ No puedes revisar comprobantes de tu propio departamento: debe hacerlo otro admi
 • Departamentos: puedes poner una cuota especial o congelar un departamento desocupado (no genera cargos mientras esté congelado).
 • Cargos: se generan solos el día 1 de cada mes. Aquí también se carga la deuda anterior al sistema.</value></data>
   <data name="HelpSecurityTitle" xml:space="preserve"><value>Seguridad de la cuenta</value></data>
-  <data name="HelpSecurityBody" xml:space="preserve"><value>Los administradores entran con contraseña y un código de 6 dígitos que llega al correo. Nunca compartas tu contraseña ni los códigos. Para agregar residentes o administradores, crea un código de invitación en Administración → Códigos; vence en pocos días y solo se usa una vez.</value></data>
+  <data name="HelpSecurityBody" xml:space="preserve"><value>Los administradores entran con contraseña y un código de 6 dígitos que llega al correo. Nunca compartas tu contraseña ni los códigos. Para agregar residentes o administradores, crea un código de invitación en Administración → Códigos y envíaselo a la persona: vence en 30 minutos y solo se usa una vez. Si lo creas para un departamento, la cuenta queda en ese departamento.</value></data>
 </root>

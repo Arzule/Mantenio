@@ -126,6 +126,7 @@ internal static class PushSetup
             services.AddHttpClient<IPushSender, FcmPushSender>();
         }
 
+        services.AddScoped<FounderDevices>();
         services.AddSingleton<PushDispatcher>();
         services.AddHostedService(sp => sp.GetRequiredService<PushDispatcher>());
         return services;

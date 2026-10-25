@@ -29,4 +29,7 @@
   <data name="ReminderBody" xml:space="preserve"><value>El departamento {0} tiene un saldo pendiente de {1}. Puedes ver el detalle en la app.</value></data>
   <data name="GenericTitle" xml:space="preserve"><value>Nuevo aviso</value></data>
   <data name="GenericBody" xml:space="preserve"><value>Tienes un nuevo aviso en la app.</value></data>
+  <!-- Database-down alert, only to the founder. {0} = condo -->
+  <data name="DatabaseDownTitle" xml:space="preserve"><value>Alerta: {0} sin base de datos</value></data>
+  <data name="DatabaseDownBody" xml:space="preserve"><value>La app no puede conectarse a la base de datos. Revisa el correo de alerta: si Aiven se apagó por inactividad, enciéndelo en console.aiven.io.</value></data>
 </root>

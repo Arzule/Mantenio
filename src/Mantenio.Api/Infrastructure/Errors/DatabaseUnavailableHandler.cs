@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.Net.Sockets;
 using Mantenio.Api.Infrastructure.Email;
+using Mantenio.Api.Infrastructure.Push;
+using Mantenio.Api.Infrastructure.Storage;
 using Mantenio.Api.Resources;
 using Mantenio.Shared.Condos;
 using Mantenio.Shared.Errors;
@@ -21,7 +23,8 @@ public sealed class AlertOptions
 /// <summary>
 /// The database cannot be reached (Aiven Free powered off after inactivity, network, maintenance): the API answers
 /// <c>503 database_unavailable</c> instead of a generic error, so the app shows a clear message, and the admin gets
-/// an email (at most one an hour) to turn the service back on.
+/// an email and the founder a push notification (at most once an hour) to turn the service back on. The founder's
+/// phones are read from file storage (<see cref="FounderDevices"/>), since the database is the thing that is down.
 /// </summary>
 internal sealed partial class DatabaseUnavailableHandler(
     IProblemDetailsService problems, IServiceScopeFactory scopes, TimeProvider time, IConfiguration configuration,
@@ -68,20 +71,49 @@ internal sealed partial class DatabaseUnavailableHandler(
         var to = configuration[$"{AlertOptions.SectionName}:{nameof(AlertOptions.Email)}"];
         var now = time.GetUtcNow().UtcTicks;
         var last = Interlocked.Read(ref _lastAlertTicks);
-        if (string.IsNullOrWhiteSpace(to) || now - last < AlertInterval.Ticks
-            || Interlocked.CompareExchange(ref _lastAlertTicks, now, last) != last)
+        if (now - last < AlertInterval.Ticks || Interlocked.CompareExchange(ref _lastAlertTicks, now, last) != last)
+        {
+            return;
+        }
+
+        await using var scope = scopes.CreateAsyncScope();
+        await PushFounderAsync(scope.ServiceProvider, cancellationToken);
+        if (string.IsNullOrWhiteSpace(to))
         {
             return;
         }
 
         try
         {
-            await using var scope = scopes.CreateAsyncScope();
             var condo = CondoProfile.Current.DisplayName;
             await scope.ServiceProvider.GetRequiredService<IEmailSender>().SendAsync(new EmailMessage(
                 to, condo, Format(EmailTexts.DatabaseDownSubject, condo),
                 Format(EmailTexts.DatabaseDownBody, condo, time.GetUtcNow().ToString("u", CultureInfo.InvariantCulture))),
                 cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            LogAlertFailed(ex);
+        }
+    }
+
+    private async Task PushFounderAsync(IServiceProvider services, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var sender = services.GetRequiredService<IPushSender>();
+            if (!sender.IsEnabled)
+            {
+                return;
+            }
+
+            var condo = CondoProfile.Current.DisplayName;
+            var data = new Dictionary<string, string> { ["kind"] = "DatabaseDown" };
+            foreach (var token in await FounderDevices.ReadAsync(services.GetRequiredService<IFileStorage>(), cancellationToken))
+            {
+                await sender.SendAsync(new PushMessage(token, Format(PushTexts.DatabaseDownTitle, condo), PushTexts.DatabaseDownBody, data),
+                    cancellationToken);
+            }
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

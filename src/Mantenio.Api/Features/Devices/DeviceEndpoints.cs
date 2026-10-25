@@ -1,7 +1,9 @@
 using System.Security.Claims;
 using Mantenio.Api.Infrastructure.Auth;
 using Mantenio.Api.Infrastructure.Persistence;
+using Mantenio.Api.Infrastructure.Push;
 using Mantenio.Domain.Notifications;
+using Mantenio.Shared.Auth;
 using Mantenio.Shared.Notifications;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,7 +21,8 @@ internal static class DeviceEndpoints
     }
 
     private static async Task<IResult> RegisterAsync(
-        RegisterDeviceRequest request, ClaimsPrincipal principal, AppDbContext db, TimeProvider time, CancellationToken cancellationToken)
+        RegisterDeviceRequest request, ClaimsPrincipal principal, AppDbContext db, TimeProvider time, FounderDevices founderDevices,
+        CancellationToken cancellationToken)
     {
         var userId = principal.GetUserId();
         var now = time.GetUtcNow();
@@ -34,14 +37,21 @@ internal static class DeviceEndpoints
         }
 
         await db.SaveChangesAsync(cancellationToken);
+        await SyncFounderAsync(principal, founderDevices, cancellationToken);
         return TypedResults.NoContent();
     }
 
     private static async Task<IResult> UnregisterAsync(
-        UnregisterDeviceRequest request, ClaimsPrincipal principal, AppDbContext db, CancellationToken cancellationToken)
+        UnregisterDeviceRequest request, ClaimsPrincipal principal, AppDbContext db, FounderDevices founderDevices,
+        CancellationToken cancellationToken)
     {
         var userId = principal.GetUserId();
         await db.UserDevices.Where(d => d.Token == request.Token && d.UserId == userId).ExecuteDeleteAsync(cancellationToken);
+        await SyncFounderAsync(principal, founderDevices, cancellationToken);
         return TypedResults.NoContent();
     }
+
+    /// <summary>The founder's phones also get the database-down alert, which cannot read them from the database.</summary>
+    private static Task SyncFounderAsync(ClaimsPrincipal principal, FounderDevices founderDevices, CancellationToken cancellationToken) =>
+        principal.HasClaim(MantenioClaims.Founder, "true") ? founderDevices.SyncAsync(cancellationToken) : Task.CompletedTask;
 }

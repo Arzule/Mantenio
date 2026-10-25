@@ -135,6 +135,23 @@ public sealed class JobTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Only_the_founders_phones_are_copied_outside_the_database_for_the_outage_alert()
+    {
+        var (resident, _) = await ResidentAsync("founder-copy@test.local", "D-401");
+        using var founder = factory.CreateClient(await factory.SignInFounderAsync());
+
+        await (await founder.PostAsJsonAsync("/api/devices", new RegisterDeviceRequest("founder-token-1", "android"), Ct)).ShouldBeAsync(HttpStatusCode.NoContent);
+        await (await resident.PostAsJsonAsync("/api/devices", new RegisterDeviceRequest("resident-token-1", "android"), Ct)).ShouldBeAsync(HttpStatusCode.NoContent);
+
+        var copy = Path.Combine(factory.StoragePath, "system", "founder-devices.json");
+        File.ReadAllText(copy).ShouldContain("founder-token-1");
+        File.ReadAllText(copy).ShouldNotContain("resident-token-1");
+
+        await (await founder.PostAsJsonAsync("/api/devices/unregister", new UnregisterDeviceRequest("founder-token-1"), Ct)).ShouldBeAsync(HttpStatusCode.NoContent);
+        File.ReadAllText(copy).ShouldNotContain("founder-token-1");
+    }
+
+    [Fact]
     public async Task Cleanup_is_audited_as_a_system_job()
     {
         await using var scope = factory.Services.CreateAsyncScope();

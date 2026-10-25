@@ -27,6 +27,9 @@ public static class StorageKeys
     public static string PaymentProof(Guid apartmentId, Guid proofId) => $"payment-proofs/{apartmentId:N}/{proofId:N}.jpg";
 
     public static string Receipt(string number, bool voided) => $"receipts/{number}{(voided ? "-anulado" : "")}.pdf";
+
+    /// <summary>The founder's push tokens, kept outside the database for the outage alert.</summary>
+    public const string FounderDevices = "system/founder-devices.json";
 }
 
 /// <summary>"Storage" section. Provider "R2" needs the R2 values; anything else uses the local folder.</summary>
