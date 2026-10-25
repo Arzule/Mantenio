@@ -2,6 +2,7 @@
 @inject AuthSession Session
 @inject NavigationManager Navigation
 @inject MantenioApi Api
+@inject IPushRegistration Push
 
 <ThemeProviders />
 <PendingNoticesGate OnAcknowledged="RefreshUnreadAsync" />
@@ -80,6 +81,7 @@
     private List<NavigationItem> _items = [.. NavigationItems.All.Where(i => !i.AdminOnly)];
     private int _unread;
     private DateTimeOffset _unreadCheckedAt;
+    private bool _pushRegistered;
 
     [CascadingParameter]
     private Task<AuthenticationState>? AuthenticationState { get; set; }
@@ -96,6 +98,13 @@
         if (user.Identity?.IsAuthenticated == true && DateTimeOffset.UtcNow - _unreadCheckedAt > TimeSpan.FromSeconds(30))
         {
             await RefreshUnreadAsync();
+        }
+
+        // Once per app start: this phone receives the push copy of the notices (no-op on the web).
+        if (user.Identity?.IsAuthenticated == true && !_pushRegistered && !user.HasClaim(MantenioClaims.MustChangePassword, "true"))
+        {
+            _pushRegistered = true;
+            await Push.RegisterAsync();
         }
 
         // A temporary password blocks everything else until it is replaced.
@@ -124,6 +133,8 @@
 
     private async Task SignOutAsync()
     {
+        await Push.UnregisterAsync();
+        _pushRegistered = false;
         await Session.SignOutAsync();
         Navigation.NavigateTo("login", replace: true);
     }

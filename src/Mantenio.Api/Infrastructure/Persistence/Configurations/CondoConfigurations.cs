@@ -96,5 +96,21 @@ internal sealed class UserNotificationConfiguration : IEntityTypeConfiguration<U
         builder.Property(x => x.Type).HasConversion<string>().HasMaxLength(40);
         builder.Property(x => x.Data).HasColumnType("jsonb");
         builder.HasIndex(x => new { x.UserId, x.CreatedAt });
+
+        // The push dispatcher looks for notices not pushed yet.
+        builder.HasIndex(x => x.CreatedAt).HasFilter("\"PushedAt\" IS NULL").HasDatabaseName("IX_Notifications_PendingPush");
+    }
+}
+
+internal sealed class UserDeviceConfiguration : IEntityTypeConfiguration<UserDevice>
+{
+    public void Configure(EntityTypeBuilder<UserDevice> builder)
+    {
+        builder.ToTable("UserDevices");
+        builder.Property(x => x.Token).HasMaxLength(4096);
+        builder.Property(x => x.Platform).HasMaxLength(20);
+        builder.HasOne<Mantenio.Api.Infrastructure.Identity.AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasIndex(x => x.Token).IsUnique();
+        builder.HasIndex(x => x.UserId);
     }
 }

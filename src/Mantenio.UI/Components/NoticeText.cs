@@ -16,6 +16,7 @@ public static class NoticeText
             NotificationKind.PaymentApproved => UiStrings.NoticePaymentApprovedTitle,
             NotificationKind.PaymentRejected => UiStrings.NoticePaymentRejectedTitle,
             NotificationKind.PaymentVoided => UiStrings.NoticePaymentVoidedTitle,
+            NotificationKind.DebtReminder => UiStrings.NoticeReminderTitle,
             _ => UiStrings.NoticeFeeTitle,
         };
     }
@@ -35,6 +36,12 @@ public static class NoticeText
                 _ => UiStrings.NoticeBank_updated,
             };
             return $"{Formats.Format(template, Text(data, "bankName"))} {reason} {UiStrings.NoticeBankCheck}";
+        }
+
+        if (notice.Kind == NotificationKind.DebtReminder)
+        {
+            var months = data.TryGetProperty("months", out var count) && count.ValueKind == JsonValueKind.Number ? count.GetInt32() : 0;
+            return Formats.Format(UiStrings.NoticeReminder, Text(data, "apartmentCode"), Formats.Money(Amount(data, "amount") ?? 0), months);
         }
 
         if (notice.Kind is NotificationKind.PaymentApproved or NotificationKind.PaymentRejected or NotificationKind.PaymentVoided)

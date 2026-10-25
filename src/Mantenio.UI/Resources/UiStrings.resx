@@ -478,4 +478,9 @@
   <data name="AuditAction_Voided" xml:space="preserve"><value>Anulado</value></data>
   <data name="AuditAction_LateFeeCreated" xml:space="preserve"><value>Recargo por mora</value></data>
   <data name="AuditAction_ReminderSent" xml:space="preserve"><value>Recordatorio enviado</value></data>
+  <!-- Phase 6: push notifications and debt reminder -->
+  <data name="PushChannelName" xml:space="preserve"><value>Avisos del condominio</value></data>
+  <data name="PushChannelDescription" xml:space="preserve"><value>Pagos aprobados o rechazados, cambios de cuota o de cuentas bancarias y recordatorios.</value></data>
+  <data name="NoticeReminderTitle" xml:space="preserve"><value>Recordatorio de pago</value></data>
+  <data name="NoticeReminder" xml:space="preserve"><value>El departamento {0} tiene un saldo pendiente de {1} ({2} meses). Puedes revisar el detalle y subir tu comprobante en Pagos. Si ya pagaste, ignora este aviso.</value></data>
 </root>

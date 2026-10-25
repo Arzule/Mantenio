@@ -24,6 +24,7 @@ var apiBaseUrl = builder.Configuration["ApiBaseUrl"] is { Length: > 0 } configur
 builder.Services.AddMudServices();
 builder.Services.AddSingleton<ITokenStore, BrowserTokenStore>();
 builder.Services.AddSingleton<IFileOpener, BrowserFileOpener>();
+builder.Services.AddSingleton<IPushRegistration, NoPushRegistration>();
 builder.Services.AddSingleton(new ClientPreferences(KeepSignedInByDefault: false));
 builder.Services.AddMantenioClient(new Uri(apiBaseUrl));
 

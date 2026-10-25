@@ -27,6 +27,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : Ident
     public DbSet<ApartmentFreeze> ApartmentFreezes => Set<ApartmentFreeze>();
     public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
     public DbSet<UserNotification> Notifications => Set<UserNotification>();
+    public DbSet<UserDevice> UserDevices => Set<UserDevice>();
     public DbSet<Charge> Charges => Set<Charge>();
     public DbSet<PaymentProof> PaymentProofs => Set<PaymentProof>();
     public DbSet<PaymentAllocation> PaymentAllocations => Set<PaymentAllocation>();

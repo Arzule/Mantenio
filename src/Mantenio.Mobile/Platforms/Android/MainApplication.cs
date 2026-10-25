@@ -16,5 +16,11 @@ public class MainApplication : MauiApplication
 	{
 	}
 
+	public override void OnCreate()
+	{
+		base.OnCreate();
+		PushSupport.Initialize(this);
+	}
+
 	protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
 }

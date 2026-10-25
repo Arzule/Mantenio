@@ -11,7 +11,19 @@ public enum NotificationKind
     PaymentApproved,
     PaymentRejected,
     PaymentVoided,
+    DebtReminder,
 }
+
+/// <summary>Data of <see cref="NotificationKind.DebtReminder"/>: overdue amount and number of overdue months.</summary>
+public sealed record DebtReminderData(string ApartmentCode, decimal Amount, int Months);
+
+/// <summary>Registers this phone for push notifications (Firebase registration token).</summary>
+public sealed record RegisterDeviceRequest(
+    [property: System.ComponentModel.DataAnnotations.Required, System.ComponentModel.DataAnnotations.MaxLength(4096)] string Token,
+    [property: System.ComponentModel.DataAnnotations.Required, System.ComponentModel.DataAnnotations.MaxLength(20)] string Platform);
+
+public sealed record UnregisterDeviceRequest(
+    [property: System.ComponentModel.DataAnnotations.Required, System.ComponentModel.DataAnnotations.MaxLength(4096)] string Token);
 
 /// <summary>Data of the payment notices. Reason: rejection or void reason.</summary>
 public sealed record PaymentNoticeData(Guid PaymentProofId, decimal Amount, string? ReceiptNumber, string? Reason);

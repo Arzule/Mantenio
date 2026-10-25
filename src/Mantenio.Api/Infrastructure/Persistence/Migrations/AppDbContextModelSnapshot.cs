@@ -728,6 +728,41 @@ namespace Mantenio.Api.Infrastructure.Persistence.Migrations
                     b.ToTable("Receipts", (string)null);
                 });
 
+            modelBuilder.Entity("Mantenio.Domain.Notifications.UserDevice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserDevices", (string)null);
+                });
+
             modelBuilder.Entity("Mantenio.Domain.Notifications.UserNotification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -744,6 +779,9 @@ namespace Mantenio.Api.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb");
 
+                    b.Property<DateTimeOffset?>("PushedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset?>("ReadAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -759,6 +797,10 @@ namespace Mantenio.Api.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_Notifications_PendingPush")
+                        .HasFilter("\"PushedAt\" IS NULL");
 
                     b.HasIndex("UserId", "CreatedAt");
 
@@ -952,6 +994,15 @@ namespace Mantenio.Api.Infrastructure.Persistence.Migrations
                         .WithOne()
                         .HasForeignKey("Mantenio.Domain.Ledger.Receipt", "PaymentProofId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Mantenio.Domain.Notifications.UserDevice", b =>
+                {
+                    b.HasOne("Mantenio.Api.Infrastructure.Identity.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

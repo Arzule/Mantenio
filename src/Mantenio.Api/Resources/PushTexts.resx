@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- Push notifications (short; the full notice is in the app). Same wording as the in-app notices. -->
+  <data name="BankTitle" xml:space="preserve"><value>Cambio en las cuentas bancarias</value></data>
+  <data name="Bank_added" xml:space="preserve"><value>Se agregó una cuenta de {0}. Revisa las cuentas en la app antes de transferir.</value></data>
+  <data name="Bank_updated" xml:space="preserve"><value>Se modificó la cuenta de {0}. Revisa las cuentas en la app antes de transferir.</value></data>
+  <data name="Bank_removed" xml:space="preserve"><value>Se retiró la cuenta de {0}. Ya no transfieras a esa cuenta.</value></data>
+  <data name="FeeTitle" xml:space="preserve"><value>Cambio en la cuota de mantenimiento</value></data>
+  <data name="FeeBody" xml:space="preserve"><value>La cuota cambia desde {0}. Revisa el detalle en la app.</value></data>
+  <data name="ApprovedTitle" xml:space="preserve"><value>Pago aprobado</value></data>
+  <data name="ApprovedBody" xml:space="preserve"><value>Tu pago de {0} fue aprobado. Recibo {1}.</value></data>
+  <data name="RejectedTitle" xml:space="preserve"><value>Comprobante rechazado</value></data>
+  <data name="RejectedBody" xml:space="preserve"><value>Tu comprobante de {0} fue rechazado. Motivo: {1}</value></data>
+  <data name="VoidedTitle" xml:space="preserve"><value>Pago anulado</value></data>
+  <data name="VoidedBody" xml:space="preserve"><value>Tu pago de {0} fue anulado. Motivo: {1}</value></data>
+  <data name="ReminderTitle" xml:space="preserve"><value>Recordatorio de pago</value></data>
+  <data name="ReminderBody" xml:space="preserve"><value>El departamento {0} tiene un saldo pendiente de {1}. Puedes ver el detalle en la app.</value></data>
+  <data name="GenericTitle" xml:space="preserve"><value>Nuevo aviso</value></data>
+  <data name="GenericBody" xml:space="preserve"><value>Tienes un nuevo aviso en la app.</value></data>
+</root>

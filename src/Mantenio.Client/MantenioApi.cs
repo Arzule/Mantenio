@@ -240,6 +240,13 @@ public sealed class MantenioApi(IHttpClientFactory httpClientFactory)
     public Task<ImportOpeningDebtResult> ImportOpeningDebtAsync(string csv, CancellationToken cancellationToken = default) =>
         SendAsync<ImportOpeningDebtResult>(HttpMethod.Post, "/api/admin/charges/opening", new ImportOpeningDebtRequest(csv), cancellationToken);
 
+    // Push devices
+    public Task RegisterDeviceAsync(string token, string platform, CancellationToken cancellationToken = default) =>
+        SendAsync(HttpMethod.Post, "/api/devices", new RegisterDeviceRequest(token, platform), cancellationToken);
+
+    public Task UnregisterDeviceAsync(string token, CancellationToken cancellationToken = default) =>
+        SendAsync(HttpMethod.Post, "/api/devices/unregister", new UnregisterDeviceRequest(token), cancellationToken);
+
     // Reports and audit
     public Task<AdminDashboard> GetDashboardAsync(CancellationToken cancellationToken = default) =>
         GetAsync<AdminDashboard>("/api/admin/dashboard", cancellationToken);

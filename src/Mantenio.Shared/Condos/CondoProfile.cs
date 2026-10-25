@@ -24,6 +24,9 @@ public sealed record CondoProfile
     public required CondoReceiptSettings Receipt { get; init; }
     public required CondoAndroidSettings Android { get; init; }
     public CondoModules Modules { get; init; } = new();
+
+    /// <summary>Firebase Android app of this condo (public client values). Null = no push for this profile.</summary>
+    public CondoFirebaseSettings? Firebase { get; init; }
     public int FileRetentionMonths { get; init; } = 60;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -114,4 +117,13 @@ public sealed record CondoModules
     public bool LateFees { get; init; } = true;
     public bool PushNotifications { get; init; } = true;
     public bool EmailReminders { get; init; } = true;
+}
+
+/// <summary>Values of google-services.json the Android app needs to start Firebase Cloud Messaging.</summary>
+public sealed record CondoFirebaseSettings
+{
+    public required string ProjectId { get; init; }
+    public required string ApplicationId { get; init; }
+    public required string ApiKey { get; init; }
+    public required string SenderId { get; init; }
 }

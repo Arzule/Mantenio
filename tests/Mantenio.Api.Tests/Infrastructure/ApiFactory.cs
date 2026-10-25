@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Mantenio.Api.Features.Setup;
 using Mantenio.Api.Infrastructure.Email;
 using Mantenio.Api.Infrastructure.Persistence;
+using Mantenio.Api.Infrastructure.Push;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -33,6 +34,8 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public FakeTimeProvider Time { get; } = new(DateTimeOffset.UtcNow);
     public CapturingEmailSender Emails { get; } = new();
 
+    public CapturingPushSender Pushes { get; } = new();
+
     /// <summary>Server-side errors logged while the tests ran (handy when an endpoint answers 500).</summary>
     public ConcurrentQueue<string> ServerErrors { get; } = new();
 
@@ -49,6 +52,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseEnvironment("Testing");
         builder.UseSetting($"ConnectionStrings:{AppDbContext.ConnectionName}", _connectionString);
         builder.UseSetting("Database:MigrateOnStartup", "true");
+        builder.UseSetting("Push:BackgroundDispatch", "false");
         builder.UseSetting("Storage:Provider", "Local");
         builder.UseSetting("Storage:LocalPath", StoragePath);
         builder.UseSetting("Jwt:SigningKey", "test-signing-key-that-is-long-enough-0123456789");
@@ -64,6 +68,8 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             services.AddSingleton<TimeProvider>(Time);
             services.RemoveAll<IEmailSender>();
             services.AddSingleton<IEmailSender>(Emails);
+            services.RemoveAll<IPushSender>();
+            services.AddSingleton<IPushSender>(Pushes);
         });
     }
 
@@ -140,6 +146,27 @@ public sealed partial class CapturingEmailSender : IEmailSender
 
     [GeneratedRegex(@"(?m)^\d{6}$")]
     private static partial Regex SixDigits();
+}
+
+/// <summary>Keeps every push message; tokens starting with "bad" behave like an uninstalled app.</summary>
+public sealed class CapturingPushSender : IPushSender
+{
+    private readonly ConcurrentQueue<PushMessage> _messages = new();
+
+    public IReadOnlyCollection<PushMessage> Messages => _messages;
+
+    public bool IsEnabled => true;
+
+    public Task<PushResult> SendAsync(PushMessage message, CancellationToken cancellationToken)
+    {
+        if (message.Token.StartsWith("bad", StringComparison.Ordinal))
+        {
+            return Task.FromResult(PushResult.InvalidToken);
+        }
+
+        _messages.Enqueue(message);
+        return Task.FromResult(PushResult.Sent);
+    }
 }
 
 internal sealed class ErrorCaptureProvider(ConcurrentQueue<string> errors) : ILoggerProvider

@@ -39,6 +39,16 @@
     <PackageReference Include="MudBlazor" />
   </ItemGroup>
 
+  <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+    <!-- Push notifications (Firebase Cloud Messaging; started from the condo profile, no google-services.json). -->
+    <PackageReference Include="Xamarin.Firebase.Messaging" />
+    <PackageReference Include="Xamarin.AndroidX.Lifecycle.LiveData" />
+    <PackageReference Include="Xamarin.AndroidX.Lifecycle.LiveData.Core.Ktx" />
+    <PackageReference Include="Xamarin.AndroidX.Lifecycle.Process" />
+    <PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" />
+    <PackageReference Include="Xamarin.AndroidX.Collection.Ktx" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Mantenio.UI\Mantenio.UI.csproj" />
     <ProjectReference Include="..\Mantenio.Client\Mantenio.Client.csproj" />

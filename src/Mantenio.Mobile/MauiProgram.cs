@@ -23,6 +23,11 @@ public static class MauiProgram
         builder.Services.AddMudServices();
         builder.Services.AddSingleton<ITokenStore, SecureTokenStore>();
         builder.Services.AddSingleton<IFileOpener, LauncherFileOpener>();
+#if ANDROID
+        builder.Services.AddSingleton<IPushRegistration, AndroidPushRegistration>();
+#else
+        builder.Services.AddSingleton<IPushRegistration, NoPushRegistration>();
+#endif
         builder.Services.AddSingleton(new ClientPreferences(KeepSignedInByDefault: true));
         builder.Services.AddMantenioClient(ApiBaseAddress());
 

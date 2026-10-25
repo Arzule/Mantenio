@@ -49,7 +49,7 @@ internal sealed class SmtpEmailSender(IOptions<EmailOptions> options) : IEmailSe
         mime.From.Add(new MailboxAddress(settings.FromName ?? CondoProfile.Current.DisplayName, settings.FromAddress));
         mime.To.Add(new MailboxAddress(message.ToName, message.To));
         mime.Subject = message.Subject;
-        var body = new BodyBuilder { TextBody = message.TextBody };
+        var body = new BodyBuilder { TextBody = message.TextBody, HtmlBody = EmailLayout.Html(message.Subject, message.TextBody) };
         foreach (var attachment in message.Attachments ?? [])
         {
             body.Attachments.Add(attachment.FileName, attachment.Content, ContentType.Parse(attachment.ContentType));
@@ -76,7 +76,7 @@ internal sealed class AcsEmailSender(IOptions<EmailOptions> options) : IEmailSen
 
     public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
     {
-        var content = new EmailContent(message.Subject) { PlainText = message.TextBody };
+        var content = new EmailContent(message.Subject) { PlainText = message.TextBody, Html = EmailLayout.Html(message.Subject, message.TextBody) };
         var recipients = new EmailRecipients([new EmailAddress(message.To, message.ToName)]);
         var email = new Azure.Communication.Email.EmailMessage(options.Value.FromAddress, recipients, content);
         foreach (var attachment in message.Attachments ?? [])

@@ -8,5 +8,6 @@
   "emailService": "email-mantenio-yourcondo",
   "pagesProject": "mantenio-yourcondo",
   "storageBucket": "mantenio-yourcondo-files",
+  "backupBucket": "mantenio-yourcondo-backups",
   "corsOrigins": [ "https://mantenio-yourcondo.pages.dev" ]
 }

@@ -1,4 +1,5 @@
 using Mantenio.Api.Infrastructure.Persistence;
+using Mantenio.Api.Infrastructure.Push;
 using Mantenio.Domain.Notifications;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,9 +7,10 @@ namespace Mantenio.Api.Infrastructure.Notifications;
 
 /// <summary>
 /// Creates in-app notices (the caller saves them in its own transaction, next to the change and its audit event).
-/// Push arrives in Phase 6; bank account changes are deliberately never sent by email.
+/// Each notice also goes out as a push (see <see cref="PushDispatcher"/>, after the commit); bank account changes are
+/// deliberately never sent by email.
 /// </summary>
-public sealed class NotificationService(AppDbContext db, TimeProvider time)
+public sealed class NotificationService(AppDbContext db, TimeProvider time, PushDispatcher push)
 {
     public async Task<int> NotifyAllActiveUsersAsync(NotificationType type, object data, bool requiresAcknowledgement, CancellationToken cancellationToken)
     {
@@ -29,5 +31,6 @@ public sealed class NotificationService(AppDbContext db, TimeProvider time)
         var json = AuditLog.Json(data);
         var now = time.GetUtcNow();
         db.Notifications.AddRange(userIds.Select(id => new UserNotification(id, type, json, requiresAcknowledgement, now)));
+        push.Signal();
     }
 }

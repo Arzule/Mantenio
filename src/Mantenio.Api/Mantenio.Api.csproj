@@ -21,6 +21,7 @@
     </PackageReference>
     <PackageReference Include="QuestPDF" />
     <PackageReference Include="ClosedXML" />
+    <PackageReference Include="Google.Apis.Auth" />
     <PackageReference Include="Scalar.AspNetCore" />
     <PackageReference Include="SkiaSharp" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
@@ -52,6 +53,11 @@
                       StronglyTypedNamespace="Mantenio.Api.Resources"
                       StronglyTypedClassName="ReportTexts"
                       StronglyTypedFileName="$(IntermediateOutputPath)ReportTexts.Designer.cs" />
+    <EmbeddedResource Update="Resources\PushTexts.resx"
+                      StronglyTypedLanguage="CSharp"
+                      StronglyTypedNamespace="Mantenio.Api.Resources"
+                      StronglyTypedClassName="PushTexts"
+                      StronglyTypedFileName="$(IntermediateOutputPath)PushTexts.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>

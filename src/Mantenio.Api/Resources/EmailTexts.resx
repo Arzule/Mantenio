@@ -37,4 +37,13 @@ Recibimos una solicitud para cambiar tu contraseña de {1}. Tu código es:
 {2}
 
 El código vence en unos minutos. Si no lo solicitaste, ignora este correo: tu contraseña no cambiará.</value></data>
+  <!-- Day-15 reminder (neutral: no consequences). {0} = first name, {1} = condo, {2} = apartment, {3} = amount, {4} = months -->
+  <data name="ReminderSubject" xml:space="preserve"><value>Recordatorio de pago de {1}</value></data>
+  <data name="ReminderBody" xml:space="preserve"><value>Hola, {0}:
+
+Te recordamos que el departamento {2} tiene un saldo pendiente de {3} ({4} meses).
+
+Puedes revisar el detalle y subir tu comprobante en la app, sección Pagos. Si ya pagaste, puedes ignorar este mensaje.</value></data>
+  <!-- HTML layout of every email -->
+  <data name="Footer" xml:space="preserve"><value>Este correo fue enviado por {0} a través de Mantenio. No respondas a este mensaje.</value></data>
 </root>

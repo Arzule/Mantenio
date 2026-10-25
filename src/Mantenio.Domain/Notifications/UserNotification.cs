@@ -11,6 +11,9 @@ public enum NotificationType
     PaymentApproved = 2,
     PaymentRejected = 3,
     PaymentVoided = 4,
+
+    /// <summary>Monthly reminder (day 15) to apartments with overdue debt. Neutral text, no consequences.</summary>
+    DebtReminder = 5,
 }
 
 /// <summary>
@@ -41,9 +44,14 @@ public sealed class UserNotification
     public DateTimeOffset? ReadAt { get; private set; }
     public DateTimeOffset? AcknowledgedAt { get; private set; }
 
+    /// <summary>When the push copy went out (or was skipped: no devices, push off). Null = still to send.</summary>
+    public DateTimeOffset? PushedAt { get; private set; }
+
     public bool IsPendingAcknowledgement => RequiresAcknowledgement && AcknowledgedAt is null;
 
     public void MarkRead(DateTimeOffset now) => ReadAt ??= now;
+
+    public void MarkPushed(DateTimeOffset now) => PushedAt ??= now;
 
     /// <summary>Acknowledging also marks the notice as read.</summary>
     public void Acknowledge(DateTimeOffset now)
