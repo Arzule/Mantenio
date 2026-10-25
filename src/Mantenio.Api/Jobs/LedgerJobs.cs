@@ -26,9 +26,19 @@ internal sealed partial class LedgerJobs(
 {
     private static readonly CultureInfo Culture = CultureInfo.GetCultureInfo(CondoProfile.Current.Culture);
 
-    /// <summary>Day 1: this month's fee for every non-frozen apartment, paid right away from any credit.</summary>
+    /// <summary>
+    /// Day 1: this month's fee for every non-frozen apartment, paid right away from any credit. Nothing before the
+    /// month the condo starts tracking (older debt is loaded as opening debt).
+    /// </summary>
     public Task<GenerateChargesResult> GenerateChargesAsync(CancellationToken cancellationToken) =>
-        db.InTransactionAsync(ct => ledger.GenerateChargesAsync(clock.CurrentPeriod, AuditSource.System, null, ct), cancellationToken);
+        db.InTransactionAsync(async ct =>
+        {
+            var period = clock.CurrentPeriod;
+            var settings = await CondoSettingsStore.GetOrCreateAsync(db, time, ct);
+            return period.Value < settings.TrackingStartPeriod
+                ? new GenerateChargesResult(period.Value, 0, 0, 0)
+                : await ledger.GenerateChargesAsync(period, AuditSource.System, null, ct);
+        }, cancellationToken);
 
     /// <summary>
     /// Daily: one late fee per overdue monthly fee (once, never on opening debt or on late fees), while the

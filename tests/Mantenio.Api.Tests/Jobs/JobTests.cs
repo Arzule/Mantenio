@@ -39,20 +39,6 @@ public sealed class JobTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
-    public async Task Generating_charges_is_a_system_action_and_runs_once_per_month()
-    {
-        var first = await JobAsync(j => j.GenerateChargesAsync(Ct));
-        var second = await JobAsync(j => j.GenerateChargesAsync(Ct));
-
-        var period = factory.Services.GetRequiredService<CondoClock>().CurrentPeriod.Value;
-        first.Period.ShouldBe(period);
-        second.Created.ShouldBe(0);
-        var audits = await factory.WithDbAsync(db => db.AuditEvents.Where(e => e.Action == "ChargeCreated").ToListAsync(Ct));
-        audits.Count.ShouldBe(first.Created);
-        audits.ShouldAllBe(e => e.Source == AuditSource.System && e.ActorUserId == null);
-    }
-
-    [Fact]
     public async Task Late_fees_apply_once_per_overdue_monthly_fee_only_when_the_founder_set_a_percentage()
     {
         using var founder = factory.CreateClient(await factory.SignInFounderAsync());
@@ -165,5 +151,40 @@ public sealed class JobTests(ApiFactory factory) : IClassFixture<ApiFactory>
         html.ShouldContain(Shared.Condos.CondoProfile.Current.DisplayName);
         html.ShouldContain("font-size:32px");
         html.ShouldContain("&lt;pronto&gt;");
+    }
+}
+
+/// <summary>The monthly charge job on its own database: it moves the fake clock into a tracked month.</summary>
+public sealed class ChargeJobTests(ApiFactory factory) : IClassFixture<ApiFactory>
+{
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    private async Task<T> JobAsync<T>(Func<LedgerJobs, Task<T>> run)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        return await run(scope.ServiceProvider.GetRequiredService<LedgerJobs>());
+    }
+
+    [Fact]
+    public async Task Generating_charges_is_a_system_action_and_runs_once_per_month()
+    {
+        // The job never charges months before the condo starts tracking (October 2026 < November 2026 here).
+        var clock = factory.Services.GetRequiredService<CondoClock>();
+        var start = await factory.WithDbAsync(db => db.CondoSettings.Select(s => s.TrackingStartPeriod).SingleOrDefaultAsync(Ct));
+        if (start == 0 || clock.CurrentPeriod.Value < start)
+        {
+            (await JobAsync(j => j.GenerateChargesAsync(Ct))).Created.ShouldBe(0);
+            factory.Time.Advance(TimeSpan.FromDays(40)); // into a tracked month
+        }
+
+        var first = await JobAsync(j => j.GenerateChargesAsync(Ct));
+        var second = await JobAsync(j => j.GenerateChargesAsync(Ct));
+
+        var period = factory.Services.GetRequiredService<CondoClock>().CurrentPeriod.Value;
+        first.Period.ShouldBe(period);
+        second.Created.ShouldBe(0);
+        var audits = await factory.WithDbAsync(db => db.AuditEvents.Where(e => e.Action == "ChargeCreated").ToListAsync(Ct));
+        audits.Count.ShouldBe(first.Created);
+        audits.ShouldAllBe(e => e.Source == AuditSource.System && e.ActorUserId == null);
     }
 }
