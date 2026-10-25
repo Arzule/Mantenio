@@ -397,4 +397,85 @@
   <data name="Error_invalid_image" xml:space="preserve"><value>El archivo no es una imagen válida. Sube una captura en JPG o PNG.</value></data>
   <data name="Error_proof_not_pending" xml:space="preserve"><value>Este comprobante ya fue revisado.</value></data>
   <data name="Error_proof_not_approved" xml:space="preserve"><value>Solo se pueden anular pagos aprobados.</value></data>
+  <!-- Phase 5: dashboard, reports and audit viewer -->
+  <data name="NavReports" xml:space="preserve"><value>Reportes</value></data>
+  <data name="NavAudit" xml:space="preserve"><value>Historial</value></data>
+  <data name="DashboardPending" xml:space="preserve"><value>Comprobantes por revisar</value></data>
+  <data name="DashboardOverdue" xml:space="preserve"><value>Deuda vencida</value></data>
+  <data name="DashboardDelinquent" xml:space="preserve"><value>Departamentos con deuda</value></data>
+  <data name="DashboardCollected" xml:space="preserve"><value>Recaudado en {0}</value></data>
+  <data name="DashboardReceipts" xml:space="preserve"><value>{0} recibos emitidos</value></data>
+  <data name="DashboardByTower" xml:space="preserve"><value>Deuda vencida por torre</value></data>
+  <data name="DashboardTowerLine" xml:space="preserve"><value>{0} de {1} departamentos · {2}</value></data>
+  <data name="DashboardNoDebt" xml:space="preserve"><value>Ningún departamento tiene deuda vencida.</value></data>
+  <data name="ReportsTitle" xml:space="preserve"><value>Reportes</value></data>
+  <data name="DelinquencyTitle" xml:space="preserve"><value>Morosidad</value></data>
+  <data name="DelinquencyBody" xml:space="preserve"><value>Deuda vencida de cada departamento al cierre del día elegido. Si eliges una fecha pasada, verás la situación de ese día aunque después hubo pagos o anulaciones.</value></data>
+  <data name="ReportDate" xml:space="preserve"><value>Fecha del reporte</value></data>
+  <data name="ExportExcel" xml:space="preserve"><value>Excel</value></data>
+  <data name="ExportPdf" xml:space="preserve"><value>PDF</value></data>
+  <data name="OverdueMonths" xml:space="preserve"><value>Meses vencidos</value></data>
+  <data name="DelinquencyTotal" xml:space="preserve"><value>{0} departamentos con deuda vencida · {1}</value></data>
+  <data name="TowerTotal" xml:space="preserve"><value>Total de la torre: {0}</value></data>
+  <data name="NoDelinquency" xml:space="preserve"><value>No hay departamentos con deuda vencida en esa fecha.</value></data>
+  <data name="FolioTitle" xml:space="preserve"><value>Folio mensual</value></data>
+  <data name="FolioBody" xml:space="preserve"><value>PDF con todos los recibos emitidos en el mes, incluidos los anulados.</value></data>
+  <data name="DownloadFolio" xml:space="preserve"><value>Descargar folio</value></data>
+  <data name="AuditTitle" xml:space="preserve"><value>Historial de cambios</value></data>
+  <data name="AuditBody" xml:space="preserve"><value>Todo lo que cambia en el libro contable y la configuración queda registrado aquí, con quién lo hizo y el motivo.</value></data>
+  <data name="AuditFrom" xml:space="preserve"><value>Desde</value></data>
+  <data name="AuditTo" xml:space="preserve"><value>Hasta</value></data>
+  <data name="AuditSource" xml:space="preserve"><value>Origen</value></data>
+  <data name="AuditEntity" xml:space="preserve"><value>Tipo</value></data>
+  <data name="AuditActor" xml:space="preserve"><value>Hecho por</value></data>
+  <data name="AuditAny" xml:space="preserve"><value>Todos</value></data>
+  <data name="AuditNoResults" xml:space="preserve"><value>No hay cambios con esos filtros.</value></data>
+  <data name="AuditBefore" xml:space="preserve"><value>Antes</value></data>
+  <data name="AuditAfter" xml:space="preserve"><value>Después</value></data>
+  <data name="AuditCount" xml:space="preserve"><value>{0} registros</value></data>
+  <data name="Source_Resident" xml:space="preserve"><value>Residente</value></data>
+  <data name="Source_Admin" xml:space="preserve"><value>Administración</value></data>
+  <data name="Source_System" xml:space="preserve"><value>Sistema</value></data>
+  <data name="Entity_User" xml:space="preserve"><value>Usuario</value></data>
+  <data name="Entity_InvitationCode" xml:space="preserve"><value>Código de invitación</value></data>
+  <data name="Entity_ApartmentList" xml:space="preserve"><value>Lista de departamentos</value></data>
+  <data name="Entity_CondoSettings" xml:space="preserve"><value>Configuración</value></data>
+  <data name="Entity_FeeChange" xml:space="preserve"><value>Cuota</value></data>
+  <data name="Entity_Tower" xml:space="preserve"><value>Torre</value></data>
+  <data name="Entity_Apartment" xml:space="preserve"><value>Departamento</value></data>
+  <data name="Entity_BankAccount" xml:space="preserve"><value>Cuenta bancaria</value></data>
+  <data name="Entity_Charge" xml:space="preserve"><value>Cargo</value></data>
+  <data name="Entity_PaymentProof" xml:space="preserve"><value>Comprobante</value></data>
+  <data name="Entity_Receipt" xml:space="preserve"><value>Recibo</value></data>
+  <data name="Download" xml:space="preserve"><value>Descargar</value></data>
+  <data name="FileReady" xml:space="preserve"><value>Archivo generado: {0}</value></data>
+  <!-- Audit action labels: AuditAction_<Action> -->
+  <data name="AuditAction_ApartmentChanged" xml:space="preserve"><value>Cambio de departamento</value></data>
+  <data name="AuditAction_ApartmentFeeChanged" xml:space="preserve"><value>Cuota especial</value></data>
+  <data name="AuditAction_Approved" xml:space="preserve"><value>Aprobado</value></data>
+  <data name="AuditAction_ChargeCreated" xml:space="preserve"><value>Cargo creado</value></data>
+  <data name="AuditAction_Created" xml:space="preserve"><value>Creado</value></data>
+  <data name="AuditAction_CreatedFromProfile" xml:space="preserve"><value>Configuración inicial</value></data>
+  <data name="AuditAction_Deactivated" xml:space="preserve"><value>Desactivado</value></data>
+  <data name="AuditAction_Deleted" xml:space="preserve"><value>Eliminado</value></data>
+  <data name="AuditAction_DueRuleChanged" xml:space="preserve"><value>Cambio de vencimiento</value></data>
+  <data name="AuditAction_FounderSeeded" xml:space="preserve"><value>Admin fundador creado</value></data>
+  <data name="AuditAction_Frozen" xml:space="preserve"><value>Congelado</value></data>
+  <data name="AuditAction_GlobalFeeChanged" xml:space="preserve"><value>Cambio de cuota</value></data>
+  <data name="AuditAction_Imported" xml:space="preserve"><value>Importación</value></data>
+  <data name="AuditAction_Issued" xml:space="preserve"><value>Recibo emitido</value></data>
+  <data name="AuditAction_LateFeeChanged" xml:space="preserve"><value>Cambio de recargo por mora</value></data>
+  <data name="AuditAction_PasswordChanged" xml:space="preserve"><value>Contraseña cambiada</value></data>
+  <data name="AuditAction_PasswordReset" xml:space="preserve"><value>Contraseña restablecida</value></data>
+  <data name="AuditAction_PaymentApplied" xml:space="preserve"><value>Pago aplicado</value></data>
+  <data name="AuditAction_PaymentReversed" xml:space="preserve"><value>Pago revertido</value></data>
+  <data name="AuditAction_Reactivated" xml:space="preserve"><value>Reactivado</value></data>
+  <data name="AuditAction_Registered" xml:space="preserve"><value>Registro</value></data>
+  <data name="AuditAction_Rejected" xml:space="preserve"><value>Rechazado</value></data>
+  <data name="AuditAction_Submitted" xml:space="preserve"><value>Comprobante enviado</value></data>
+  <data name="AuditAction_Unfrozen" xml:space="preserve"><value>Descongelado</value></data>
+  <data name="AuditAction_Updated" xml:space="preserve"><value>Modificado</value></data>
+  <data name="AuditAction_Voided" xml:space="preserve"><value>Anulado</value></data>
+  <data name="AuditAction_LateFeeCreated" xml:space="preserve"><value>Recargo por mora</value></data>
+  <data name="AuditAction_ReminderSent" xml:space="preserve"><value>Recordatorio enviado</value></data>
 </root>

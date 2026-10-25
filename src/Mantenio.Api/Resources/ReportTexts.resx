@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- Delinquency report (Excel: one sheet per tower; PDF: one section per tower). {0} = date -->
+  <data name="DelinquencyTitle" xml:space="preserve"><value>Reporte de morosidad al {0}</value></data>
+  <data name="DelinquencyFileName" xml:space="preserve"><value>morosidad-{0}</value></data>
+  <data name="Apartment" xml:space="preserve"><value>Departamento</value></data>
+  <data name="OverdueMonths" xml:space="preserve"><value>Meses vencidos</value></data>
+  <data name="MonthCount" xml:space="preserve"><value>N.º de meses</value></data>
+  <data name="Amount" xml:space="preserve"><value>Monto (S/)</value></data>
+  <data name="Status" xml:space="preserve"><value>Estado</value></data>
+  <data name="Frozen" xml:space="preserve"><value>Congelado</value></data>
+  <data name="Total" xml:space="preserve"><value>Total</value></data>
+  <data name="TowerTotal" xml:space="preserve"><value>Total {0}: {1} departamentos, {2}</value></data>
+  <data name="GrandTotal" xml:space="preserve"><value>Total general: {0} departamentos con deuda vencida, {1}</value></data>
+  <data name="NoDelinquency" xml:space="preserve"><value>No hay departamentos con deuda vencida.</value></data>
+  <data name="DelinquentApartments" xml:space="preserve"><value>Departamentos con deuda</value></data>
+  <data name="Summary" xml:space="preserve"><value>Resumen</value></data>
+  <data name="Generated" xml:space="preserve"><value>Generado por Mantenio · {0}</value></data>
+  <data name="Page" xml:space="preserve"><value>Página </value></data>
+  <!-- Monthly folio PDF. {0} = month -->
+  <data name="FolioTitle" xml:space="preserve"><value>Folio mensual de recibos · {0}</value></data>
+  <data name="FolioFileName" xml:space="preserve"><value>folio-{0}</value></data>
+  <data name="ReceiptNumber" xml:space="preserve"><value>Recibo</value></data>
+  <data name="Date" xml:space="preserve"><value>Fecha</value></data>
+  <data name="ReceivedFrom" xml:space="preserve"><value>Recibí de</value></data>
+  <data name="Months" xml:space="preserve"><value>Meses</value></data>
+  <data name="Operation" xml:space="preserve"><value>Operación</value></data>
+  <data name="Voided" xml:space="preserve"><value>ANULADO</value></data>
+  <data name="Valid" xml:space="preserve"><value>Válido</value></data>
+  <data name="FolioTotals" xml:space="preserve"><value>{0} recibos válidos por {1} · {2} anulados</value></data>
+  <data name="NoReceipts" xml:space="preserve"><value>No se emitieron recibos este mes.</value></data>
+</root>

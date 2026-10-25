@@ -15,6 +15,12 @@ public static class LedgerText
 
     public static string TimelineAction(string action) => Text("Timeline_" + action, action);
 
+    public static string AuditAction(string action) => Text("AuditAction_" + action, action);
+
+    public static string AuditSource(string source) => Text("Source_" + source, source);
+
+    public static string AuditEntity(string entityType) => Text("Entity_" + entityType, entityType);
+
     public static Color ProofColor(ProofStatus status) => status switch
     {
         ProofStatus.Approved => Color.Success,

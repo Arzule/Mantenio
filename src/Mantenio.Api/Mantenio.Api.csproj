@@ -20,6 +20,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="QuestPDF" />
+    <PackageReference Include="ClosedXML" />
     <PackageReference Include="Scalar.AspNetCore" />
     <PackageReference Include="SkiaSharp" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
@@ -46,6 +47,11 @@
                       StronglyTypedNamespace="Mantenio.Api.Resources"
                       StronglyTypedClassName="ReceiptTexts"
                       StronglyTypedFileName="$(IntermediateOutputPath)ReceiptTexts.Designer.cs" />
+    <EmbeddedResource Update="Resources\ReportTexts.resx"
+                      StronglyTypedLanguage="CSharp"
+                      StronglyTypedNamespace="Mantenio.Api.Resources"
+                      StronglyTypedClassName="ReportTexts"
+                      StronglyTypedFileName="$(IntermediateOutputPath)ReportTexts.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>

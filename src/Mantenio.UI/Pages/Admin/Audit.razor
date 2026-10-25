@@ -1,0 +1,173 @@
+@page "/admin/audit"
+@attribute [Authorize(Policy = MantenioPolicies.AdminOnly)]
+@using Mantenio.Shared.Reports
+@using Mantenio.Shared.Users
+@inherits BusyComponentBase
+@inject MantenioApi Api
+
+<PageTitle>@UiStrings.AuditTitle · @CondoProfile.Current.ShortName</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+    <MudText Typo="Typo.h5" HtmlTag="h1">@UiStrings.AuditTitle</MudText>
+    <MudText Class="mt-2 mb-4">@UiStrings.AuditBody</MudText>
+
+    <MudPaper Class="pa-3 mb-3" Elevation="1">
+        <MudGrid Spacing="2">
+            <MudItem xs="6" md="2">
+                <MudDatePicker Date="_from" DateChanged="d => FilterAsync(() => _from = d)" Label="@UiStrings.AuditFrom" DateFormat="dd/MM/yyyy"
+                               Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="6" md="2">
+                <MudDatePicker Date="_to" DateChanged="d => FilterAsync(() => _to = d)" Label="@UiStrings.AuditTo" DateFormat="dd/MM/yyyy"
+                               Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="6" md="2">
+                <MudSelect T="AuditSourceFilter?" Value="_source" ValueChanged="v => FilterAsync(() => _source = v)" Label="@UiStrings.AuditSource"
+                           Variant="Variant.Outlined" Margin="Margin.Dense">
+                    <MudSelectItem T="AuditSourceFilter?" Value="null">@UiStrings.AuditAny</MudSelectItem>
+                    @foreach (var source in Enum.GetValues<AuditSourceFilter>())
+                    {
+                        <MudSelectItem T="AuditSourceFilter?" Value="source">@LedgerText.AuditSource(source.ToString())</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" md="2">
+                <MudSelect T="string" Value="_entityType" ValueChanged="v => FilterAsync(() => _entityType = v)" Label="@UiStrings.AuditEntity"
+                           Variant="Variant.Outlined" Margin="Margin.Dense">
+                    <MudSelectItem T="string" Value="@("")">@UiStrings.AuditAny</MudSelectItem>
+                    @foreach (var entity in EntityTypes)
+                    {
+                        <MudSelectItem T="string" Value="entity">@LedgerText.AuditEntity(entity)</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" md="2">
+                <MudSelect T="Guid?" Value="_actorId" ValueChanged="v => FilterAsync(() => _actorId = v)" Label="@UiStrings.AuditActor"
+                           Variant="Variant.Outlined" Margin="Margin.Dense">
+                    <MudSelectItem T="Guid?" Value="null">@UiStrings.AuditAny</MudSelectItem>
+                    @foreach (var actor in _actors)
+                    {
+                        <MudSelectItem T="Guid?" Value="actor.Id">@actor.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" md="2">
+                <ApartmentPicker Value="_apartment" ValueChanged="a => FilterAsync(() => _apartment = a)" HelperText="" />
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (Error is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">@Error</MudAlert>
+    }
+
+    @if (_page is null)
+    {
+        <LoadingIndicator />
+    }
+    else if (_page.Items.Count == 0)
+    {
+        <MudText>@UiStrings.AuditNoResults</MudText>
+    }
+    else
+    {
+        <MudText Typo="Typo.caption" Class="mb-2 d-block">@Formats.Format(UiStrings.AuditCount, _page.Total)</MudText>
+        <MudExpansionPanels MultiExpansion="true" Elevation="1">
+            @foreach (var item in _page.Items)
+            {
+                <MudExpansionPanel>
+                    <TitleContent>
+                        <div class="d-flex flex-wrap align-center gap-2">
+                            <MudText Typo="Typo.body2" Style="min-width: 8.5rem">@Formats.DateTime(item.CreatedAt)</MudText>
+                            <MudChip T="string" Size="Size.Small" Color="@SourceColor(item.Source)">@LedgerText.AuditSource(item.Source)</MudChip>
+                            <MudText Typo="Typo.body2"><b>@LedgerText.AuditEntity(item.EntityType)</b> · @LedgerText.AuditAction(item.Action)</MudText>
+                            @if (item.ApartmentCode is { } apartmentCode)
+                            {
+                                <MudText Typo="Typo.body2">· @apartmentCode</MudText>
+                            }
+                            <MudText Typo="Typo.caption">· @(item.ActorName ?? UiStrings.TimelineSource_System)</MudText>
+                        </div>
+                    </TitleContent>
+                    <ChildContent>
+                        @if (item.Reason is { } reason)
+                        {
+                            <MudText Typo="Typo.body2"><b>@UiStrings.Reason:</b> @reason</MudText>
+                        }
+                        @if (item.OldValues is { } before)
+                        {
+                            <MudText Typo="Typo.body2" Class="mt-1"><b>@UiStrings.AuditBefore:</b></MudText>
+                            <pre style="white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.8rem; margin: 0">@before</pre>
+                        }
+                        @if (item.NewValues is { } after)
+                        {
+                            <MudText Typo="Typo.body2" Class="mt-1"><b>@UiStrings.AuditAfter:</b></MudText>
+                            <pre style="white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.8rem; margin: 0">@after</pre>
+                        }
+                    </ChildContent>
+                </MudExpansionPanel>
+            }
+        </MudExpansionPanels>
+        @if (_page.Total > PageSize)
+        {
+            <div class="d-flex justify-center mt-3">
+                <MudPagination Count="@((_page.Total + PageSize - 1) / PageSize)" Selected="_pageNumber" SelectedChanged="PageAsync" Color="Color.Primary" />
+            </div>
+        }
+    }
+</MudContainer>
+
+@code {
+    private const int PageSize = 25;
+
+    private static readonly string[] EntityTypes =
+        ["Charge", "PaymentProof", "Receipt", "FeeChange", "CondoSettings", "BankAccount", "Apartment", "Tower", "User", "InvitationCode", "ApartmentList"];
+
+    private PagedResult<AuditItem>? _page;
+    private List<AuditActor> _actors = [];
+    private int _pageNumber = 1;
+    private DateTime? _from;
+    private DateTime? _to;
+    private AuditSourceFilter? _source;
+    private string _entityType = "";
+    private Guid? _actorId;
+    private ApartmentOption? _apartment;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RunAsync(async () => _actors = await Api.ListAuditActorsAsync());
+        await LoadAsync();
+    }
+
+    private async Task FilterAsync(Action change)
+    {
+        change();
+        _pageNumber = 1;
+        await LoadAsync();
+    }
+
+    private async Task PageAsync(int page)
+    {
+        _pageNumber = page;
+        await LoadAsync();
+    }
+
+    private Task LoadAsync()
+    {
+        var filter = new AuditFilter(
+            _from is { } from ? DateOnly.FromDateTime(from) : null,
+            _to is { } to ? DateOnly.FromDateTime(to) : null,
+            _source,
+            _entityType.Length == 0 ? null : _entityType,
+            _apartment?.Id,
+            _actorId);
+        return RunAsync(async () => _page = await Api.ListAuditAsync(filter, _pageNumber, PageSize));
+    }
+
+    private static Color SourceColor(string source) => source switch
+    {
+        "Admin" => Color.Primary,
+        "System" => Color.Dark,
+        _ => Color.Default,
+    };
+}

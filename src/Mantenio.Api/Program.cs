@@ -5,6 +5,7 @@ using Mantenio.Api.Features.BankAccounts;
 using Mantenio.Api.Features.Invitations;
 using Mantenio.Api.Features.Ledger;
 using Mantenio.Api.Features.Notifications;
+using Mantenio.Api.Features.Reports;
 using Mantenio.Api.Features.Settings;
 using Mantenio.Api.Features.Setup;
 using Mantenio.Api.Features.SystemInfo;
@@ -53,6 +54,7 @@ builder.Services.AddScoped<NotificationService>();
 builder.Services.AddMantenioStorage(builder.Configuration);
 builder.Services.AddScoped<LedgerService>();
 builder.Services.AddScoped<ReceiptEmails>();
+builder.Services.AddScoped<DelinquencyService>();
 
 // The web app (Cloudflare Pages) lives on another origin. The Android app calls the API natively, without CORS.
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
@@ -100,6 +102,7 @@ app.MapSettingsEndpoints();
 app.MapBankAccountEndpoints();
 app.MapNotificationEndpoints();
 app.MapLedgerEndpoints();
+app.MapReportEndpoints();
 app.MapLocalFiles();
 
 await app.RunAsync();

@@ -29,9 +29,11 @@ public static class NavigationItems
         new("bank-accounts", UiStrings.NavBankAccounts, Icons.Material.Filled.AccountBalance, InBottomBar: false),
         new("notifications", UiStrings.NavNotifications, Icons.Material.Filled.Notifications),
 
-        // Phones get one "Administración" entry (a hub page); the desktop drawer lists every admin page.
-        new("admin", UiStrings.NavAdmin, Icons.Material.Filled.AdminPanelSettings, NavLinkMatch.All, AdminOnly: true, InDrawer: false),
+        // Phones get one "Administración" entry (a hub page with the dashboard); the desktop drawer also lists every admin page.
+        new("admin", UiStrings.NavAdmin, Icons.Material.Filled.AdminPanelSettings, NavLinkMatch.All, AdminOnly: true),
         new("admin/payments", UiStrings.NavPaymentReview, Icons.Material.Filled.FactCheck, AdminOnly: true, InBottomBar: false),
+        new("admin/reports", UiStrings.NavReports, Icons.Material.Filled.Assessment, AdminOnly: true, InBottomBar: false),
+        new("admin/audit", UiStrings.NavAudit, Icons.Material.Filled.History, AdminOnly: true, InBottomBar: false),
         new("admin/charges", UiStrings.NavCharges, Icons.Material.Filled.RequestQuote, AdminOnly: true, InBottomBar: false),
         new("admin/users", UiStrings.NavUsers, Icons.Material.Filled.People, AdminOnly: true, InBottomBar: false),
         new("admin/invitations", UiStrings.NavInvitations, Icons.Material.Filled.PersonAdd, AdminOnly: true, InBottomBar: false),

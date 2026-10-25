@@ -30,6 +30,7 @@
   <ItemGroup Label="Files, images and PDF">
     <PackageVersion Include="AWSSDK.S3" Version="4.0.104.6" />
     <PackageVersion Include="QuestPDF" Version="2026.9.1" />
+    <PackageVersion Include="ClosedXML" Version="0.105.1" />
     <PackageVersion Include="SkiaSharp" Version="3.119.4" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
   </ItemGroup>

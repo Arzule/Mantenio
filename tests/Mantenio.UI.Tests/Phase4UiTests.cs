@@ -26,7 +26,7 @@ public sealed class Phase4UiTests : BunitContext
         Services.AddMudServices();
         Services.AddSingleton<IHttpClientFactory>(_api);
         Services.AddSingleton<MantenioApi>();
-        Services.AddSingleton<IFileOpener, RecordingFileOpener>();
+        Services.AddSingleton<IFileOpener, FakeFileOpener>();
         JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
@@ -134,9 +134,4 @@ public sealed class Phase4UiTests : BunitContext
 
     private static NotificationItem Notice(NotificationKind kind, object data) =>
         new(Guid.NewGuid(), kind, JsonSerializer.SerializeToElement(data, JsonSerializerOptions.Web), false, DateTimeOffset.UtcNow, null, null);
-
-    private sealed class RecordingFileOpener : IFileOpener
-    {
-        public Task OpenAsync(Uri url) => Task.CompletedTask;
-    }
 }

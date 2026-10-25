@@ -17,6 +17,12 @@ internal sealed class FakeApi : HttpMessageHandler, IHttpClientFactory
         return this;
     }
 
+    public FakeApi Returns(string path, Func<HttpResponseMessage> response)
+    {
+        _responses[path] = response;
+        return this;
+    }
+
     public FakeApi Fails(string path, HttpStatusCode status, string code) =>
         Returns(path, new { status = (int)status, code }, status);
 

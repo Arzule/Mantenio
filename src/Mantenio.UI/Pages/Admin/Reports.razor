@@ -1,0 +1,136 @@
+@page "/admin/reports"
+@attribute [Authorize(Policy = MantenioPolicies.AdminOnly)]
+@using Mantenio.Shared.Reports
+@inherits BusyComponentBase
+@inject MantenioApi Api
+@inject IFileOpener Files
+@inject ISnackbar Snackbar
+
+<PageTitle>@UiStrings.ReportsTitle · @CondoProfile.Current.ShortName</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+    <MudText Typo="Typo.h5" HtmlTag="h1" Class="mb-4">@UiStrings.ReportsTitle</MudText>
+
+    @if (Error is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">@Error</MudAlert>
+    }
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h6" HtmlTag="h2">@UiStrings.DelinquencyTitle</MudText>
+        <MudText Typo="Typo.body2" Class="mt-1 mb-3">@UiStrings.DelinquencyBody</MudText>
+        <div class="d-flex flex-wrap align-center gap-3">
+            <MudDatePicker Date="_date" DateChanged="OnDateAsync" Label="@UiStrings.ReportDate" MaxDate="DateTime.Today" DateFormat="dd/MM/yyyy"
+                           Variant="Variant.Outlined" Style="max-width: 220px" />
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.TableView" Disabled="Busy"
+                       OnClick="() => DownloadAsync(excel: true)">@UiStrings.ExportExcel</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PictureAsPdf" Disabled="Busy"
+                       OnClick="() => DownloadAsync(excel: false)">@UiStrings.ExportPdf</MudButton>
+        </div>
+
+        @if (_report is null)
+        {
+            <LoadingIndicator />
+        }
+        else if (_report.Towers.Count == 0)
+        {
+            <MudAlert Severity="Severity.Success" Class="mt-4">@UiStrings.NoDelinquency</MudAlert>
+        }
+        else
+        {
+            <MudText Typo="Typo.subtitle1" Class="mt-4">
+                <b>@Formats.Format(UiStrings.DelinquencyTotal, _report.DelinquentApartments, Formats.Money(_report.Total))</b>
+            </MudText>
+            <MudTabs Elevation="0" ApplyEffectsToContainer="true" TabPanelsClass="pt-2" Class="mt-2">
+                @foreach (var tower in _report.Towers)
+                {
+                    <MudTabPanel Text="@tower.Name" BadgeData="tower.Rows.Count" BadgeColor="Color.Error">
+                        <MudSimpleTable Dense="true" Hover="true" Elevation="0">
+                            <thead>
+                                <tr>
+                                    <th>@UiStrings.Apartment</th>
+                                    <th>@UiStrings.OverdueMonths</th>
+                                    <th style="text-align: right">@UiStrings.Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in tower.Rows)
+                                {
+                                    <tr>
+                                        <td>
+                                            <MudLink Href="@($"apartments/{row.ApartmentId}/statement")"><b>@row.Code</b></MudLink>
+                                            @if (row.IsFrozen)
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Info" Icon="@Icons.Material.Filled.AcUnit">@UiStrings.Frozen</MudChip>
+                                            }
+                                        </td>
+                                        <td>@row.Periods.Count · @string.Join(", ", row.Periods.Select(Formats.Month))</td>
+                                        <td style="text-align: right; white-space: nowrap">@Formats.Money(row.Amount)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </MudSimpleTable>
+                        <MudText Typo="Typo.body2" Align="Align.Right" Class="mt-2"><b>@Formats.Format(UiStrings.TowerTotal, Formats.Money(tower.Total))</b></MudText>
+                    </MudTabPanel>
+                }
+            </MudTabs>
+        }
+    </MudPaper>
+
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudText Typo="Typo.h6" HtmlTag="h2">@UiStrings.FolioTitle</MudText>
+        <MudText Typo="Typo.body2" Class="mt-1 mb-3">@UiStrings.FolioBody</MudText>
+        <div class="d-flex flex-wrap align-center gap-3">
+            <MudSelect T="int" @bind-Value="_folioPeriod" Label="@UiStrings.Month" Variant="Variant.Outlined" Style="max-width: 240px">
+                @foreach (var month in _months)
+                {
+                    <MudSelectItem Value="month">@Formats.Month(month)</MudSelectItem>
+                }
+            </MudSelect>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PictureAsPdf" Disabled="Busy"
+                       OnClick="DownloadFolioAsync">@UiStrings.DownloadFolio</MudButton>
+        </div>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private DateTime? _date = DateTime.Today;
+    private DelinquencyReport? _report;
+    private int[] _months = [];
+    private int _folioPeriod;
+
+    private DateOnly Date => DateOnly.FromDateTime(_date ?? DateTime.Today);
+
+    protected override async Task OnInitializedAsync()
+    {
+        // The current month and the 11 before it, newest first.
+        var now = CondoTime.ToLocal(DateTimeOffset.UtcNow);
+        var current = (now.Year * 100) + now.Month;
+        var start = ((now.Year - 1) * 100) + now.Month;
+        _months = Formats.NextMonths(start, 12).Reverse().ToArray();
+        _folioPeriod = current;
+        await LoadAsync();
+    }
+
+    private async Task OnDateAsync(DateTime? date)
+    {
+        _date = date;
+        await LoadAsync();
+    }
+
+    private Task LoadAsync() => RunAsync(async () => _report = await Api.GetDelinquencyAsync(Date));
+
+    private Task DownloadAsync(bool excel) => SaveAsync(() => Api.DownloadDelinquencyAsync(Date, excel));
+
+    private Task DownloadFolioAsync() => SaveAsync(() => Api.DownloadFolioAsync(_folioPeriod));
+
+    private async Task SaveAsync(Func<Task<DownloadedFile>> download)
+    {
+        DownloadedFile? file = null;
+        if (await RunAsync(async () => file = await download()))
+        {
+            await Files.SaveAsync(file!.FileName, file.ContentType, file.Content);
+            Snackbar.Add(Formats.Format(UiStrings.FileReady, file.FileName), Severity.Success);
+        }
+    }
+}

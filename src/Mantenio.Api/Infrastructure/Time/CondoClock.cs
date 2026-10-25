@@ -16,6 +16,20 @@ public sealed class CondoClock(TimeProvider time)
 
     public static DateTimeOffset ToLocal(DateTimeOffset utc) => TimeZoneInfo.ConvertTime(utc, Zone);
 
+    /// <summary>The last instant of <paramref name="date"/> in the condo time zone, in UTC.</summary>
+    public static DateTimeOffset EndOfDayUtc(DateOnly date)
+    {
+        var nextMidnight = date.AddDays(1).ToDateTime(TimeOnly.MinValue);
+        return new DateTimeOffset(nextMidnight, Zone.GetUtcOffset(nextMidnight)).ToUniversalTime().AddTicks(-1);
+    }
+
+    /// <summary>The first instant of <paramref name="date"/> in the condo time zone, in UTC.</summary>
+    public static DateTimeOffset StartOfDayUtc(DateOnly date)
+    {
+        var midnight = date.ToDateTime(TimeOnly.MinValue);
+        return new DateTimeOffset(midnight, Zone.GetUtcOffset(midnight)).ToUniversalTime();
+    }
+
     private static TimeZoneInfo FindZone(string id)
     {
         try
