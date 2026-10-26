@@ -8,14 +8,14 @@ public sealed class InvitationCodeTests
     private static readonly DateTimeOffset Now = new(2026, 10, 24, 15, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public void A_new_code_expires_after_thirty_minutes()
+    public void A_new_code_expires_after_twenty_four_hours()
     {
         var code = new InvitationCode("hash", UserRole.Resident, null, Guid.NewGuid(), Now);
 
-        code.ExpiresAt.ShouldBe(Now.AddMinutes(30));
-        code.IsRedeemable(Now.AddMinutes(29).AddSeconds(59)).ShouldBeTrue();
-        code.IsRedeemable(Now.AddMinutes(30)).ShouldBeFalse();
-        code.IsRedeemable(Now.AddMinutes(31)).ShouldBeFalse();
+        code.ExpiresAt.ShouldBe(Now.AddHours(24));
+        code.IsRedeemable(Now.AddHours(24).AddSeconds(-1)).ShouldBeTrue();
+        code.IsRedeemable(Now.AddHours(24)).ShouldBeFalse();
+        code.IsRedeemable(Now.AddHours(25)).ShouldBeFalse();
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public sealed class InvitationCodeTests
     {
         var code = new InvitationCode("hash", UserRole.Resident, null, Guid.NewGuid(), Now);
 
-        Should.Throw<InvalidOperationException>(() => code.Redeem(Guid.NewGuid(), Now.AddMinutes(31)));
+        Should.Throw<InvalidOperationException>(() => code.Redeem(Guid.NewGuid(), Now.AddHours(25)));
     }
 
     [Fact]

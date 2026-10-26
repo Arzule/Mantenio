@@ -1,4 +1,5 @@
 @inherits LayoutComponentBase
+@implements IDisposable
 @inject AuthSession Session
 @inject NavigationManager Navigation
 @inject MantenioApi Api
@@ -83,6 +84,7 @@
     private int _unread;
     private DateTimeOffset _unreadCheckedAt;
     private bool _pushRegistered;
+    private readonly CancellationTokenSource _disposed = new();
 
     [CascadingParameter]
     private Task<AuthenticationState>? AuthenticationState { get; set; }
@@ -114,6 +116,47 @@
         {
             Navigation.NavigateTo("account/password", replace: true);
         }
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _ = CheckPeriodicallyAsync(_disposed.Token);
+        }
+    }
+
+    /// <summary>
+    /// Every minute, even without navigating: refreshes the bell badge and, through that call, notices a session
+    /// revoked elsewhere (e.g. a password change on another phone), which signs this app out.
+    /// </summary>
+    private async Task CheckPeriodicallyAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellationToken))
+            {
+                if (Session.User.Identity?.IsAuthenticated == true)
+                {
+                    await InvokeAsync(async () =>
+                    {
+                        await RefreshUnreadAsync();
+                        StateHasChanged();
+                    });
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // The layout went away.
+        }
+    }
+
+    public void Dispose()
+    {
+        _disposed.Cancel();
+        _disposed.Dispose();
     }
 
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;

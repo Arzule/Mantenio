@@ -71,8 +71,6 @@
   <data name="PasswordHint" xml:space="preserve"><value>Mínimo 8 caracteres, con al menos un número.</value></data>
   <data name="PasswordsDontMatch" xml:space="preserve"><value>Las contraseñas no coinciden.</value></data>
   <data name="CodeFormat" xml:space="preserve"><value>Ingresa los 6 dígitos del código.</value></data>
-  <data name="ApartmentSearchHint" xml:space="preserve"><value>Escribe el edificio y el número, por ejemplo H-102.</value></data>
-  <data name="ApartmentNoResults" xml:space="preserve"><value>No encontramos ese departamento.</value></data>
   <!-- Login -->
   <data name="LoginTitle" xml:space="preserve"><value>Iniciar sesión</value></data>
   <data name="LoginSubmit" xml:space="preserve"><value>Ingresar</value></data>
@@ -92,7 +90,7 @@
   <data name="StartOver" xml:space="preserve"><value>Volver a empezar</value></data>
   <!-- Registration -->
   <data name="RegisterTitle" xml:space="preserve"><value>Crear cuenta</value></data>
-  <data name="RegisterCodeBody" xml:space="preserve"><value>Ingresa el código de invitación de 6 dígitos que te dio la administración. Vence a los 30 minutos.</value></data>
+  <data name="RegisterCodeBody" xml:space="preserve"><value>Ingresa el código de invitación de 6 dígitos que te dio la administración. Vence a las 24 horas.</value></data>
   <data name="InvitationCodeLabel" xml:space="preserve"><value>Código de invitación</value></data>
   <data name="RegisterAsAdmin" xml:space="preserve"><value>Este código es para una cuenta de administrador.</value></data>
   <data name="RegisterAsResident" xml:space="preserve"><value>Este código es para una cuenta de residente.</value></data>
@@ -115,7 +113,7 @@
   <data name="HomeGreeting" xml:space="preserve"><value>Hola, {0}</value></data>
   <!-- Admin: invitation codes -->
   <data name="InvitationsTitle" xml:space="preserve"><value>Códigos de invitación</value></data>
-  <data name="InvitationsBody" xml:space="preserve"><value>Genera un código de un solo uso para que una persona cree su cuenta. Vence a los 30 minutos.</value></data>
+  <data name="InvitationsBody" xml:space="preserve"><value>Genera un código de un solo uso para que una persona cree su cuenta. Vence a las 24 horas.</value></data>
   <data name="InvitationRole" xml:space="preserve"><value>Tipo de cuenta</value></data>
   <data name="InvitationApartmentLabel" xml:space="preserve"><value>Departamento (opcional)</value></data>
   <data name="InvitationApartmentHint" xml:space="preserve"><value>Si lo eliges, la cuenta quedará asociada a ese departamento y la persona no podrá cambiarlo.</value></data>
@@ -557,5 +555,5 @@ No puedes revisar comprobantes de tu propio departamento: debe hacerlo otro admi
 • Departamentos: puedes poner una cuota especial o congelar un departamento desocupado (no genera cargos mientras esté congelado).
 • Cargos: se generan solos el día 1 de cada mes. Aquí también se carga la deuda anterior al sistema.</value></data>
   <data name="HelpSecurityTitle" xml:space="preserve"><value>Seguridad de la cuenta</value></data>
-  <data name="HelpSecurityBody" xml:space="preserve"><value>Los administradores entran con contraseña y un código de 6 dígitos que llega al correo. Nunca compartas tu contraseña ni los códigos. Para agregar residentes o administradores, crea un código de invitación en Administración → Códigos y envíaselo a la persona: vence en 30 minutos y solo se usa una vez. Si lo creas para un departamento, la cuenta queda en ese departamento.</value></data>
+  <data name="HelpSecurityBody" xml:space="preserve"><value>Los administradores entran con contraseña y un código de 6 dígitos que llega al correo. Nunca compartas tu contraseña ni los códigos. Para agregar residentes o administradores, crea un código de invitación en Administración → Códigos y envíaselo a la persona: vence en 24 horas y solo se usa una vez. Si lo creas para un departamento, la cuenta queda en ese departamento.</value></data>
 </root>

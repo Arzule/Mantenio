@@ -43,6 +43,8 @@ internal static class AuthSetup
         services.AddSingleton<TokenService>();
         services.AddSingleton<InvitationCodeHasher>();
         services.AddScoped<SessionService>();
+        services.AddMemoryCache();
+        services.AddSingleton<SessionGuard>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
         services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
@@ -50,6 +52,7 @@ internal static class AuthSetup
             {
                 options.MapInboundClaims = false;
                 options.TokenValidationParameters = tokens.ValidationParameters(JwtOptions.AccessAudience);
+                options.Events = new JwtBearerEvents { OnTokenValidated = RejectRevokedSessionAsync };
             });
 
         services.AddAuthorizationBuilder()
@@ -63,6 +66,17 @@ internal static class AuthSetup
                 .RequireClaim(MantenioClaims.Founder, "true")));
 
         return services;
+    }
+
+    /// <summary>A password change or logout elsewhere ends this session now, not when the access token expires.</summary>
+    private static async Task RejectRevokedSessionAsync(TokenValidatedContext context)
+    {
+        var guard = context.HttpContext.RequestServices.GetRequiredService<SessionGuard>();
+        if (!Guid.TryParse(context.Principal?.FindFirst(MantenioClaims.SessionId)?.Value, out var sessionId)
+            || !await guard.IsActiveAsync(sessionId, context.HttpContext.RequestAborted))
+        {
+            context.Fail("The session was revoked.");
+        }
     }
 
     /// <summary>Signed in and without a pending temporary-password change.</summary>

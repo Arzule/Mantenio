@@ -12,6 +12,9 @@ public static class MantenioClaims
     public const string ApartmentId = "apartment_id";
     public const string ApartmentCode = "apartment_code";
 
+    /// <summary>The sign-in session (refresh-token family); the API rejects the token once that session is revoked.</summary>
+    public const string SessionId = "sid";
+
     /// <summary>"true" for the founder admin.</summary>
     public const string Founder = "founder";
 

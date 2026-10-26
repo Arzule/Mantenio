@@ -1,29 +1,48 @@
 @inject PublicApi Api
 
-@* Searchable apartment combobox: "h102", "H-102" or "h 102" all find H-102. *@
-<MudAutocomplete T="ApartmentOption"
-                 Value="_selected"
-                 ValueChanged="OnSelectedAsync"
-                 SearchFunc="SearchAsync"
-                 ToStringFunc="@(a => a?.Code)"
-                 Label="@Label"
-                 HelperText="@(HelperText ?? UiStrings.ApartmentSearchHint)"
-                 Required="Required"
-                 RequiredError="@UiStrings.Required"
-                 Disabled="Disabled"
-                 Clearable="true"
-                 ResetValueOnEmptyText="true"
-                 DebounceInterval="250"
-                 MaxItems="20"
-                 Variant="Variant.Outlined"
-                 Class="@Class">
-    <NoItemsTemplate>
-        <MudText Class="pa-3" Typo="Typo.body2">@UiStrings.ApartmentNoResults</MudText>
-    </NoItemsTemplate>
-</MudAutocomplete>
+@* Two comboboxes: the tower first, then the apartment numbers of that tower. *@
+<div class="@Class">
+<MudText Typo="Typo.caption" Class="d-block mb-1">@Label</MudText>
+<div class="d-flex gap-2">
+    <MudSelect T="string"
+               Value="_tower"
+               ValueChanged="OnTowerAsync"
+               Label="@CondoProfile.Current.TowerLabel"
+               Required="Required"
+               RequiredError="@UiStrings.Required"
+               Disabled="@(Disabled || _options.Count == 0)"
+               Clearable="@(!Required)"
+               Variant="Variant.Outlined"
+               Style="flex: 1">
+        @foreach (var tower in Towers)
+        {
+            <MudSelectItem Value="tower">@tower</MudSelectItem>
+        }
+    </MudSelect>
+    <MudSelect T="ApartmentOption"
+               Value="_selected"
+               ValueChanged="OnSelectedAsync"
+               ToStringFunc="@(a => a?.Number)"
+               Label="@UiStrings.ApartmentNumber"
+               HelperText="@HelperText"
+               Required="Required"
+               RequiredError="@UiStrings.Required"
+               Disabled="@(Disabled || _tower is null)"
+               Variant="Variant.Outlined"
+               Style="flex: 1">
+        @foreach (var apartment in Numbers)
+        {
+            <MudSelectItem Value="apartment">@apartment.Number</MudSelectItem>
+        }
+    </MudSelect>
+</div>
+</div>
 
 @code {
+    private List<ApartmentOption> _options = [];
+    private string? _tower;
     private ApartmentOption? _selected;
+    private Guid? _appliedValueId;
 
     [Parameter]
     public ApartmentOption? Value { get; set; }
@@ -46,23 +65,56 @@
     [Parameter]
     public string? Class { get; set; }
 
-    protected override void OnParametersSet() => _selected = Value;
+    private IEnumerable<string> Towers => _options.Select(a => a.Tower).Distinct();
+
+    private IEnumerable<ApartmentOption> Numbers => _options
+        .Where(a => a.Tower == _tower)
+        .OrderBy(a => int.TryParse(a.Number, out var n) ? n : int.MaxValue)
+        .ThenBy(a => a.Number, StringComparer.OrdinalIgnoreCase);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _options = [.. await Api.ListApartmentOptionsAsync()];
+        }
+        catch (ApiException)
+        {
+            _options = [];
+        }
+
+        _appliedValueId = null;
+        ApplyValue();
+    }
+
+    protected override void OnParametersSet() => ApplyValue();
+
+    /// <summary>Shows the bound apartment (callers may pass only its id and code) once the list is loaded.</summary>
+    private void ApplyValue()
+    {
+        if (Value?.Id == _appliedValueId || _options.Count == 0)
+        {
+            return;
+        }
+
+        _appliedValueId = Value?.Id;
+        _selected = Value is null ? null : _options.FirstOrDefault(a => a.Id == Value.Id);
+        _tower = _selected?.Tower ?? (Value is null ? _tower : null);
+    }
+
+    private async Task OnTowerAsync(string? tower)
+    {
+        _tower = tower;
+        if (_selected is not null && _selected.Tower != tower)
+        {
+            await OnSelectedAsync(null);
+        }
+    }
 
     private async Task OnSelectedAsync(ApartmentOption? apartment)
     {
         _selected = apartment;
+        _appliedValueId = apartment?.Id;
         await ValueChanged.InvokeAsync(apartment);
-    }
-
-    private async Task<IEnumerable<ApartmentOption>> SearchAsync(string? text, CancellationToken cancellationToken)
-    {
-        try
-        {
-            return await Api.SearchApartmentsAsync(text, cancellationToken);
-        }
-        catch (ApiException)
-        {
-            return [];
-        }
     }
 }

@@ -60,6 +60,15 @@ public sealed class PublicApi(IHttpClientFactory httpClientFactory)
         return await response.ReadAsync<List<ApartmentOption>>(cancellationToken);
     }
 
+    /// <summary>Every apartment, for the tower and number comboboxes.</summary>
+    public async Task<IReadOnlyList<ApartmentOption>> ListApartmentOptionsAsync(CancellationToken cancellationToken = default)
+    {
+        using var client = httpClientFactory.CreateClient(MantenioHttpClients.Public);
+        var url = $"/api/apartments/options?limit={ApartmentOptionLimits.Max}";
+        using var response = await client.GetAsync(new Uri(url, UriKind.Relative), cancellationToken).SendSafeAsync();
+        return await response.ReadAsync<List<ApartmentOption>>(cancellationToken);
+    }
+
     private async Task<T> PostAsync<T>(string path, object body, CancellationToken cancellationToken)
     {
         using var client = httpClientFactory.CreateClient(MantenioHttpClients.Public);

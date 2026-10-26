@@ -30,7 +30,7 @@ public sealed class TokenService(IOptions<JwtOptions> options, TimeProvider time
 
     public SymmetricSecurityKey SigningKey { get; } = new(Encoding.UTF8.GetBytes(options.Value.SigningKey));
 
-    public (string Token, DateTimeOffset ExpiresAt) CreateAccessToken(AppUser user)
+    public (string Token, DateTimeOffset ExpiresAt) CreateAccessToken(AppUser user, Guid sessionId)
     {
         ArgumentNullException.ThrowIfNull(user);
         var now = time.GetUtcNow();
@@ -44,6 +44,7 @@ public sealed class TokenService(IOptions<JwtOptions> options, TimeProvider time
             [MantenioClaims.FirstName] = user.FirstName,
             [MantenioClaims.LastName] = user.LastName,
             [MantenioClaims.Role] = user.Role.ToString(),
+            [MantenioClaims.SessionId] = sessionId.ToString(),
             [JwtRegisteredClaimNames.Jti] = Guid.NewGuid().ToString("N"),
         };
         if (user.IsFounder) claims[MantenioClaims.Founder] = "true";

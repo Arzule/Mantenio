@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Mantenio.Api.Infrastructure.Auth;
 
 /// <summary>Issues, rotates and revokes refresh-token sessions.</summary>
-public sealed class SessionService(AppDbContext db, TokenService tokens, TimeProvider time)
+public sealed class SessionService(AppDbContext db, TokenService tokens, SessionGuard guard, TimeProvider time)
 {
     /// <summary>Starts a new session (a new token family) for a user who just proved who they are.</summary>
     public async Task<AuthTokens> StartAsync(AppUser user, bool keepSignedIn, CancellationToken cancellationToken)
@@ -76,20 +76,24 @@ public sealed class SessionService(AppDbContext db, TokenService tokens, TimePro
     }
 
     /// <summary>Signs the user out everywhere (deactivation, password change or reset).</summary>
-    public Task<int> RevokeAllAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<int> RevokeAllAsync(Guid userId, CancellationToken cancellationToken)
     {
         var now = time.GetUtcNow();
-        return db.RefreshTokens
-            .Where(t => t.UserId == userId && t.RevokedAt == null)
-            .ExecuteUpdateAsync(s => s.SetProperty(t => t.RevokedAt, now), cancellationToken);
+        var live = db.RefreshTokens.Where(t => t.UserId == userId && t.RevokedAt == null);
+        var families = await live.Select(t => t.FamilyId).Distinct().ToListAsync(cancellationToken);
+        var revoked = await live.ExecuteUpdateAsync(s => s.SetProperty(t => t.RevokedAt, now), cancellationToken);
+        guard.Forget(families);
+        return revoked;
     }
 
-    private Task<int> RevokeFamilyAsync(Guid familyId, CancellationToken cancellationToken)
+    private async Task<int> RevokeFamilyAsync(Guid familyId, CancellationToken cancellationToken)
     {
         var now = time.GetUtcNow();
-        return db.RefreshTokens
+        var revoked = await db.RefreshTokens
             .Where(t => t.FamilyId == familyId && t.RevokedAt == null)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.RevokedAt, now), cancellationToken);
+        guard.Forget([familyId]);
+        return revoked;
     }
 
     private (string Token, RefreshToken Entity) NewRefreshToken(AppUser user, Guid familyId, bool keepSignedIn)
@@ -110,7 +114,7 @@ public sealed class SessionService(AppDbContext db, TokenService tokens, TimePro
 
     private AuthTokens Tokens(AppUser user, string refreshToken, RefreshToken entity)
     {
-        var (accessToken, accessExpiresAt) = tokens.CreateAccessToken(user);
+        var (accessToken, accessExpiresAt) = tokens.CreateAccessToken(user, entity.FamilyId);
         return new AuthTokens(accessToken, accessExpiresAt, refreshToken, entity.ExpiresAt);
     }
 }

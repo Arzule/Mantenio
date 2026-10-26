@@ -9,8 +9,6 @@ namespace Mantenio.Api.Features.Apartments;
 
 internal static class ApartmentEndpoints
 {
-    public const int MaxOptions = 50;
-
     public static IEndpointRouteBuilder MapApartmentEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/apartments").WithTags("Apartments");
@@ -22,10 +20,10 @@ internal static class ApartmentEndpoints
         return app;
     }
 
-    /// <summary>Text search for the apartment combobox. "h102", "H-102" and "h 102" all match H-102.</summary>
+    /// <summary>Apartment options: all of them (tower and number comboboxes) or a text search ("h102", "H-102" and "h 102" all match H-102).</summary>
     private static async Task<IResult> SearchOptionsAsync(AppDbContext db, string? search, int? limit, CancellationToken cancellationToken)
     {
-        var take = Math.Clamp(limit ?? 20, 1, MaxOptions);
+        var take = Math.Clamp(limit ?? 20, 1, ApartmentOptionLimits.Max);
         var query = db.Apartments.AsNoTracking();
 
         var term = new string((search ?? "").Where(char.IsLetterOrDigit).ToArray());

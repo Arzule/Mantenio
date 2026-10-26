@@ -13,16 +13,16 @@ public sealed class InvitationExpiryTests(ApiFactory factory) : IClassFixture<Ap
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
-    public async Task Codes_stop_working_after_thirty_minutes()
+    public async Task Codes_stop_working_after_twenty_four_hours()
     {
         using var admin = factory.CreateClient(await factory.SignInFounderAsync());
         var code = await admin.CreateInvitationAsync(AccountRole.Resident);
         using var client = factory.CreateClient();
 
-        factory.Time.Advance(TimeSpan.FromMinutes(29));
+        factory.Time.Advance(TimeSpan.FromHours(23));
         await (await client.PostAsJsonAsync("/api/invitations/check", new CheckInvitationRequest(code), Ct)).ShouldBeAsync(HttpStatusCode.OK);
 
-        factory.Time.Advance(TimeSpan.FromMinutes(2));
+        factory.Time.Advance(TimeSpan.FromHours(2));
         var expired = await client.PostAsJsonAsync("/api/invitations/check", new CheckInvitationRequest(code), Ct);
         await expired.ShouldBeProblemAsync(HttpStatusCode.BadRequest, ErrorCodes.InvitationInvalid);
     }

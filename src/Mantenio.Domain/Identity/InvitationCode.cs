@@ -10,7 +10,7 @@ namespace Mantenio.Domain.Identity;
 public sealed class InvitationCode
 {
     public const int Length = 6;
-    public static readonly TimeSpan Lifetime = TimeSpan.FromMinutes(30);
+    public static readonly TimeSpan Lifetime = TimeSpan.FromHours(24);
 
     private InvitationCode() { } // EF Core
 

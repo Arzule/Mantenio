@@ -56,6 +56,11 @@ public sealed class AuthorizationTests(ApiFactory factory) : IClassFixture<ApiFa
         var all = await client.GetFromJsonAsync<List<ApartmentOption>>("/api/apartments/options?limit=50", Ct);
         all!.Count.ShouldBe(50);
         all[0].Code.ShouldBe("A-101");
+
+        // The tower and number comboboxes load every apartment in one call.
+        var every = await client.GetFromJsonAsync<List<ApartmentOption>>($"/api/apartments/options?limit={ApartmentOptionLimits.Max}", Ct);
+        every!.Count.ShouldBeGreaterThan(50);
+        every.Select(o => o.Tower).Distinct().Count().ShouldBeGreaterThan(1);
     }
 }
 
