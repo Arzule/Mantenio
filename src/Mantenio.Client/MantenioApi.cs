@@ -216,6 +216,18 @@ public sealed class MantenioApi(IHttpClientFactory httpClientFactory)
         return await response.ReadAsync<PaymentProofItem>(cancellationToken);
     }
 
+    /// <summary>Reads amount, date and operation number from the voucher image, to pre-fill the form.</summary>
+    public async Task<ProofScanResult> ScanPaymentProofAsync(byte[] image, string contentType, CancellationToken cancellationToken = default)
+    {
+        using var form = new MultipartFormDataContent();
+        var file = new ByteArrayContent(image);
+        file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        form.Add(file, "image", "voucher" + (contentType == "image/png" ? ".png" : ".jpg"));
+        using var client = httpClientFactory.CreateClient(MantenioHttpClients.Authenticated);
+        using var response = await client.PostAsync(new Uri("/api/payments/scan", UriKind.Relative), form, cancellationToken).SendSafeAsync();
+        return await response.ReadAsync<ProofScanResult>(cancellationToken);
+    }
+
     /// <summary>Admin: registers the voucher a resident brought in person; it comes back approved, with its receipt.</summary>
     public async Task<PaymentProofItem> RegisterPaymentProofAsync(
         Guid apartmentId, string payerName, decimal amount, DateOnly operationDate, string bankName, string operationNumber, byte[] image,

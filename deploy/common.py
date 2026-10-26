@@ -84,6 +84,17 @@ def app_settings(config, store):
     if store.get("AlertEmail"):
         env_vars["Alerts__Email"] = store["AlertEmail"]
 
+    # Azure AI Vision (free F0) reads the voucher images to pre-fill the payment form.
+    if config.get("visionService"):
+        vision = config["visionService"]
+        app_secrets["vision-key"] = run(["az", "cognitiveservices", "account", "keys", "list", "-n", vision, "-g", rg,
+                                         "--query", "key1", "-o", "tsv"], capture=True)
+        env_vars["Vision__Endpoint"] = run(["az", "cognitiveservices", "account", "show", "-n", vision, "-g", rg,
+                                            "--query", "properties.endpoint", "-o", "tsv"], capture=True)
+        env_vars["Vision__Key"] = "secretref:vision-key"
+    else:
+        print("No visionService in deployment.json: voucher reading stays off.")
+
     service_account = firebase_service_account(store)
     if service_account:
         # Base64: the key is multi-line JSON and goes through the command line.

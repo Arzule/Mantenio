@@ -25,6 +25,10 @@ public sealed record CondoProfile
     public required CondoAndroidSettings Android { get; init; }
     public CondoModules Modules { get; init; } = new();
 
+    /// <summary>Banks offered as "origin bank" in the payment forms ("Other bank" is always added).</summary>
+    public IReadOnlyList<string> Banks { get; init; } =
+        ["BCP", "Interbank", "BBVA", "Scotiabank", "Banco de la Nación", "BanBif", "Pichincha"];
+
     /// <summary>Firebase Android app of this condo (public client values). Null = no push for this profile.</summary>
     public CondoFirebaseSettings? Firebase { get; init; }
     public int FileRetentionMonths { get; init; } = 60;

@@ -4,6 +4,7 @@ using Mantenio.Api.Features.Setup;
 using Mantenio.Api.Infrastructure.Email;
 using Mantenio.Api.Infrastructure.Persistence;
 using Mantenio.Api.Infrastructure.Push;
+using Mantenio.Api.Infrastructure.Vision;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -35,6 +36,8 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public CapturingEmailSender Emails { get; } = new();
 
     public CapturingPushSender Pushes { get; } = new();
+
+    public FakeProofScanner Scanner { get; } = new();
 
     /// <summary>Server-side errors logged while the tests ran (handy when an endpoint answers 500).</summary>
     public ConcurrentQueue<string> ServerErrors { get; } = new();
@@ -70,6 +73,8 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             services.AddSingleton<IEmailSender>(Emails);
             services.RemoveAll<IPushSender>();
             services.AddSingleton<IPushSender>(Pushes);
+            services.RemoveAll<IProofScanner>();
+            services.AddSingleton<IProofScanner>(Scanner);
         });
     }
 
@@ -167,6 +172,16 @@ public sealed class CapturingPushSender : IPushSender
         _messages.Enqueue(message);
         return Task.FromResult(PushResult.Sent);
     }
+}
+
+/// <summary>Answers every image with <see cref="Lines"/>; null lines behave like a failed call.</summary>
+public sealed class FakeProofScanner : IProofScanner
+{
+    public bool IsEnabled { get; set; } = true;
+
+    public IReadOnlyList<string>? Lines { get; set; } = [];
+
+    public Task<IReadOnlyList<string>?> ReadLinesAsync(byte[] jpeg, CancellationToken cancellationToken) => Task.FromResult(Lines);
 }
 
 internal sealed class ErrorCaptureProvider(ConcurrentQueue<string> errors) : ILoggerProvider

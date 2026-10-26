@@ -7,6 +7,7 @@ using Mantenio.Api.Infrastructure.Persistence;
 using Mantenio.Api.Infrastructure.Security;
 using Mantenio.Api.Infrastructure.Storage;
 using Mantenio.Api.Infrastructure.Time;
+using Mantenio.Api.Infrastructure.Vision;
 using Mantenio.Domain.Audit;
 using Mantenio.Domain.Common;
 using Mantenio.Domain.Ledger;
@@ -33,6 +34,7 @@ internal static class LedgerEndpoints
     {
         var payments = app.MapGroup("/api/payments").WithTags("Payments").RequireAuthorization();
         payments.MapPost("/", SubmitAsync).DisableAntiforgery().WithUploadLimits().Produces<PaymentProofItem>();
+        payments.MapPost("/scan", ScanAsync).DisableAntiforgery().WithUploadLimits().Produces<ProofScanResult>();
         payments.MapGet("/mine", MineAsync).Produces<IReadOnlyList<PaymentProofItem>>();
         payments.MapGet("/{id:guid}/image", ImageAsync).Produces<FileLink>();
         payments.MapGet("/{id:guid}/receipt", ReceiptAsync).Produces<FileLink>();
@@ -97,6 +99,28 @@ internal static class LedgerEndpoints
         }
 
         return TypedResults.Ok(await ItemAsync(db, proof.Id, cancellationToken));
+    }
+
+    /// <summary>
+    /// Reads amount, date and operation number from the voucher image to pre-fill the form (resident upload and admin
+    /// registration). Nothing is stored; the person and the reviewing admin still check the values.
+    /// </summary>
+    private static async Task<IResult> ScanAsync(IFormFile image, IProofScanner scanner, CondoClock clock, CancellationToken cancellationToken)
+    {
+        var jpeg = await ReadImageAsync(image, cancellationToken);
+        if (jpeg is null)
+        {
+            return ApiProblems.BadRequest(ErrorCodes.InvalidImage);
+        }
+
+        var lines = scanner.IsEnabled ? await scanner.ReadLinesAsync(jpeg, cancellationToken) : null;
+        if (lines is null)
+        {
+            return TypedResults.Ok(new ProofScanResult(false, null, null, null));
+        }
+
+        var fields = ProofTextReader.Read(lines, clock.Today);
+        return TypedResults.Ok(new ProofScanResult(true, fields.Amount, fields.OperationDate, fields.OperationNumber));
     }
 
     private static async Task<IResult> MineAsync(ClaimsPrincipal principal, AppDbContext db, CancellationToken cancellationToken)
@@ -535,19 +559,7 @@ internal static class LedgerEndpoints
     /// <summary>Validates and re-encodes the image and stores it; null when it is not a usable image.</summary>
     private static async Task<string?> StoreImageAsync(IFormFile image, Guid apartmentId, IFileStorage storage, CancellationToken cancellationToken)
     {
-        if (image.Length is 0 or > ProofImage.MaxUploadBytes)
-        {
-            return null;
-        }
-
-        byte[] original;
-        using (var buffer = new MemoryStream())
-        {
-            await image.CopyToAsync(buffer, cancellationToken);
-            original = buffer.ToArray();
-        }
-
-        var jpeg = ProofImage.Normalize(original);
+        var jpeg = await ReadImageAsync(image, cancellationToken);
         if (jpeg is null)
         {
             return null;
@@ -557,6 +569,19 @@ internal static class LedgerEndpoints
         using var content = new MemoryStream(jpeg);
         await storage.PutAsync(key, content, "image/jpeg", cancellationToken);
         return key;
+    }
+
+    /// <summary>The upload re-encoded as JPEG ≤1600 px without metadata; null when it is not a usable image.</summary>
+    private static async Task<byte[]?> ReadImageAsync(IFormFile image, CancellationToken cancellationToken)
+    {
+        if (image.Length is 0 or > ProofImage.MaxUploadBytes)
+        {
+            return null;
+        }
+
+        using var buffer = new MemoryStream();
+        await image.CopyToAsync(buffer, cancellationToken);
+        return ProofImage.Normalize(buffer.ToArray());
     }
 
     /// <summary>Not found, wrong status or the admin's own apartment (another admin must review it).</summary>

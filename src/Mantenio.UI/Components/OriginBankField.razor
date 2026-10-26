@@ -1,0 +1,41 @@
+@* Bank the money came from: the condo profile's list plus "Other bank" (typed). Value is the final bank name. *@
+
+<MudSelect T="string" Value="_choice" ValueChanged="OnChoiceAsync" Label="@UiStrings.OriginBank" Variant="Variant.Outlined" Class="@Class">
+    @foreach (var bank in CondoProfile.Current.Banks)
+    {
+        <MudSelectItem Value="bank">@bank</MudSelectItem>
+    }
+    <MudSelectItem Value="OtherBank">@UiStrings.OtherBank</MudSelectItem>
+</MudSelect>
+@if (_choice == OtherBank)
+{
+    <MudTextField T="string" Value="_other" ValueChanged="OnOtherAsync" Label="@UiStrings.OtherBank" Variant="Variant.Outlined"
+                  MaxLength="80" Immediate="true" Class="mt-3" />
+}
+
+@code {
+    private const string OtherBank = "\u0000other";
+    private string _choice = "";
+    private string _other = "";
+
+    [Parameter]
+    public string Value { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    private Task OnChoiceAsync(string choice)
+    {
+        _choice = choice;
+        return ValueChanged.InvokeAsync(choice == OtherBank ? _other.Trim() : choice);
+    }
+
+    private Task OnOtherAsync(string text)
+    {
+        _other = text;
+        return ValueChanged.InvokeAsync(text.Trim());
+    }
+}

@@ -302,6 +302,10 @@
   <data name="SeeBankAccounts" xml:space="preserve"><value>Ver cuentas para pagar</value></data>
   <data name="OperationDate" xml:space="preserve"><value>Fecha de la operación</value></data>
   <data name="OtherBank" xml:space="preserve"><value>Otro banco</value></data>
+  <data name="OriginBank" xml:space="preserve"><value>Banco de origen</value></data>
+  <data name="ScanReading" xml:space="preserve"><value>Leyendo el comprobante…</value></data>
+  <data name="ScanFilled" xml:space="preserve"><value>Completamos los datos que pudimos leer del comprobante. Revísalos antes de continuar.</value></data>
+  <data name="ScanNothing" xml:space="preserve"><value>No pudimos leer los datos del comprobante. Complétalos a mano.</value></data>
   <data name="OperationNumber" xml:space="preserve"><value>N.º de operación</value></data>
   <data name="ChooseImage" xml:space="preserve"><value>Elegir captura</value></data>
   <data name="ImageChosen" xml:space="preserve"><value>Captura lista ({0})</value></data>
@@ -516,7 +520,7 @@ Si varias personas viven en el mismo departamento, cada una puede tener su cuent
   <data name="HelpPayTitle" xml:space="preserve"><value>Pagar la cuota</value></data>
   <data name="HelpPayBody" xml:space="preserve"><value>1. En Pagos toca "Ver cuentas para pagar" y copia la cuenta o el CCI.
 2. Haz la transferencia desde tu banco y toma una captura de la constancia.
-3. En Pagos toca "Subir comprobante": escribe el monto, la fecha, el banco y el número de operación, y adjunta la captura.
+3. En Pagos toca "Subir comprobante" y adjunta la captura: la app intenta leer el monto, la fecha y el número de operación. Revísalos (o escríbelos si no se leyeron) y elige el banco desde el que transferiste.
 4. La administración lo revisa. Cuando lo aprueba te llega un aviso y el recibo en PDF a tu correo.
 Si prefieres, puedes entregar tu voucher en persona: el administrador o el guardia de turno lo registra por ti.</value></data>
   <data name="HelpStatementTitle" xml:space="preserve"><value>Ver tu estado de cuenta y recibos</value></data>
@@ -539,8 +543,8 @@ No puedes revisar comprobantes de tu propio departamento: debe hacerlo otro admi
   <data name="HelpWalkInTitle" xml:space="preserve"><value>Registrar el pago de un residente (guardia de turno)</value></data>
   <data name="HelpWalkInBody" xml:space="preserve"><value>Para quien entrega su voucher en persona o no tiene la app:
 1. En Comprobantes toca "Registrar comprobante de un residente".
-2. Elige o escribe el edificio y el departamento, quién paga ("Recibí de"), el monto, la fecha, el banco y el número de operación.
-3. Toma una foto del voucher o elígela de la galería (es obligatoria).
+2. Toma una foto del voucher o elígela de la galería (es obligatoria): la app intenta leer el monto, la fecha y el número de operación.
+3. Elige o escribe el edificio y el departamento, quién paga ("Recibí de") y el banco de origen, y revisa los datos leídos.
 4. Revisa la confirmación: al aceptar, el pago queda aprobado y se emite el recibo.
 5. Toca "Enviar por WhatsApp" y elige al residente, o descarga el recibo para imprimirlo.</value></data>
   <data name="HelpVoidTitle" xml:space="preserve"><value>Anular un pago</value></data>

@@ -20,6 +20,9 @@ public enum DebtStatus
     Paid,
 }
 
+/// <summary>What was read from a voucher image to pre-fill the form; <paramref name="Scanned"/> is false when reading is off or failed.</summary>
+public sealed record ProofScanResult(bool Scanned, decimal? Amount, DateOnly? OperationDate, string? OperationNumber);
+
 /// <param name="PayerName">Who the receipt is made out to when an admin registered the proof; null when the resident uploaded it.</param>
 public sealed record PaymentProofItem(
     Guid Id,

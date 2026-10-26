@@ -21,6 +21,7 @@ using Mantenio.Api.Infrastructure.RateLimiting;
 using Mantenio.Api.Infrastructure.Security;
 using Mantenio.Api.Infrastructure.Storage;
 using Mantenio.Api.Infrastructure.Time;
+using Mantenio.Api.Infrastructure.Vision;
 using Mantenio.Api.Jobs;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -64,6 +65,7 @@ builder.Services.AddScoped<ReceiptEmails>();
 builder.Services.AddScoped<DelinquencyService>();
 builder.Services.AddScoped<LedgerJobs>();
 builder.Services.AddMantenioPush(builder.Configuration);
+builder.Services.AddMantenioVision(builder.Configuration);
 
 // The web app (Cloudflare Pages) lives on another origin. The Android app calls the API natively, without CORS.
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];

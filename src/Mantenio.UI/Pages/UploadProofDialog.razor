@@ -1,5 +1,6 @@
-@* The resident sends the screenshot of a transfer: amount, date, bank, operation number and the image. *@
-@using Mantenio.Shared.BankAccounts
+@* The resident sends the screenshot of a transfer: the image first (it is read to pre-fill the rest), then amount,
+   date, origin bank and operation number. *@
+@using Mantenio.Shared.Ledger
 @inherits BusyComponentBase
 @inject MantenioApi Api
 
@@ -7,22 +8,11 @@
     <TitleContent><MudText Typo="Typo.h6">@UiStrings.UploadProofTitle</MudText></TitleContent>
     <DialogContent>
         <MudText Class="mb-3">@UiStrings.UploadProofBody</MudText>
+        <div class="mb-4"><VoucherImageField @bind-Image="_image" OnScanned="Apply" /></div>
         <MudNumericField T="decimal?" @bind-Value="_amount" Label="@UiStrings.Amount" Min="0" Format="N2" Variant="Variant.Outlined" />
         <MudDatePicker @bind-Date="_date" Label="@UiStrings.OperationDate" MaxDate="DateTime.Today" DateFormat="dd/MM/yyyy" Variant="Variant.Outlined" Class="mt-3" />
-        <MudSelect T="string" @bind-Value="_bank" Label="@UiStrings.BankName" Variant="Variant.Outlined" Class="mt-3">
-            @foreach (var bank in _banks)
-            {
-                <MudSelectItem Value="bank">@bank</MudSelectItem>
-            }
-            <MudSelectItem Value="OtherBank">@UiStrings.OtherBank</MudSelectItem>
-        </MudSelect>
-        @if (_bank == OtherBank)
-        {
-            <MudTextField @bind-Value="_otherBank" Label="@UiStrings.OtherBank" Variant="Variant.Outlined" MaxLength="80" Immediate="true" Class="mt-3" />
-        }
+        <OriginBankField @bind-Value="_bank" Class="mt-3" />
         <MudTextField @bind-Value="_operation" Label="@UiStrings.OperationNumber" Variant="Variant.Outlined" MaxLength="40" Immediate="true" Class="mt-3" />
-
-        <div class="mt-4"><ProofImageInput @bind-Image="_image" /></div>
         @if (Error is not null)
         {
             <MudAlert Severity="Severity.Error" Class="mt-3">@Error</MudAlert>
@@ -35,37 +25,26 @@
 </MudDialog>
 
 @code {
-    private const string OtherBank = "\u0000other";
-
-    private List<string> _banks = [];
     private decimal? _amount;
     private DateTime? _date = DateTime.Today;
     private string _bank = "";
-    private string _otherBank = "";
     private string _operation = "";
     private PickedImage? _image;
 
     [CascadingParameter]
     private IMudDialogInstance Dialog { get; set; } = default!;
 
-    private string BankName => (_bank == OtherBank ? _otherBank : _bank).Trim();
+    private bool CanSend => _amount > 0 && _date is not null && _bank.Length > 0 && _operation.Trim().Length > 0 && _image is not null;
 
-    private bool CanSend => _amount > 0 && _date is not null && BankName.Length > 0 && _operation.Trim().Length > 0 && _image is not null;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await RunAsync(async () =>
-        {
-            _banks = (await Api.ListBankAccountsAsync()).Select(b => b.BankName).Distinct().ToList();
-            _bank = _banks.FirstOrDefault() ?? OtherBank;
-        });
-    }
+    /// <summary>Fills what the person has not filled yet with what was read from the image.</summary>
+    private void Apply(ProofScanResult scan) =>
+        (_amount, _date, _operation) = ProofScanFill.Apply(scan, _amount, _date, _operation);
 
     private async Task SendAsync()
     {
         PaymentProofItem? sent = null;
         if (await RunAsync(async () => sent = await Api.SubmitPaymentProofAsync(
-                _amount!.Value, DateOnly.FromDateTime(_date!.Value), BankName, _operation.Trim(), _image!.Content, _image.ContentType)))
+                _amount!.Value, DateOnly.FromDateTime(_date!.Value), _bank, _operation.Trim(), _image!.Content, _image.ContentType)))
         {
             Dialog.Close(DialogResult.Ok(sent));
         }

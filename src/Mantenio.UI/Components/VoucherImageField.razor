@@ -1,0 +1,63 @@
+@* The voucher photo, read as soon as it is picked: what is found pre-fills the form (the parent decides which fields). *@
+@using Mantenio.Shared.Ledger
+@inject MantenioApi Api
+
+<ProofImageInput Image="Image" ImageChanged="OnImageAsync" />
+@if (_scanning)
+{
+    <div class="d-flex align-center gap-2 mt-2">
+        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+        <MudText Typo="Typo.body2">@UiStrings.ScanReading</MudText>
+    </div>
+}
+else if (_message is not null)
+{
+    <MudAlert Severity="@(_found ? Severity.Info : Severity.Normal)" Dense="true" Class="mt-2">@_message</MudAlert>
+}
+
+@code {
+    private bool _scanning;
+    private bool _found;
+    private string? _message;
+
+    [Parameter]
+    public PickedImage? Image { get; set; }
+
+    [Parameter]
+    public EventCallback<PickedImage?> ImageChanged { get; set; }
+
+    /// <summary>Raised with what was read (only when the reading service answered).</summary>
+    [Parameter]
+    public EventCallback<ProofScanResult> OnScanned { get; set; }
+
+    private async Task OnImageAsync(PickedImage? image)
+    {
+        _message = null;
+        await ImageChanged.InvokeAsync(image);
+        if (image is null)
+        {
+            return;
+        }
+
+        _scanning = true;
+        StateHasChanged();
+        try
+        {
+            var result = await Api.ScanPaymentProofAsync(image.Content, image.ContentType);
+            if (result.Scanned)
+            {
+                _found = result.Amount is not null || result.OperationDate is not null || result.OperationNumber is not null;
+                _message = _found ? UiStrings.ScanFilled : UiStrings.ScanNothing;
+                await OnScanned.InvokeAsync(result);
+            }
+        }
+        catch (ApiException)
+        {
+            // Reading is a convenience: on any error the person fills the form by hand.
+        }
+        finally
+        {
+            _scanning = false;
+        }
+    }
+}

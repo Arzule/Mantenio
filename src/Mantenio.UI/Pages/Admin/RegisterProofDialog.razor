@@ -1,6 +1,7 @@
 @* Admin (e.g. the guard on duty): registers the voucher a resident brought in person. Three steps: the form, a
    confirmation with every detail (it is approved at once) and the receipt, ready to send by WhatsApp. *@
 @using Mantenio.Shared.Apartments
+@using Mantenio.Shared.Ledger
 @inherits BusyComponentBase
 @inject MantenioApi Api
 @inject IFileOpener Files
@@ -11,6 +12,7 @@
         @if (_step == Step.Form)
         {
             <MudText Typo="Typo.body2" Class="mb-3">@UiStrings.RegisterProofBody</MudText>
+            <div class="mb-4"><VoucherImageField @bind-Image="_image" OnScanned="Apply" /></div>
             <div class="d-flex gap-2">
                 <MudAutocomplete T="string" Value="_tower" ValueChanged="OnTowerAsync" SearchFunc="SearchTowers" Label="@CondoProfile.Current.TowerLabel"
                                  CoerceText="false" CoerceValue="true" Clearable="true" Variant="Variant.Outlined" Style="flex: 1" />
@@ -25,19 +27,8 @@
                              CoerceText="false" CoerceValue="true" MaxLength="120" Variant="Variant.Outlined" Class="mt-3" />
             <MudNumericField T="decimal?" @bind-Value="_amount" Label="@UiStrings.Amount" Min="0" Format="N2" Variant="Variant.Outlined" Class="mt-3" />
             <MudDatePicker @bind-Date="_date" Label="@UiStrings.OperationDate" MaxDate="DateTime.Today" DateFormat="dd/MM/yyyy" Variant="Variant.Outlined" Class="mt-3" />
-            <MudSelect T="string" @bind-Value="_bank" Label="@UiStrings.BankName" Variant="Variant.Outlined" Class="mt-3">
-                @foreach (var bank in _banks)
-                {
-                    <MudSelectItem Value="bank">@bank</MudSelectItem>
-                }
-                <MudSelectItem Value="OtherBank">@UiStrings.OtherBank</MudSelectItem>
-            </MudSelect>
-            @if (_bank == OtherBank)
-            {
-                <MudTextField @bind-Value="_otherBank" Label="@UiStrings.OtherBank" Variant="Variant.Outlined" MaxLength="80" Immediate="true" Class="mt-3" />
-            }
+            <OriginBankField @bind-Value="_bank" Class="mt-3" />
             <MudTextField @bind-Value="_operation" Label="@UiStrings.OperationNumber" Variant="Variant.Outlined" MaxLength="40" Immediate="true" Class="mt-3" />
-            <div class="mt-4"><ProofImageInput @bind-Image="_image" /></div>
             @if (_image is null)
             {
                 <MudText Typo="Typo.caption" Class="mt-1 d-block">@UiStrings.PhotoRequired</MudText>
@@ -53,7 +44,7 @@
                     <tr><td>@UiStrings.PayerName</td><td><b>@_payer</b></td></tr>
                     <tr><td>@UiStrings.Amount</td><td><b>@Formats.Money(_amount!.Value)</b></td></tr>
                     <tr><td>@UiStrings.OperationDate</td><td>@Formats.Date(DateOnly.FromDateTime(_date!.Value))</td></tr>
-                    <tr><td>@UiStrings.BankName</td><td>@BankName</td></tr>
+                    <tr><td>@UiStrings.OriginBank</td><td>@_bank</td></tr>
                     <tr><td>@UiStrings.OperationNumber</td><td>@_operation.Trim()</td></tr>
                 </tbody>
             </MudSimpleTable>
@@ -93,8 +84,6 @@
 </MudDialog>
 
 @code {
-    private const string OtherBank = "\u0000other";
-
     private enum Step
     {
         Form,
@@ -104,7 +93,6 @@
 
     private Step _step = Step.Form;
     private List<ApartmentAdminItem> _apartments = [];
-    private List<string> _banks = [];
     private List<string> _residents = [];
     private string? _tower;
     private string? _number;
@@ -112,7 +100,6 @@
     private decimal? _amount;
     private DateTime? _date = DateTime.Today;
     private string _bank = "";
-    private string _otherBank = "";
     private string _operation = "";
     private PickedImage? _image;
     private PaymentProofItem? _registered;
@@ -125,17 +112,17 @@
         string.Equals(a.Tower, _tower?.Trim(), StringComparison.OrdinalIgnoreCase)
         && string.Equals(a.Number, _number?.Trim(), StringComparison.OrdinalIgnoreCase));
 
-    private string BankName => (_bank == OtherBank ? _otherBank : _bank).Trim();
-
     private bool CanContinue => Apartment is not null && !string.IsNullOrWhiteSpace(_payer) && _amount > 0 && _date is not null
-        && BankName.Length > 0 && _operation.Trim().Length > 0 && _image is not null;
+        && _bank.Length > 0 && _operation.Trim().Length > 0 && _image is not null;
 
     protected override Task OnInitializedAsync() => RunAsync(async () =>
     {
         _apartments = await Api.ListApartmentsAsync(null, null);
-        _banks = (await Api.ListBankAccountsAsync()).Select(b => b.BankName).Distinct().ToList();
-        _bank = _banks.FirstOrDefault() ?? OtherBank;
     });
+
+    /// <summary>Fills what the admin has not filled yet with what was read from the image.</summary>
+    private void Apply(ProofScanResult scan) =>
+        (_amount, _date, _operation) = ProofScanFill.Apply(scan, _amount, _date, _operation);
 
     private Task<IEnumerable<string>> SearchTowers(string? text, CancellationToken cancellationToken) =>
         Task.FromResult(_apartments.Select(a => a.Tower).Distinct()
@@ -179,7 +166,7 @@
     private async Task RegisterAsync()
     {
         if (await RunAsync(async () => _registered = await Api.RegisterPaymentProofAsync(
-                Apartment!.Id, _payer!.Trim(), _amount!.Value, DateOnly.FromDateTime(_date!.Value), BankName, _operation.Trim(),
+                Apartment!.Id, _payer!.Trim(), _amount!.Value, DateOnly.FromDateTime(_date!.Value), _bank, _operation.Trim(),
                 _image!.Content, _image.ContentType)))
         {
             _step = Step.Done;
