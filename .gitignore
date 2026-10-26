@@ -502,3 +502,6 @@ firebase-service-account*.json
 
 # Wrangler (Cloudflare) local cache
 .wrangler/
+
+# The VS template above ignores Backup*/ (case-insensitive on Windows): keep the nightly backup image source.
+!deploy/backup/
