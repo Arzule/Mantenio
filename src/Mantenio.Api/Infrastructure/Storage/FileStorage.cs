@@ -19,6 +19,9 @@ public interface IFileStorage
 
     Task<byte[]?> GetAsync(string key, CancellationToken cancellationToken);
 
+    /// <summary>Deletes the file; nothing happens when it does not exist.</summary>
+    Task DeleteAsync(string key, CancellationToken cancellationToken);
+
     Uri GetReadUrl(string key, TimeSpan lifetime);
 }
 
@@ -95,6 +98,9 @@ internal sealed class R2FileStorage : IFileStorage, IDisposable
         }
     }
 
+    public async Task DeleteAsync(string key, CancellationToken cancellationToken) =>
+        await _client.DeleteObjectAsync(_bucket, key, cancellationToken);
+
     public Uri GetReadUrl(string key, TimeSpan lifetime) =>
         new(_client.GetPreSignedURL(new GetPreSignedUrlRequest
         {
@@ -130,6 +136,12 @@ internal sealed class LocalFileStorage(IOptions<StorageOptions> options, IOption
     {
         var path = PathFor(key);
         return File.Exists(path) ? await File.ReadAllBytesAsync(path, cancellationToken) : null;
+    }
+
+    public Task DeleteAsync(string key, CancellationToken cancellationToken)
+    {
+        File.Delete(PathFor(key));
+        return Task.CompletedTask;
     }
 
     public Uri GetReadUrl(string key, TimeSpan lifetime)

@@ -6,6 +6,9 @@ public enum PaymentProofStatus
     Approved = 1,
     Rejected = 2,
     Voided = 3,
+
+    /// <summary>A payment from before the app (paper ledger), recorded for the history; not applied to the debt yet.</summary>
+    Historical = 4,
 }
 
 /// <summary>
@@ -38,6 +41,28 @@ public sealed class PaymentProof
     }
 
     /// <summary>
+    /// A payment made before the app was used, loaded by an admin from the paper records. Bank, operation number,
+    /// paper receipt number and photo are optional (the photo can be attached later); it does not touch the debt.
+    /// </summary>
+    public static PaymentProof Historical(
+        Guid apartmentId, Guid adminId, decimal amount, DateOnly operationDate, string? payerName, string? bankName,
+        string? operationNumber, string? paperReceiptNumber, string? imageObjectKey, DateTimeOffset now)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(amount);
+        var proof = new PaymentProof
+        {
+            Id = Guid.CreateVersion7(),
+            ApartmentId = apartmentId,
+            SubmittedById = adminId,
+            Status = PaymentProofStatus.Historical,
+            SubmittedAt = now,
+        };
+        proof.SetHistoricalDetails(amount, operationDate, payerName, bankName, operationNumber, paperReceiptNumber);
+        proof.ImageObjectKey = imageObjectKey ?? "";
+        return proof;
+    }
+
+    /// <summary>
     /// An admin (e.g. the guard on duty) registered it for a resident who brought the voucher in person.
     /// <see cref="PayerName"/> is then who the receipt is made out to; otherwise it is the user who uploaded it.
     /// </summary>
@@ -60,7 +85,13 @@ public sealed class PaymentProof
     public DateOnly OperationDate { get; private set; }
     public string BankName { get; private set; } = "";
     public string OperationNumber { get; private set; } = "";
+    /// <summary>Where the photo is stored; empty when there is none (historical payment without photo, or removed by retention).</summary>
     public string ImageObjectKey { get; private set; } = "";
+
+    public bool HasImage => ImageObjectKey.Length > 0;
+
+    /// <summary>Number of the paper receipt of a historical payment, when it is known.</summary>
+    public string? PaperReceiptNumber { get; private set; }
 
     /// <summary>Set when an admin registered the proof for a resident (see <see cref="RegisteredByAdmin"/>).</summary>
     public string? PayerName { get; private set; }
@@ -106,9 +137,38 @@ public sealed class PaymentProof
         VoidedAt = now;
     }
 
+    /// <summary>Corrects the data of a historical payment (e.g. once its photo is attached and read).</summary>
+    public void SetHistoricalDetails(
+        decimal amount, DateOnly operationDate, string? payerName, string? bankName, string? operationNumber, string? paperReceiptNumber)
+    {
+        RequireStatus(PaymentProofStatus.Historical);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(amount);
+        DeclaredAmount = decimal.Round(amount, 2);
+        OperationDate = operationDate;
+        PayerName = Clean(payerName);
+        BankName = Clean(bankName) ?? "";
+        OperationNumber = NormalizeOperationNumber(operationNumber ?? "");
+        PaperReceiptNumber = Clean(paperReceiptNumber);
+    }
+
+    /// <summary>Points to a new photo (historical payments only); returns the previous key so its file can be deleted.</summary>
+    public string ReplaceImage(string imageObjectKey)
+    {
+        RequireStatus(PaymentProofStatus.Historical);
+        ArgumentException.ThrowIfNullOrWhiteSpace(imageObjectKey);
+        var previous = ImageObjectKey;
+        ImageObjectKey = imageObjectKey;
+        return previous;
+    }
+
+    /// <summary>Forgets the photo once its file was deleted by the retention policy (the ledger row stays).</summary>
+    public void RemoveImage() => ImageObjectKey = "";
+
     /// <summary>Digits and letters only, upper case: "00 1234-56" and "00123456" are the same operation.</summary>
     public static string NormalizeOperationNumber(string value) =>
         new string((value ?? "").Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
+
+    private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private void RequireStatus(PaymentProofStatus expected)
     {

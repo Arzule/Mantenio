@@ -39,5 +39,5 @@
     "pushNotifications": true,
     "emailReminders": true
   },
-  "fileRetentionMonths": 60
+  "fileRetentionMonths": 120
 }

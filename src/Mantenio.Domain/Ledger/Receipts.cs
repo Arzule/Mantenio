@@ -44,6 +44,9 @@ public sealed class Receipt
 
     public void AttachPdf(string objectKey) => PdfObjectKey = objectKey;
 
+    /// <summary>Forgets the PDF once its file was deleted by the retention policy (the receipt row stays).</summary>
+    public void RemovePdf() => PdfObjectKey = null;
+
     public void Void(DateTimeOffset now)
     {
         Status = ReceiptStatus.Voided;

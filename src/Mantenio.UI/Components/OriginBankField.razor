@@ -27,6 +27,25 @@
     [Parameter]
     public string? Class { get; set; }
 
+    /// <summary>Shows the stored bank once (editing): a listed bank, or "Other bank" with its name.</summary>
+    protected override void OnParametersSet()
+    {
+        if (_choice.Length > 0 || string.IsNullOrWhiteSpace(Value))
+        {
+            return;
+        }
+
+        if (CondoProfile.Current.Banks.Contains(Value))
+        {
+            _choice = Value;
+        }
+        else
+        {
+            _choice = OtherBank;
+            _other = Value;
+        }
+    }
+
     private Task OnChoiceAsync(string choice)
     {
         _choice = choice;

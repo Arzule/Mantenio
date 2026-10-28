@@ -26,6 +26,7 @@ public static class LedgerText
         ProofStatus.Approved => Color.Success,
         ProofStatus.Rejected => Color.Error,
         ProofStatus.Voided => Color.Dark,
+        ProofStatus.Historical => Color.Info,
         _ => Color.Warning,
     };
 

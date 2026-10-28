@@ -38,6 +38,8 @@ internal sealed class PaymentProofConfiguration : IEntityTypeConfiguration<Payme
         builder.Property(x => x.ImageObjectKey).HasMaxLength(200);
         builder.Property(x => x.PayerName).HasMaxLength(120);
         builder.Ignore(x => x.IsRegisteredByAdmin);
+        builder.Ignore(x => x.HasImage);
+        builder.Property(x => x.PaperReceiptNumber).HasMaxLength(40);
         builder.Property(x => x.RejectionReason).HasMaxLength(500);
         builder.Property(x => x.VoidReason).HasMaxLength(500);
         builder.Property<uint>("RowVersion").IsRowVersion();
@@ -46,10 +48,11 @@ internal sealed class PaymentProofConfiguration : IEntityTypeConfiguration<Payme
         builder.HasIndex(x => new { x.Status, x.SubmittedAt });
         builder.HasIndex(x => x.ApartmentId);
 
-        // Same bank operation twice is a duplicate, unless the earlier one was rejected.
+        // Same bank operation twice is a duplicate, unless the earlier one was rejected. Historical payments
+        // may have no operation number, so empty ones are not compared.
         builder.HasIndex(x => new { x.BankName, x.OperationNumber })
             .IsUnique()
-            .HasFilter("\"Status\" <> 'Rejected'")
+            .HasFilter("\"Status\" <> 'Rejected' AND \"OperationNumber\" <> ''")
             .HasDatabaseName("IX_PaymentProofs_UniqueOperation");
     }
 }

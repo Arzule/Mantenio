@@ -624,6 +624,10 @@ namespace Mantenio.Api.Infrastructure.Persistence.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)");
 
+                    b.Property<string>("PaperReceiptNumber")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
                     b.Property<string>("PayerName")
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
@@ -674,7 +678,7 @@ namespace Mantenio.Api.Infrastructure.Persistence.Migrations
                     b.HasIndex("BankName", "OperationNumber")
                         .IsUnique()
                         .HasDatabaseName("IX_PaymentProofs_UniqueOperation")
-                        .HasFilter("\"Status\" <> 'Rejected'");
+                        .HasFilter("\"Status\" <> 'Rejected' AND \"OperationNumber\" <> ''");
 
                     b.HasIndex("Status", "SubmittedAt");
 

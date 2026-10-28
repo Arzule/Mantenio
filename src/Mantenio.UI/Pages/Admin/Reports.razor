@@ -91,6 +91,23 @@
                        OnClick="DownloadFolioAsync">@UiStrings.DownloadFolio</MudButton>
         </div>
     </MudPaper>
+
+    <MudPaper Class="pa-4 mt-4" Elevation="1">
+        <MudText Typo="Typo.h6" HtmlTag="h2">@UiStrings.PeriodReportTitle</MudText>
+        <MudText Typo="Typo.body2" Class="mt-1 mb-3">@UiStrings.PeriodReportBody</MudText>
+        <div class="d-flex flex-wrap align-center gap-3">
+            <MudDatePicker @bind-Date="_periodFrom" Label="@UiStrings.PeriodFrom" OpenTo="OpenTo.Month" FixDay="1" DateFormat="MM/yyyy"
+                           MinDate="MinMonth" MaxDate="DateTime.Today" Variant="Variant.Outlined" Style="max-width: 200px" />
+            <MudDatePicker @bind-Date="_periodTo" Label="@UiStrings.PeriodTo" OpenTo="OpenTo.Month" FixDay="1" DateFormat="MM/yyyy"
+                           MinDate="MinMonth" MaxDate="DateTime.Today" Variant="Variant.Outlined" Style="max-width: 200px" />
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Custom.FileFormats.FileExcel"
+                       Disabled="@(Busy || !PeriodValid)" OnClick="DownloadPeriodAsync">@UiStrings.DownloadPeriodReport</MudButton>
+        </div>
+        @if (!PeriodValid)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Error" Class="mt-1 d-block">@UiStrings.PeriodInvalid</MudText>
+        }
+    </MudPaper>
 </MudContainer>
 
 @code {
@@ -98,6 +115,15 @@
     private DelinquencyReport? _report;
     private int[] _months = [];
     private int _folioPeriod;
+
+    // Up to ten years (the retention period); by default the last five, like a board term.
+    private static readonly DateTime MinMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(-119);
+    private DateTime? _periodFrom = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(-59);
+    private DateTime? _periodTo = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+    private static int ToPeriod(DateTime date) => (date.Year * 100) + date.Month;
+
+    private bool PeriodValid => _periodFrom is { } from && _periodTo is { } to && from <= to && from >= MinMonth;
 
     private DateOnly Date => DateOnly.FromDateTime(_date ?? DateTime.Today);
 
@@ -123,6 +149,9 @@
     private Task DownloadAsync(bool excel) => SaveAsync(() => Api.DownloadDelinquencyAsync(Date, excel));
 
     private Task DownloadFolioAsync() => SaveAsync(() => Api.DownloadFolioAsync(_folioPeriod));
+
+    private Task DownloadPeriodAsync() =>
+        SaveAsync(() => Api.DownloadPeriodReportAsync(ToPeriod(_periodFrom!.Value), ToPeriod(_periodTo!.Value)));
 
     private async Task SaveAsync(Func<Task<DownloadedFile>> download)
     {

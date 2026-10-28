@@ -59,7 +59,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Storage:Provider", "Local");
         builder.UseSetting("Storage:LocalPath", StoragePath);
         builder.UseSetting("Jwt:SigningKey", "test-signing-key-that-is-long-enough-0123456789");
-        foreach (var name in new[] { "AuthPerMinute", "EmailPer15Minutes", "InvitationPerMinute", "RefreshPerMinute", "UploadsPerHour" })
+        foreach (var name in new[] { "AuthPerMinute", "EmailPer15Minutes", "InvitationPerMinute", "RefreshPerMinute", "UploadsPerHour", "AdminUploadsPerHour" })
         {
             builder.UseSetting($"RateLimiting:{name}", RateLimit.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }

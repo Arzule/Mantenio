@@ -76,12 +76,45 @@
                 </MudStack>
             }
         </MudTabPanel>
+        <MudTabPanel Text="@UiStrings.TabHistorical">
+            <div class="d-flex align-center justify-space-between flex-wrap gap-2 mb-2">
+                <MudSwitch T="bool" Value="_onlyWithoutPhoto" ValueChanged="v => _onlyWithoutPhoto = v" Color="Color.Primary" Label="@UiStrings.OnlyWithoutPhoto" />
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.History" OnClick="() => HistoricalAsync(null)">@UiStrings.RegisterHistorical</MudButton>
+            </div>
+            <MudText Typo="Typo.body2" Class="mb-3">@UiStrings.HistoricalTabBody</MudText>
+            @if (_historical is null)
+            {
+                <LoadingIndicator />
+            }
+            else if (!VisibleHistorical.Any())
+            {
+                <MudText>@UiStrings.NoHistorical</MudText>
+            }
+            else
+            {
+                <MudStack Spacing="2">
+                    @foreach (var proof in VisibleHistorical)
+                    {
+                        <ProofCard Item="proof" ShowApartment="true">
+                            <MudSpacer />
+                            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddAPhoto"
+                                       OnClick="() => HistoricalAsync(proof)">@UiStrings.CompleteHistorical</MudButton>
+                        </ProofCard>
+                    }
+                </MudStack>
+            }
+        </MudTabPanel>
     </MudTabs>
 </MudContainer>
 
 @code {
     private List<PaymentProofItem>? _pending;
     private List<PaymentProofItem>? _history;
+    private List<PaymentProofItem>? _historical;
+    private bool _onlyWithoutPhoto;
+
+    private IEnumerable<PaymentProofItem> VisibleHistorical =>
+        (_historical ?? []).Where(p => !_onlyWithoutPhoto || !p.HasImage).OrderByDescending(p => p.OperationDate);
     private readonly Dictionary<Guid, string> _images = [];
 
     protected override Task OnInitializedAsync() => LoadPendingAsync();
@@ -107,7 +140,12 @@
     {
         if (index == 1)
         {
-            await RunAsync(async () => _history = (await Api.ListPaymentsAsync(null)).Where(p => p.Status != ProofStatus.Pending).ToList());
+            await RunAsync(async () => _history = (await Api.ListPaymentsAsync(null))
+                .Where(p => p.Status is not (ProofStatus.Pending or ProofStatus.Historical)).ToList());
+        }
+        else if (index == 2)
+        {
+            await RunAsync(async () => _historical = await Api.ListPaymentsAsync(ProofStatus.Historical));
         }
     }
 
@@ -119,6 +157,20 @@
         if (result is { Canceled: false, Data: PaymentProofItem })
         {
             await OnTabAsync(1);
+        }
+    }
+
+    /// <summary>Loads a new historical payment (null) or completes one, then reloads the tab.</summary>
+    private async Task HistoricalAsync(PaymentProofItem? existing)
+    {
+        var parameters = new DialogParameters<HistoricalPaymentDialog> { { d => d.Existing, existing } };
+        var dialog = await Dialogs.ShowAsync<HistoricalPaymentDialog>(existing is null ? UiStrings.RegisterHistorical : UiStrings.EditHistorical,
+            parameters, new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, BackdropClick = false });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: PaymentProofItem })
+        {
+            Snackbar.Add(UiStrings.HistoricalSaved, Severity.Success);
+            await OnTabAsync(2);
         }
     }
 

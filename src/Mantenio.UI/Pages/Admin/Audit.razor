@@ -25,7 +25,7 @@
                 <MudSelect T="AuditSourceFilter?" Value="_source" ValueChanged="v => FilterAsync(() => _source = v)" Label="@UiStrings.AuditSource"
                            Variant="Variant.Outlined" Margin="Margin.Dense">
                     <MudSelectItem T="AuditSourceFilter?" Value="null">@UiStrings.AuditAny</MudSelectItem>
-                    @foreach (var source in Enum.GetValues<AuditSourceFilter>())
+                    @foreach (var source in SourceOptions)
                     {
                         <MudSelectItem T="AuditSourceFilter?" Value="source">@LedgerText.AuditSource(source.ToString())</MudSelectItem>
                     }
@@ -128,6 +128,10 @@
     private int _pageNumber = 1;
     private DateTime? _from;
     private DateTime? _to;
+    /// <summary>People first; "System" (scheduled jobs) last.</summary>
+    private static readonly AuditSourceFilter[] SourceOptions =
+        [AuditSourceFilter.Resident, AuditSourceFilter.Admin, AuditSourceFilter.People, AuditSourceFilter.System];
+
     private AuditSourceFilter? _source;
     private string _entityType = "";
     private Guid? _actorId;

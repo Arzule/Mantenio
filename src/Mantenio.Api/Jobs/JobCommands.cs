@@ -1,6 +1,9 @@
 using Mantenio.Api.Infrastructure.Persistence;
 using Mantenio.Api.Infrastructure.Push;
+using Mantenio.Api.Infrastructure.Storage;
+using Mantenio.Api.Infrastructure.Time;
 using Mantenio.Domain.Audit;
+using Mantenio.Shared.Condos;
 using Microsoft.EntityFrameworkCore;
 
 namespace Mantenio.Api.Jobs;
@@ -56,7 +59,8 @@ internal static class JobCommands
 
     /// <summary>
     /// Removes data that only matters for a while: expired or revoked refresh tokens and unused, expired invitation
-    /// codes (after 30 days). Ledger rows are never touched.
+    /// codes (after 30 days), and the files past the retention period (see <see cref="PurgeExpiredFilesAsync"/>).
+    /// Ledger rows are never touched.
     /// </summary>
     public static async Task<string> CleanupAsync(IServiceProvider services, CancellationToken cancellationToken)
     {
@@ -65,9 +69,44 @@ internal static class JobCommands
         var cutoff = now.AddDays(-30);
         var tokens = await db.RefreshTokens.Where(t => t.ExpiresAt < cutoff || t.RevokedAt < cutoff).ExecuteDeleteAsync(cancellationToken);
         var invitations = await db.InvitationCodes.Where(i => i.UsedAt == null && i.ExpiresAt < cutoff).ExecuteDeleteAsync(cancellationToken);
+        var (images, pdfs) = await PurgeExpiredFilesAsync(
+            db, services.GetRequiredService<IFileStorage>(), services.GetRequiredService<CondoClock>().Today, cancellationToken);
         db.AuditEvents.Add(new AuditEvent(AuditEntities.Job, "cleanup", "Cleanup", AuditSource.System, null, now,
-            newValues: AuditLog.Json(new { RefreshTokens = tokens, InvitationCodes = invitations })));
+            newValues: AuditLog.Json(new { RefreshTokens = tokens, InvitationCodes = invitations, ProofImages = images, ReceiptPdfs = pdfs })));
         await db.SaveChangesAsync(cancellationToken);
-        return $"Removed {tokens} refresh tokens and {invitations} invitation codes.";
+        return $"Removed {tokens} refresh tokens, {invitations} invitation codes, {images} proof images and {pdfs} receipt PDFs.";
+    }
+
+    /// <summary>
+    /// Retention (condo profile FileRetentionMonths, 10 years by default): deletes the photos and receipt PDFs of
+    /// payments made before the cutoff, so file storage stays within the free tier. The rows stay; they just no
+    /// longer have a file. At most 500 of each per run. The caller saves.
+    /// </summary>
+    public static async Task<(int Images, int Pdfs)> PurgeExpiredFilesAsync(
+        AppDbContext db, IFileStorage storage, DateOnly today, CancellationToken cancellationToken)
+    {
+        var cutoff = today.AddMonths(-CondoProfile.Current.FileRetentionMonths);
+        var proofs = await db.PaymentProofs.Where(p => p.OperationDate < cutoff && p.ImageObjectKey != "").Take(500).ToListAsync(cancellationToken);
+        foreach (var proof in proofs)
+        {
+            await storage.DeleteAsync(proof.ImageObjectKey, cancellationToken);
+            proof.RemoveImage();
+        }
+
+        var receipts = await (
+                from r in db.Receipts
+                join p in db.PaymentProofs on r.PaymentProofId equals p.Id
+                where p.OperationDate < cutoff && r.PdfObjectKey != null
+                select r)
+            .Take(500).ToListAsync(cancellationToken);
+        foreach (var receipt in receipts)
+        {
+            // Both versions: the original PDF and the VOIDED copy, if the payment was voided.
+            await storage.DeleteAsync(StorageKeys.Receipt(receipt.Number, voided: false), cancellationToken);
+            await storage.DeleteAsync(StorageKeys.Receipt(receipt.Number, voided: true), cancellationToken);
+            receipt.RemovePdf();
+        }
+
+        return (proofs.Count, receipts.Count);
     }
 }

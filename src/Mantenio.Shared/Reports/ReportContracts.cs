@@ -28,6 +28,9 @@ public enum AuditSourceFilter
     Resident,
     Admin,
     System,
+
+    /// <summary>Residents and admins together: everything people did, without the scheduled jobs.</summary>
+    People,
 }
 
 public sealed record AuditItem(

@@ -31,7 +31,8 @@ public sealed record CondoProfile
 
     /// <summary>Firebase Android app of this condo (public client values). Null = no push for this profile.</summary>
     public CondoFirebaseSettings? Firebase { get; init; }
-    public int FileRetentionMonths { get; init; } = 60;
+    /// <summary>How long proof photos and receipt PDFs are kept (by payment date); ledger rows are kept forever.</summary>
+    public int FileRetentionMonths { get; init; } = 120;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {

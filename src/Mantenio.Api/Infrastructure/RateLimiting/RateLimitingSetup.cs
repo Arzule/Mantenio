@@ -21,6 +21,9 @@ public sealed class RateLimitSettings
 
     /// <summary>Payment-proof uploads per signed-in user (images are the heaviest requests).</summary>
     public int UploadsPerHour { get; set; } = 30;
+
+    /// <summary>Admins upload more (vouchers brought in person, historical payments with their photos).</summary>
+    public int AdminUploadsPerHour { get; set; } = 300;
 }
 
 public static class RateLimitPolicies
@@ -64,9 +67,18 @@ internal static class RateLimitingSetup
             options.AddPolicy(RateLimitPolicies.Email, http => PerClient(http, settings.EmailPer15Minutes, TimeSpan.FromMinutes(15)));
             options.AddPolicy(RateLimitPolicies.Invitation, http => PerClient(http, settings.InvitationPerMinute, TimeSpan.FromMinutes(1)));
             options.AddPolicy(RateLimitPolicies.Refresh, http => PerClient(http, settings.RefreshPerMinute, TimeSpan.FromMinutes(1)));
-            options.AddPolicy(RateLimitPolicies.Upload, http => RateLimitPartition.GetFixedWindowLimiter(
-                http.User.FindFirst(Mantenio.Shared.Auth.MantenioClaims.UserId)?.Value ?? http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-                _ => new FixedWindowRateLimiterOptions { PermitLimit = settings.UploadsPerHour, Window = TimeSpan.FromHours(1), QueueLimit = 0 }));
+            options.AddPolicy(RateLimitPolicies.Upload, http =>
+            {
+                var isAdmin = http.User.HasClaim(Mantenio.Shared.Auth.MantenioClaims.Role, nameof(Mantenio.Shared.Auth.AccountRole.Admin));
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    http.User.FindFirst(Mantenio.Shared.Auth.MantenioClaims.UserId)?.Value ?? http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = isAdmin ? settings.AdminUploadsPerHour : settings.UploadsPerHour,
+                        Window = TimeSpan.FromHours(1),
+                        QueueLimit = 0,
+                    });
+            });
         });
 
         return services;

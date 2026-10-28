@@ -1,6 +1,7 @@
 using System.Globalization;
 using ClosedXML.Excel;
 using Mantenio.Api.Resources;
+using Mantenio.Domain.Ledger;
 using Mantenio.Shared.Condos;
 using Mantenio.Shared.Reports;
 using QuestPDF.Fluent;
@@ -96,6 +97,194 @@ public static class ReportFiles
         workbook.SaveAs(stream);
         return stream.ToArray();
     }
+
+    public static string PeriodFileName(int from, int to) =>
+        Format(ReportTexts.PeriodFileName, IsoMonth(from), IsoMonth(to)) + ".xlsx";
+
+    /// <summary>
+    /// The audit report of a range of months: a summary (totals and debt per tower), every charge of the period with
+    /// what was paid by the close, every payment of the period, the rejected and voided ones apart, and one sheet per tower.
+    /// </summary>
+    public static byte[] PeriodExcel(PeriodReport report)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        using var workbook = new XLWorkbook();
+        var title = Format(ReportTexts.PeriodTitle, MonthName(report.From), MonthName(report.To));
+        var close = Format(ReportTexts.PeriodClose, Date(report.CloseDate));
+
+        // Summary
+        var summary = workbook.Worksheets.Add(ReportTexts.Summary);
+        summary.Cell(1, 1).Value = CondoProfile.Current.DisplayName;
+        summary.Cell(2, 1).Value = title;
+        summary.Cell(3, 1).Value = close;
+        summary.Range(1, 1, 2, 1).Style.Font.Bold = true;
+        Header(summary, 5, ReportTexts.Concept, ReportTexts.Count, ReportTexts.Amount);
+        var row = 6;
+        void Line(string label, int count, decimal amount)
+        {
+            summary.Cell(row, 1).Value = label;
+            summary.Cell(row, 2).Value = count;
+            summary.Cell(row, 3).Value = amount;
+            row++;
+        }
+
+        foreach (var type in new[] { ChargeType.Maintenance, ChargeType.Opening, ChargeType.LateFee })
+        {
+            var ofType = report.Charges.Where(c => c.Type == type).ToList();
+            Line(Format(ReportTexts.ChargedOfType, ChargeTypeName(type)), ofType.Count, ofType.Sum(c => c.Amount));
+        }
+
+        Line(ReportTexts.PaidOnPeriodCharges, report.Charges.Count(c => c.PaidAtClose > 0), report.Charges.Sum(c => c.PaidAtClose));
+        Line(ReportTexts.OutstandingOnPeriodCharges, report.Charges.Count(c => c.Outstanding > 0), report.Charges.Sum(c => c.Outstanding));
+        foreach (var status in new[]
+                 {
+                     PaymentProofStatus.Approved, PaymentProofStatus.Historical, PaymentProofStatus.Pending, PaymentProofStatus.Rejected,
+                     PaymentProofStatus.Voided,
+                 })
+        {
+            var ofStatus = report.Payments.Where(p => p.Status == status).ToList();
+            Line(Format(ReportTexts.PaymentsOfStatus, StatusName(status)), ofStatus.Count, ofStatus.Sum(p => p.Approved ?? p.Declared));
+        }
+
+        Line(ReportTexts.DelinquencyAtClose, report.DelinquencyAtClose.DelinquentApartments, report.DelinquencyAtClose.Total);
+        summary.Column(3).Style.NumberFormat.Format = "#,##0.00";
+
+        row++;
+        Header(summary, row++, CondoProfile.Current.TowerLabel, ReportTexts.Charged, ReportTexts.Paid, ReportTexts.Outstanding);
+        foreach (var tower in report.Charges.GroupBy(c => (c.Tower, c.TowerOrder)).OrderBy(g => g.Key.TowerOrder).ThenBy(g => g.Key.Tower, StringComparer.Ordinal))
+        {
+            summary.Cell(row, 1).Value = tower.Key.Tower;
+            summary.Cell(row, 2).Value = tower.Sum(c => c.Amount);
+            summary.Cell(row, 3).Value = tower.Sum(c => c.PaidAtClose);
+            summary.Cell(row, 4).Value = tower.Sum(c => c.Outstanding);
+            row++;
+        }
+
+        summary.Range(6, 2, row, 4).Style.NumberFormat.Format = "#,##0.00";
+        summary.Range(6, 2, 6 + 11, 2).Style.NumberFormat.Format = "0";
+        summary.Columns().AdjustToContents();
+
+        // Charges
+        var chargesSheet = workbook.Worksheets.Add(ReportTexts.ChargesSheet);
+        Header(chargesSheet, 1, CondoProfile.Current.TowerLabel, ReportTexts.Apartment, ReportTexts.Month, ReportTexts.Type, ReportTexts.Amount,
+            ReportTexts.Paid, ReportTexts.Outstanding, ReportTexts.DueDate);
+        row = 2;
+        foreach (var c in report.Charges)
+        {
+            chargesSheet.Cell(row, 1).Value = c.Tower;
+            chargesSheet.Cell(row, 2).Value = c.Apartment;
+            chargesSheet.Cell(row, 3).Value = MonthName(c.Period);
+            chargesSheet.Cell(row, 4).Value = ChargeTypeName(c.Type);
+            chargesSheet.Cell(row, 5).Value = c.Amount;
+            chargesSheet.Cell(row, 6).Value = c.PaidAtClose;
+            chargesSheet.Cell(row, 7).Value = c.Outstanding;
+            chargesSheet.Cell(row, 8).Value = Date(c.DueDate);
+            row++;
+        }
+
+        chargesSheet.Range(2, 5, Math.Max(row, 2), 7).Style.NumberFormat.Format = "#,##0.00";
+        Finish(chargesSheet, row);
+
+        // Payments (all) and the rejected/voided ones apart
+        PaymentsSheet(workbook.Worksheets.Add(ReportTexts.PaymentsSheet), report.Payments);
+        PaymentsSheet(workbook.Worksheets.Add(ReportTexts.RejectedVoidedSheet),
+            report.Payments.Where(p => p.Status is PaymentProofStatus.Rejected or PaymentProofStatus.Voided).ToList());
+
+        // One sheet per tower: totals per apartment
+        foreach (var tower in report.Charges.GroupBy(c => (c.Tower, c.TowerOrder)).OrderBy(g => g.Key.TowerOrder).ThenBy(g => g.Key.Tower, StringComparer.Ordinal))
+        {
+            var name = new string(tower.Key.Tower.Where(c => "[]:*?/\\".IndexOf(c, StringComparison.Ordinal) < 0).ToArray());
+            var sheet = workbook.Worksheets.Add(string.IsNullOrWhiteSpace(name) ? "-" : name[..Math.Min(name.Length, 31)]);
+            sheet.Cell(1, 1).Value = $"{CondoProfile.Current.TowerLabel} {tower.Key.Tower}";
+            sheet.Cell(2, 1).Value = title;
+            sheet.Cell(3, 1).Value = close;
+            sheet.Range(1, 1, 2, 1).Style.Font.Bold = true;
+            Header(sheet, 5, ReportTexts.Apartment, ReportTexts.Charged, ReportTexts.Paid, ReportTexts.Outstanding, ReportTexts.UnpaidMonths);
+            row = 6;
+            foreach (var apartment in tower.GroupBy(c => (c.Apartment, c.Number)).OrderBy(g => g.Key.Number.Length).ThenBy(g => g.Key.Number, StringComparer.Ordinal))
+            {
+                sheet.Cell(row, 1).Value = apartment.Key.Apartment;
+                sheet.Cell(row, 2).Value = apartment.Sum(c => c.Amount);
+                sheet.Cell(row, 3).Value = apartment.Sum(c => c.PaidAtClose);
+                sheet.Cell(row, 4).Value = apartment.Sum(c => c.Outstanding);
+                sheet.Cell(row, 5).Value = string.Join(", ", apartment.Where(c => c.Outstanding > 0).Select(c => c.Period).Distinct().Order().Select(ShortMonth));
+                row++;
+            }
+
+            sheet.Cell(row, 1).Value = ReportTexts.Total;
+            sheet.Cell(row, 2).Value = tower.Sum(c => c.Amount);
+            sheet.Cell(row, 3).Value = tower.Sum(c => c.PaidAtClose);
+            sheet.Cell(row, 4).Value = tower.Sum(c => c.Outstanding);
+            sheet.Row(row).Style.Font.Bold = true;
+            sheet.Range(6, 2, row, 4).Style.NumberFormat.Format = "#,##0.00";
+            sheet.Columns().AdjustToContents();
+        }
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return stream.ToArray();
+    }
+
+    /// <summary>One row per payment: date, apartment, payer, amounts, bank operation, state, receipt, who registered and reviewed it, reason.</summary>
+    private static void PaymentsSheet(IXLWorksheet sheet, IReadOnlyList<PeriodPaymentLine> payments)
+    {
+        Header(sheet, 1, ReportTexts.Date, CondoProfile.Current.TowerLabel, ReportTexts.Apartment, ReportTexts.ReceivedFrom, ReportTexts.Declared,
+            ReportTexts.Approved, ReportTexts.Bank, ReportTexts.Operation, ReportTexts.Status, ReportTexts.ReceiptNumber, ReportTexts.RegisteredBy,
+            ReportTexts.ReviewedBy, ReportTexts.ReviewedAt, ReportTexts.Reason);
+        var row = 2;
+        foreach (var p in payments)
+        {
+            sheet.Cell(row, 1).Value = Date(p.OperationDate);
+            sheet.Cell(row, 2).Value = p.Tower;
+            sheet.Cell(row, 3).Value = p.Apartment;
+            sheet.Cell(row, 4).Value = p.Payer;
+            sheet.Cell(row, 5).Value = p.Declared;
+            if (p.Approved is { } approved)
+            {
+                sheet.Cell(row, 6).Value = approved;
+            }
+
+            sheet.Cell(row, 7).Value = p.Bank;
+            sheet.Cell(row, 8).Value = p.Operation;
+            sheet.Cell(row, 9).Value = StatusName(p.Status);
+            sheet.Cell(row, 10).Value = p.Receipt ?? "";
+            sheet.Cell(row, 11).Value = p.RegisteredBy;
+            sheet.Cell(row, 12).Value = p.ReviewedBy ?? "";
+            sheet.Cell(row, 13).Value = p.ReviewedAtLocal?.ToString("dd/MM/yyyy HH:mm", Culture) ?? "";
+            sheet.Cell(row, 14).Value = p.Reason ?? "";
+            row++;
+        }
+
+        sheet.Range(2, 5, Math.Max(row, 2), 6).Style.NumberFormat.Format = "#,##0.00";
+        Finish(sheet, row);
+    }
+
+    /// <summary>Filter buttons on the header, frozen header row and fitted columns.</summary>
+    private static void Finish(IXLWorksheet sheet, int lastRow)
+    {
+        sheet.Range(1, 1, Math.Max(lastRow - 1, 1), sheet.LastColumnUsed()?.ColumnNumber() ?? 1).SetAutoFilter();
+        sheet.SheetView.FreezeRows(1);
+        sheet.Columns().AdjustToContents();
+    }
+
+    private static string ChargeTypeName(ChargeType type) => type switch
+    {
+        ChargeType.Opening => ReportTexts.ChargeType_Opening,
+        ChargeType.LateFee => ReportTexts.ChargeType_LateFee,
+        _ => ReportTexts.ChargeType_Maintenance,
+    };
+
+    private static string StatusName(PaymentProofStatus status) => status switch
+    {
+        PaymentProofStatus.Approved => ReportTexts.Status_Approved,
+        PaymentProofStatus.Rejected => ReportTexts.Status_Rejected,
+        PaymentProofStatus.Voided => ReportTexts.Status_Voided,
+        PaymentProofStatus.Historical => ReportTexts.Status_Historical,
+        _ => ReportTexts.Status_Pending,
+    };
+
+    private static string IsoMonth(int period) =>
+        (period / 100).ToString("0000", CultureInfo.InvariantCulture) + "-" + (period % 100).ToString("00", CultureInfo.InvariantCulture);
 
     public static byte[] DelinquencyPdf(DelinquencyReport report, DateTimeOffset generatedLocal)
     {

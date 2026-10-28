@@ -13,6 +13,7 @@ using Mantenio.Domain.Common;
 using Mantenio.Domain.Ledger;
 using Mantenio.Domain.Notifications;
 using Mantenio.Shared.Auth;
+using Mantenio.Shared.Condos;
 using Mantenio.Shared.Errors;
 using Mantenio.Shared.Ledger;
 using Mantenio.Shared.Notifications;
@@ -46,6 +47,8 @@ internal static class LedgerEndpoints
         var admin = app.MapGroup("/api/admin").WithTags("Payments").RequireAuthorization(MantenioPolicies.AdminOnly);
         admin.MapGet("/payments", ListAsync).Produces<IReadOnlyList<PaymentProofItem>>();
         admin.MapPost("/payments/register", RegisterAsync).DisableAntiforgery().WithUploadLimits().Produces<PaymentProofItem>();
+        admin.MapPost("/payments/historical", RegisterHistoricalAsync).DisableAntiforgery().WithUploadLimits().Produces<PaymentProofItem>();
+        admin.MapPost("/payments/{id:guid}/historical", UpdateHistoricalAsync).DisableAntiforgery().WithUploadLimits().Produces<PaymentProofItem>();
         admin.MapGet("/apartments/{id:guid}/residents", ResidentsAsync).Produces<IReadOnlyList<string>>();
         admin.MapPost("/payments/{id:guid}/approve", ApproveAsync).Produces<PaymentProofItem>();
         admin.MapPost("/payments/{id:guid}/reject", RejectAsync).Produces<PaymentProofItem>();
@@ -136,7 +139,7 @@ internal static class LedgerEndpoints
         Guid id, ClaimsPrincipal principal, AppDbContext db, IFileStorage storage, CancellationToken cancellationToken)
     {
         var proof = await db.PaymentProofs.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, cancellationToken);
-        if (proof is null || !await ApartmentAccess.CanAccessAsync(db, principal, proof.ApartmentId, cancellationToken))
+        if (proof is not { HasImage: true } || !await ApartmentAccess.CanAccessAsync(db, principal, proof.ApartmentId, cancellationToken))
         {
             return ApiProblems.NotFound();
         }
@@ -491,6 +494,142 @@ internal static class LedgerEndpoints
         return result;
     }
 
+    /// <summary>
+    /// An admin loads a payment from before the app (paper records): amount and date are required; payer, bank,
+    /// operation number, paper receipt number and photo are optional. It is kept for the history and the audit,
+    /// and does not change the debt (no allocation, no receipt).
+    /// </summary>
+    private static async Task<IResult> RegisterHistoricalAsync(
+        [FromForm] Guid apartmentId, [FromForm] decimal amount, [FromForm] DateOnly operationDate, [FromForm] string? payerName,
+        [FromForm] string? bankName, [FromForm] string? operationNumber, [FromForm] string? paperReceiptNumber, IFormFile? image,
+        ClaimsPrincipal principal, AppDbContext db, TimeProvider time, CondoClock clock, IFileStorage storage, CancellationToken cancellationToken)
+    {
+        var adminId = principal.GetUserId();
+        if (!await db.Apartments.AnyAsync(a => a.Id == apartmentId, cancellationToken))
+        {
+            return ApiProblems.BadRequest(ErrorCodes.ApartmentNotFound);
+        }
+
+        if (await db.Users.AnyAsync(u => u.Id == adminId && u.ApartmentId == apartmentId, cancellationToken))
+        {
+            return ApiProblems.Forbidden(ErrorCodes.OwnApartmentReview);
+        }
+
+        if (await ValidateHistoricalAsync(db, clock, amount, operationDate, payerName, bankName, operationNumber, paperReceiptNumber, null,
+                cancellationToken) is { } invalid)
+        {
+            return invalid;
+        }
+
+        string? key = null;
+        if (image is not null && (key = await StoreImageAsync(image, apartmentId, storage, cancellationToken)) is null)
+        {
+            return ApiProblems.BadRequest(ErrorCodes.InvalidImage);
+        }
+
+        var now = time.GetUtcNow();
+        var proof = PaymentProof.Historical(apartmentId, adminId, amount, operationDate, payerName, bankName, operationNumber, paperReceiptNumber, key, now);
+        db.PaymentProofs.Add(proof);
+        db.AuditEvents.Add(new AuditEvent(AuditEntities.PaymentProof, proof.Id.ToString(), "HistoricalRegistered", AuditSource.Admin, adminId, now,
+            newValues: HistoricalSnapshot(proof), apartmentId: apartmentId));
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            return ApiProblems.Conflict(ErrorCodes.DuplicateOperationNumber);
+        }
+
+        return TypedResults.Ok(await ItemAsync(db, proof.Id, cancellationToken));
+    }
+
+    /// <summary>
+    /// Corrects a historical payment and/or attaches its photo; a new photo replaces the previous one (whose file is
+    /// deleted). Audited with the old and new values.
+    /// </summary>
+    private static async Task<IResult> UpdateHistoricalAsync(
+        Guid id, [FromForm] decimal amount, [FromForm] DateOnly operationDate, [FromForm] string? payerName, [FromForm] string? bankName,
+        [FromForm] string? operationNumber, [FromForm] string? paperReceiptNumber, IFormFile? image, ClaimsPrincipal principal,
+        AppDbContext db, TimeProvider time, CondoClock clock, IFileStorage storage, CancellationToken cancellationToken)
+    {
+        var adminId = principal.GetUserId();
+        var proof = await db.PaymentProofs.SingleOrDefaultAsync(p => p.Id == id, cancellationToken);
+        if (proof is null)
+        {
+            return ApiProblems.NotFound();
+        }
+
+        if (proof.Status != PaymentProofStatus.Historical)
+        {
+            return ApiProblems.Conflict(ErrorCodes.Conflict);
+        }
+
+        if (await db.Users.AnyAsync(u => u.Id == adminId && u.ApartmentId == proof.ApartmentId, cancellationToken))
+        {
+            return ApiProblems.Forbidden(ErrorCodes.OwnApartmentReview);
+        }
+
+        if (await ValidateHistoricalAsync(db, clock, amount, operationDate, payerName, bankName, operationNumber, paperReceiptNumber, id,
+                cancellationToken) is { } invalid)
+        {
+            return invalid;
+        }
+
+        string? newKey = null;
+        if (image is not null && (newKey = await StoreImageAsync(image, proof.ApartmentId, storage, cancellationToken)) is null)
+        {
+            return ApiProblems.BadRequest(ErrorCodes.InvalidImage);
+        }
+
+        var old = HistoricalSnapshot(proof);
+        proof.SetHistoricalDetails(amount, operationDate, payerName, bankName, operationNumber, paperReceiptNumber);
+        var replaced = newKey is null ? null : proof.ReplaceImage(newKey);
+        db.AuditEvents.Add(new AuditEvent(AuditEntities.PaymentProof, proof.Id.ToString(), newKey is null ? "HistoricalUpdated" : "HistoricalPhotoAttached",
+            AuditSource.Admin, adminId, time.GetUtcNow(), oldValues: old, newValues: HistoricalSnapshot(proof), apartmentId: proof.ApartmentId));
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            return ApiProblems.Conflict(ErrorCodes.DuplicateOperationNumber);
+        }
+
+        if (!string.IsNullOrEmpty(replaced))
+        {
+            await storage.DeleteAsync(replaced, cancellationToken);
+        }
+
+        return TypedResults.Ok(await ItemAsync(db, proof.Id, cancellationToken));
+    }
+
+    /// <summary>Historical payment fields: amount, a past date within the retention period, optional texts within their lengths, no duplicate operation.</summary>
+    private static async Task<IResult?> ValidateHistoricalAsync(
+        AppDbContext db, CondoClock clock, decimal amount, DateOnly operationDate, string? payerName, string? bankName, string? operationNumber,
+        string? paperReceiptNumber, Guid? excludeId, CancellationToken cancellationToken)
+    {
+        var normalizedNumber = PaymentProof.NormalizeOperationNumber(operationNumber ?? "");
+        if (amount <= 0 || amount > 99_999 || operationDate > clock.Today
+            || operationDate < clock.Today.AddMonths(-CondoProfile.Current.FileRetentionMonths)
+            || (payerName?.Trim().Length ?? 0) > 120 || (bankName?.Trim().Length ?? 0) > 80 || normalizedNumber.Length > 40
+            || (paperReceiptNumber?.Trim().Length ?? 0) > 40)
+        {
+            return ApiProblems.BadRequest(ErrorCodes.ValidationFailed);
+        }
+
+        return normalizedNumber.Length > 0
+               && await IsDuplicateAsync(db, (bankName ?? "").Trim(), normalizedNumber, cancellationToken, excludeId)
+            ? ApiProblems.Conflict(ErrorCodes.DuplicateOperationNumber)
+            : null;
+    }
+
+    private static string HistoricalSnapshot(PaymentProof proof) => AuditLog.Json(new
+    {
+        proof.DeclaredAmount, proof.OperationDate, proof.PayerName, proof.BankName, proof.OperationNumber, proof.PaperReceiptNumber,
+        proof.HasImage,
+    });
+
     /// <summary>Names to suggest as "Recibí de" when an admin registers a payment.</summary>
     private static async Task<IResult> ResidentsAsync(Guid id, AppDbContext db, CancellationToken cancellationToken) =>
         TypedResults.Ok(await db.Users.AsNoTracking()
@@ -613,9 +752,11 @@ internal static class LedgerEndpoints
         return null;
     }
 
-    private static Task<bool> IsDuplicateAsync(AppDbContext db, string bankName, string operationNumber, CancellationToken cancellationToken) =>
+    private static Task<bool> IsDuplicateAsync(
+        AppDbContext db, string bankName, string operationNumber, CancellationToken cancellationToken, Guid? excludeId = null) =>
         db.PaymentProofs.AnyAsync(
-            p => p.BankName == bankName && p.OperationNumber == operationNumber && p.Status != PaymentProofStatus.Rejected, cancellationToken);
+            p => p.BankName == bankName && p.OperationNumber == operationNumber && p.Status != PaymentProofStatus.Rejected && p.Id != excludeId,
+            cancellationToken);
 
     private static async Task<PaymentProofItem> ItemAsync(AppDbContext db, Guid id, CancellationToken cancellationToken) =>
         (await ItemsAsync(db, db.PaymentProofs.Where(p => p.Id == id), cancellationToken)).Single();
@@ -646,7 +787,7 @@ internal static class LedgerEndpoints
                 x.Proof.Id, x.Proof.ApartmentId, x.ApartmentCode, x.Submitter, x.Proof.DeclaredAmount, x.Proof.ApprovedAmount,
                 x.Proof.OperationDate, x.Proof.BankName, x.Proof.OperationNumber, (ProofStatus)(int)x.Proof.Status, x.Proof.SubmittedAt,
                 x.Proof.ReviewedAt, x.Reviewer, x.Proof.RejectionReason, x.Proof.VoidReason, x.ReceiptNumber, unchecked((int)x.RowVersion),
-                x.Proof.PayerName))
+                x.Proof.PayerName, x.Proof.HasImage, x.Proof.PaperReceiptNumber))
             .ToList();
     }
 }

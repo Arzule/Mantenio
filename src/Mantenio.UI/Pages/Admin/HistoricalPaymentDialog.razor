@@ -1,0 +1,109 @@
+@* Admin (treasurer): loads a payment from the paper records, or completes one already loaded: its photo (read
+   automatically, and replaceable), payer, amount, date, bank, operation and paper receipt number. Historical
+   payments are kept for the history and the audit; they do not change the debt. *@
+@using Mantenio.Shared.Apartments
+@using Mantenio.Shared.Ledger
+@inherits BusyComponentBase
+@inject MantenioApi Api
+
+<MudDialog>
+    <TitleContent><MudText Typo="Typo.h6">@(Existing is null ? UiStrings.RegisterHistorical : UiStrings.EditHistorical)</MudText></TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">@UiStrings.HistoricalBody</MudText>
+        @if (Existing is null)
+        {
+            <ApartmentPicker @bind-Value="_apartment" Required="true" Class="mb-3" />
+        }
+        else
+        {
+            <MudText Typo="Typo.subtitle1" Class="mb-2"><b>@Existing.ApartmentCode</b></MudText>
+            @if (Existing.HasImage)
+            {
+                <MudText Typo="Typo.caption" Class="d-block mb-1">@UiStrings.HistoricalReplacePhoto</MudText>
+            }
+        }
+        <VoucherImageField @bind-Image="_image" OnScanned="Apply" />
+        <MudTextField @bind-Value="_payer" Label="@UiStrings.PayerName" HelperText="@UiStrings.Optional" Variant="Variant.Outlined" MaxLength="120" Class="mt-3" />
+        <MudNumericField T="decimal?" @bind-Value="_amount" Label="@UiStrings.Amount" Min="0" Format="N2" Variant="Variant.Outlined" Class="mt-3" />
+        <MudDatePicker @bind-Date="_date" Label="@UiStrings.OperationDate" MinDate="MinDate" MaxDate="DateTime.Today" DateFormat="dd/MM/yyyy"
+                       Variant="Variant.Outlined" Class="mt-3" />
+        <OriginBankField @bind-Value="_bank" Class="mt-3" />
+        <MudTextField @bind-Value="_operation" Label="@UiStrings.OperationNumber" HelperText="@UiStrings.Optional" Variant="Variant.Outlined"
+                      MaxLength="40" Immediate="true" Class="mt-3" />
+        <MudTextField @bind-Value="_paperReceipt" Label="@UiStrings.PaperReceiptNumber" HelperText="@UiStrings.Optional" Variant="Variant.Outlined"
+                      MaxLength="40" Class="mt-3" />
+        @if (Error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-3">@Error</MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => Dialog.Cancel()">@UiStrings.Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!CanSave || Busy)" OnClick="SaveAsync">@UiStrings.Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private static readonly DateTime MinDate = DateTime.Today.AddMonths(-CondoProfile.Current.FileRetentionMonths);
+
+    private ApartmentOption? _apartment;
+    private PickedImage? _image;
+    private string _payer = "";
+    private decimal? _amount;
+    private DateTime? _date;
+    private string _bank = "";
+    private string _operation = "";
+    private string _paperReceipt = "";
+
+    [CascadingParameter]
+    private IMudDialogInstance Dialog { get; set; } = default!;
+
+    /// <summary>The historical payment to complete; null to load a new one.</summary>
+    [Parameter]
+    public PaymentProofItem? Existing { get; set; }
+
+    private bool CanSave => (Existing is not null || _apartment is not null) && _amount > 0 && _date is not null;
+
+    /// <summary>Starts from the stored values when completing an existing payment.</summary>
+    protected override void OnInitialized()
+    {
+        if (Existing is { } p)
+        {
+            _payer = p.PayerName ?? "";
+            _amount = p.DeclaredAmount;
+            _date = p.OperationDate.ToDateTime(TimeOnly.MinValue);
+            _bank = p.BankName;
+            _operation = p.OperationNumber;
+            _paperReceipt = p.PaperReceiptNumber ?? "";
+        }
+    }
+
+    /// <summary>Fills what is still empty with what was read from the photo (a date is only taken when none was set).</summary>
+    private void Apply(ProofScanResult scan)
+    {
+        _amount ??= scan.Amount;
+        if (_date is null && scan.OperationDate is { } read)
+        {
+            _date = read.ToDateTime(TimeOnly.MinValue);
+        }
+
+        if (string.IsNullOrWhiteSpace(_operation) && scan.OperationNumber is { } operation)
+        {
+            _operation = operation;
+        }
+    }
+
+    /// <summary>Creates or updates the historical payment and closes the dialog with it.</summary>
+    private async Task SaveAsync()
+    {
+        var request = new HistoricalPaymentRequest(_amount!.Value, DateOnly.FromDateTime(_date!.Value), _payer, _bank, _operation, _paperReceipt,
+            _image?.Content, _image?.ContentType);
+        PaymentProofItem? saved = null;
+        if (await RunAsync(async () => saved = Existing is null
+                ? await Api.RegisterHistoricalPaymentAsync(_apartment!.Id, request)
+                : await Api.UpdateHistoricalPaymentAsync(Existing.Id, request)))
+        {
+            Dialog.Close(DialogResult.Ok(saved));
+        }
+    }
+}

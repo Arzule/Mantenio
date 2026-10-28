@@ -15,8 +15,24 @@
         <MudChip T="string" Size="Size.Small" Color="@LedgerText.ProofColor(Item.Status)">@LedgerText.Proof(Item.Status)</MudChip>
     </div>
     <MudText Typo="Typo.body2" Class="mt-1">
-        @Item.BankName · @UiStrings.OperationNumber @Item.OperationNumber · @Formats.Date(Item.OperationDate)
+        @if (Item.BankName.Length > 0)
+        {
+            <span>@Item.BankName · </span>
+        }
+        @if (Item.OperationNumber.Length > 0)
+        {
+            <span>@UiStrings.OperationNumber @Item.OperationNumber · </span>
+        }
+        @Formats.Date(Item.OperationDate)
     </MudText>
+    @if (Item.PaperReceiptNumber is { } paper)
+    {
+        <MudText Typo="Typo.body2">@Formats.Format(UiStrings.PaperReceipt, paper)</MudText>
+    }
+    @if (Item.Status == ProofStatus.Historical)
+    {
+        <MudText Typo="Typo.caption" Class="d-block mt-1">@UiStrings.HistoricalNotApplied</MudText>
+    }
     @if (Item.ApprovedAmount is { } approved && approved != Item.DeclaredAmount)
     {
         <MudText Typo="Typo.body2">@UiStrings.DeclaredAmount: @Formats.Money(Item.DeclaredAmount)</MudText>
@@ -45,8 +61,15 @@
         <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2">@Formats.Format(UiStrings.VoidReason, voidReason)</MudAlert>
     }
     <div class="d-flex flex-wrap gap-2 mt-3">
-        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Image"
-                   OnClick="() => OpenAsync(() => Api.GetPaymentImageAsync(Item.Id))">@UiStrings.ViewImage</MudButton>
+        @if (Item.HasImage)
+        {
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Image"
+                       OnClick="() => OpenAsync(() => Api.GetPaymentImageAsync(Item.Id))">@UiStrings.ViewImage</MudButton>
+        }
+        else
+        {
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@UiStrings.WithoutPhoto</MudChip>
+        }
         @if (Item.ReceiptNumber is { } number)
         {
             <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PictureAsPdf"

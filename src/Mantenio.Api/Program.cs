@@ -63,6 +63,7 @@ builder.Services.AddMantenioStorage(builder.Configuration);
 builder.Services.AddScoped<LedgerService>();
 builder.Services.AddScoped<ReceiptEmails>();
 builder.Services.AddScoped<DelinquencyService>();
+builder.Services.AddScoped<PeriodReportService>();
 builder.Services.AddScoped<LedgerJobs>();
 builder.Services.AddMantenioPush(builder.Configuration);
 builder.Services.AddMantenioVision(builder.Configuration);

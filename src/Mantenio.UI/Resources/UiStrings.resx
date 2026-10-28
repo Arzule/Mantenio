@@ -317,6 +317,22 @@
   <data name="ProofStatus_Approved" xml:space="preserve"><value>Aprobado</value></data>
   <data name="ProofStatus_Rejected" xml:space="preserve"><value>Rechazado</value></data>
   <data name="ProofStatus_Voided" xml:space="preserve"><value>Anulado</value></data>
+  <data name="ProofStatus_Historical" xml:space="preserve"><value>Histórico</value></data>
+  <data name="TabHistorical" xml:space="preserve"><value>Históricos</value></data>
+  <data name="RegisterHistorical" xml:space="preserve"><value>Registrar pago histórico</value></data>
+  <data name="EditHistorical" xml:space="preserve"><value>Completar pago histórico</value></data>
+  <data name="HistoricalBody" xml:space="preserve"><value>Pagos anteriores a la app, cargados desde los registros en papel. Quedan en el historial y en los reportes, pero todavía no se aplican a la deuda. Adjunta la foto del voucher o del recibo: la app intenta leer el monto, la fecha y el número de operación.</value></data>
+  <data name="HistoricalTabBody" xml:space="preserve"><value>Pagos cargados desde los registros en papel. No cambian la deuda. Usa "Completar" para adjuntar o reemplazar la foto y corregir los datos.</value></data>
+  <data name="HistoricalReplacePhoto" xml:space="preserve"><value>Ya tiene foto: si eliges otra, reemplaza a la anterior.</value></data>
+  <data name="HistoricalSaved" xml:space="preserve"><value>Pago histórico guardado.</value></data>
+  <data name="CompleteHistorical" xml:space="preserve"><value>Completar</value></data>
+  <data name="OnlyWithoutPhoto" xml:space="preserve"><value>Solo sin foto</value></data>
+  <data name="NoHistorical" xml:space="preserve"><value>No hay pagos históricos.</value></data>
+  <data name="WithoutPhoto" xml:space="preserve"><value>Sin foto</value></data>
+  <data name="PaperReceiptNumber" xml:space="preserve"><value>N.º de recibo de papel</value></data>
+  <data name="PaperReceipt" xml:space="preserve"><value>Recibo de papel {0}</value></data>
+  <data name="HistoricalNotApplied" xml:space="preserve"><value>Pago histórico: registrado para el historial, aún no se aplica a la deuda.</value></data>
+  <data name="Optional" xml:space="preserve"><value>Opcional</value></data>
   <data name="DebtStatus_Pending" xml:space="preserve"><value>Pendiente</value></data>
   <data name="DebtStatus_PartiallyPaid" xml:space="preserve"><value>Pago parcial</value></data>
   <data name="DebtStatus_Paid" xml:space="preserve"><value>Pagado</value></data>
@@ -423,6 +439,12 @@
   <data name="FolioTitle" xml:space="preserve"><value>Folio mensual</value></data>
   <data name="FolioBody" xml:space="preserve"><value>PDF con todos los recibos emitidos en el mes, incluidos los anulados.</value></data>
   <data name="DownloadFolio" xml:space="preserve"><value>Descargar folio</value></data>
+  <data name="PeriodReportTitle" xml:space="preserve"><value>Reporte por período</value></data>
+  <data name="PeriodReportBody" xml:space="preserve"><value>Excel para auditorías (por ejemplo, la gestión de la junta anterior): los cargos de esos meses con lo pagado y lo pendiente, todos los pagos (aprobados, históricos, pendientes, rechazados y anulados) y la morosidad al cierre. Hasta 10 años.</value></data>
+  <data name="PeriodFrom" xml:space="preserve"><value>Desde (mes)</value></data>
+  <data name="PeriodTo" xml:space="preserve"><value>Hasta (mes)</value></data>
+  <data name="DownloadPeriodReport" xml:space="preserve"><value>Descargar Excel</value></data>
+  <data name="PeriodInvalid" xml:space="preserve"><value>El mes inicial debe ser anterior o igual al final, y como máximo de hace 10 años.</value></data>
   <data name="AuditTitle" xml:space="preserve"><value>Historial de cambios</value></data>
   <data name="AuditBody" xml:space="preserve"><value>Todo lo que cambia en el libro contable y la configuración queda registrado aquí, con quién lo hizo y el motivo.</value></data>
   <data name="AuditFrom" xml:space="preserve"><value>Desde</value></data>
@@ -438,6 +460,7 @@
   <data name="Source_Resident" xml:space="preserve"><value>Residente</value></data>
   <data name="Source_Admin" xml:space="preserve"><value>Administración</value></data>
   <data name="Source_System" xml:space="preserve"><value>Sistema</value></data>
+  <data name="Source_People" xml:space="preserve"><value>Residentes y administración</value></data>
   <data name="Entity_User" xml:space="preserve"><value>Usuario</value></data>
   <data name="Entity_InvitationCode" xml:space="preserve"><value>Código de invitación</value></data>
   <data name="Entity_ApartmentList" xml:space="preserve"><value>Lista de departamentos</value></data>
@@ -506,6 +529,9 @@
   <data name="ReceiptReadyBody" xml:space="preserve"><value>Envíale el recibo al residente por WhatsApp o descárgalo para imprimirlo.</value></data>
   <data name="PhotoError" xml:space="preserve"><value>No se pudo obtener la imagen. Revisa el permiso de la cámara o elige una de la galería.</value></data>
   <data name="AuditAction_RegisteredByAdmin" xml:space="preserve"><value>Registrado por administración</value></data>
+  <data name="AuditAction_HistoricalRegistered" xml:space="preserve"><value>Pago histórico registrado</value></data>
+  <data name="AuditAction_HistoricalUpdated" xml:space="preserve"><value>Pago histórico corregido</value></data>
+  <data name="AuditAction_HistoricalPhotoAttached" xml:space="preserve"><value>Foto de pago histórico adjuntada</value></data>
   <!-- Help page (short manual for residents and admins) -->
   <data name="NavHelp" xml:space="preserve"><value>Ayuda</value></data>
   <data name="HelpTitle" xml:space="preserve"><value>Ayuda</value></data>

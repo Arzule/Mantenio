@@ -25,6 +25,7 @@ internal static class ReportEndpoints
         admin.MapGet("/reports/delinquency/excel", DelinquencyExcelAsync);
         admin.MapGet("/reports/delinquency/pdf", DelinquencyPdfAsync);
         admin.MapGet("/reports/folio/{period:int}/pdf", FolioPdfAsync);
+        admin.MapGet("/reports/period/excel", PeriodExcelAsync);
         admin.MapGet("/audit", AuditAsync).Produces<PagedResult<AuditItem>>();
         admin.MapGet("/audit/actors", ActorsAsync).Produces<IReadOnlyList<AuditActor>>();
         return app;
@@ -63,6 +64,19 @@ internal static class ReportEndpoints
     {
         var report = await delinquency.BuildAsync(date ?? clock.Today, cancellationToken);
         return TypedResults.File(ReportFiles.DelinquencyPdf(report, clock.Now), ReportFiles.PdfContentType, ReportFiles.DelinquencyFileName(report.Date, ".pdf"));
+    }
+
+    /// <summary>The audit report of a range of months (from and to as yyyymm, at most ten years) as Excel.</summary>
+    private static async Task<IResult> PeriodExcelAsync(int from, int to, PeriodReportService reports, CancellationToken cancellationToken)
+    {
+        if (!Period.TryFromValue(from, out var first) || !Period.TryFromValue(to, out var last) || from > to
+            || (last.Year - first.Year) * 12 + last.Month - first.Month >= PeriodReportService.MaxMonths)
+        {
+            return ApiProblems.BadRequest(ErrorCodes.InvalidPeriod);
+        }
+
+        var report = await reports.BuildAsync(first, last, cancellationToken);
+        return TypedResults.File(ReportFiles.PeriodExcel(report), ReportFiles.ExcelContentType, ReportFiles.PeriodFileName(from, to));
     }
 
     private static async Task<IResult> FolioPdfAsync(int period, AppDbContext db, CondoClock clock, CancellationToken cancellationToken)
@@ -120,7 +134,11 @@ internal static class ReportEndpoints
             query = query.Where(e => e.CreatedAt <= until);
         }
 
-        if (source is { } wanted)
+        if (source == AuditSourceFilter.People)
+        {
+            query = query.Where(e => e.Source != AuditSource.System);
+        }
+        else if (source is { } wanted)
         {
             var domainSource = (AuditSource)(int)wanted;
             query = query.Where(e => e.Source == domainSource);

@@ -41,4 +41,40 @@
   <data name="Valid" xml:space="preserve"><value>Válido</value></data>
   <data name="FolioTotals" xml:space="preserve"><value>{0} recibos válidos por {1} · {2} anulados</value></data>
   <data name="NoReceipts" xml:space="preserve"><value>No se emitieron recibos este mes.</value></data>
+  <!-- Period audit report (Excel). {0} = first month, {1} = last month -->
+  <data name="PeriodTitle" xml:space="preserve"><value>Reporte por período: {0} a {1}</value></data>
+  <data name="PeriodClose" xml:space="preserve"><value>Saldos al cierre: {0}</value></data>
+  <data name="PeriodFileName" xml:space="preserve"><value>reporte-periodo-{0}-a-{1}</value></data>
+  <data name="Concept" xml:space="preserve"><value>Concepto</value></data>
+  <data name="Count" xml:space="preserve"><value>Cantidad</value></data>
+  <data name="ChargedOfType" xml:space="preserve"><value>Cargos: {0}</value></data>
+  <data name="PaidOnPeriodCharges" xml:space="preserve"><value>Pagado de los cargos del período</value></data>
+  <data name="OutstandingOnPeriodCharges" xml:space="preserve"><value>Pendiente de los cargos del período</value></data>
+  <data name="PaymentsOfStatus" xml:space="preserve"><value>Pagos: {0}</value></data>
+  <data name="DelinquencyAtClose" xml:space="preserve"><value>Morosidad total al cierre (departamentos con deuda vencida)</value></data>
+  <data name="Charged" xml:space="preserve"><value>Cargado (S/)</value></data>
+  <data name="Paid" xml:space="preserve"><value>Pagado (S/)</value></data>
+  <data name="Outstanding" xml:space="preserve"><value>Pendiente (S/)</value></data>
+  <data name="UnpaidMonths" xml:space="preserve"><value>Meses con saldo</value></data>
+  <data name="ChargesSheet" xml:space="preserve"><value>Cargos</value></data>
+  <data name="PaymentsSheet" xml:space="preserve"><value>Pagos</value></data>
+  <data name="RejectedVoidedSheet" xml:space="preserve"><value>Rechazados y anulados</value></data>
+  <data name="Month" xml:space="preserve"><value>Mes</value></data>
+  <data name="Type" xml:space="preserve"><value>Tipo</value></data>
+  <data name="DueDate" xml:space="preserve"><value>Vence</value></data>
+  <data name="Declared" xml:space="preserve"><value>Declarado (S/)</value></data>
+  <data name="Approved" xml:space="preserve"><value>Aprobado (S/)</value></data>
+  <data name="Bank" xml:space="preserve"><value>Banco</value></data>
+  <data name="RegisteredBy" xml:space="preserve"><value>Registrado por</value></data>
+  <data name="ReviewedBy" xml:space="preserve"><value>Revisado o anulado por</value></data>
+  <data name="ReviewedAt" xml:space="preserve"><value>Fecha de revisión</value></data>
+  <data name="Reason" xml:space="preserve"><value>Motivo</value></data>
+  <data name="ChargeType_Maintenance" xml:space="preserve"><value>Cuota de mantenimiento</value></data>
+  <data name="ChargeType_Opening" xml:space="preserve"><value>Deuda anterior</value></data>
+  <data name="ChargeType_LateFee" xml:space="preserve"><value>Recargo por mora</value></data>
+  <data name="Status_Pending" xml:space="preserve"><value>Pendiente de revisión</value></data>
+  <data name="Status_Approved" xml:space="preserve"><value>Aprobado</value></data>
+  <data name="Status_Rejected" xml:space="preserve"><value>Rechazado</value></data>
+  <data name="Status_Voided" xml:space="preserve"><value>Anulado</value></data>
+  <data name="Status_Historical" xml:space="preserve"><value>Histórico (no aplicado a la deuda)</value></data>
 </root>

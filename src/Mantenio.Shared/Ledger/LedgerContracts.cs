@@ -10,6 +10,9 @@ public enum ProofStatus
     Approved,
     Rejected,
     Voided,
+
+    /// <summary>Loaded from the paper records; kept for the history, not applied to the debt.</summary>
+    Historical,
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter<DebtStatus>))]
@@ -42,7 +45,9 @@ public sealed record PaymentProofItem(
     string? VoidReason,
     string? ReceiptNumber,
     int RowVersion,
-    string? PayerName = null)
+    string? PayerName = null,
+    bool HasImage = true,
+    string? PaperReceiptNumber = null)
 {
     /// <summary>An admin registered it for the resident (see PayerName); SubmittedByName is that admin.</summary>
     public bool RegisteredByAdmin => PayerName is not null;

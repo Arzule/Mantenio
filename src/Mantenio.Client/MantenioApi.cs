@@ -228,6 +228,43 @@ public sealed class MantenioApi(IHttpClientFactory httpClientFactory)
         return await response.ReadAsync<ProofScanResult>(cancellationToken);
     }
 
+    /// <summary>Admin: loads a payment from the paper records (kept for the history; it does not change the debt).</summary>
+    public Task<PaymentProofItem> RegisterHistoricalPaymentAsync(Guid apartmentId, HistoricalPaymentRequest request, CancellationToken cancellationToken = default) =>
+        SendHistoricalAsync("/api/admin/payments/historical", request, apartmentId, cancellationToken);
+
+    /// <summary>Admin: corrects a historical payment and/or attaches or replaces its photo.</summary>
+    public Task<PaymentProofItem> UpdateHistoricalPaymentAsync(Guid proofId, HistoricalPaymentRequest request, CancellationToken cancellationToken = default) =>
+        SendHistoricalAsync($"/api/admin/payments/{proofId}/historical", request, null, cancellationToken);
+
+    private async Task<PaymentProofItem> SendHistoricalAsync(string path, HistoricalPaymentRequest request, Guid? apartmentId, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        using var form = new MultipartFormDataContent
+        {
+            { new StringContent(request.Amount.ToString(CultureInfo.InvariantCulture)), "amount" },
+            { new StringContent(request.OperationDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)), "operationDate" },
+            { new StringContent(request.PayerName), "payerName" },
+            { new StringContent(request.BankName), "bankName" },
+            { new StringContent(request.OperationNumber), "operationNumber" },
+            { new StringContent(request.PaperReceiptNumber), "paperReceiptNumber" },
+        };
+        if (apartmentId is { } id)
+        {
+            form.Add(new StringContent(id.ToString()), "apartmentId");
+        }
+
+        if (request.Image is { } image)
+        {
+            var file = new ByteArrayContent(image);
+            file.Headers.ContentType = new MediaTypeHeaderValue(request.ContentType ?? "image/jpeg");
+            form.Add(file, "image", "voucher" + (request.ContentType == "image/png" ? ".png" : ".jpg"));
+        }
+
+        using var client = httpClientFactory.CreateClient(MantenioHttpClients.Authenticated);
+        using var response = await client.PostAsync(new Uri(path, UriKind.Relative), form, cancellationToken).SendSafeAsync();
+        return await response.ReadAsync<PaymentProofItem>(cancellationToken);
+    }
+
     /// <summary>Admin: registers the voucher a resident brought in person; it comes back approved, with its receipt.</summary>
     public async Task<PaymentProofItem> RegisterPaymentProofAsync(
         Guid apartmentId, string payerName, decimal amount, DateOnly operationDate, string bankName, string operationNumber, byte[] image,
@@ -307,6 +344,9 @@ public sealed class MantenioApi(IHttpClientFactory httpClientFactory)
     public Task<DownloadedFile> DownloadDelinquencyAsync(DateOnly date, bool excel, CancellationToken cancellationToken = default) =>
         DownloadAsync($"/api/admin/reports/delinquency/{(excel ? "excel" : "pdf")}?date={Iso(date)}", cancellationToken);
 
+    public Task<DownloadedFile> DownloadPeriodReportAsync(int from, int to, CancellationToken cancellationToken = default) =>
+        DownloadAsync($"/api/admin/reports/period/excel?from={from}&to={to}", cancellationToken);
+
     public Task<DownloadedFile> DownloadFolioAsync(int period, CancellationToken cancellationToken = default) =>
         DownloadAsync($"/api/admin/reports/folio/{period}/pdf", cancellationToken);
 
@@ -372,3 +412,8 @@ public sealed record DownloadedFile(string FileName, string ContentType, byte[] 
 
 /// <summary>Audit viewer filters; null = any.</summary>
 public sealed record AuditFilter(DateOnly? From, DateOnly? To, AuditSourceFilter? Source, string? EntityType, Guid? ApartmentId, Guid? ActorId);
+
+/// <summary>A historical payment as the admin form sends it; empty texts mean "unknown". Image is optional.</summary>
+public sealed record HistoricalPaymentRequest(
+    decimal Amount, DateOnly OperationDate, string PayerName, string BankName, string OperationNumber, string PaperReceiptNumber,
+    byte[]? Image, string? ContentType);
