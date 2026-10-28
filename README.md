@@ -17,10 +17,12 @@ deployment settings in a private copy. It is in a pilot with a 180-apartment con
 - See the **account statement** of their apartment: every monthly charge, its due date and state (pending, partial,
   paid, overdue), total debt and credit. Everyone in the apartment sees the same statement.
 - See the condo **bank accounts** (bank, holder, account number, CCI) with copy buttons.
+  A reminder asks to pay each month with its own transfer (each operation number can be registered only once).
 - **Upload a payment proof**: the photo first; the app reads the amount, date and operation number from it
   (Azure AI Vision) and pre-fills the form; the resident checks it and picks the origin bank.
 - Get notices (in-app bell + push on Android): payment approved/rejected/voided, fee changes, bank account changes
-  (must be confirmed), monthly reminder. Receive the **receipt PDF by email**.
+  (must be confirmed), monthly reminder. Receive the **receipt PDF by email**. Each approved payment shows the months it covers
+  and any credit it left (one transfer for several months is applied oldest first; the rest pays the next months).
 - Change their password; sign in on several devices at once.
 
 **Admins** (email 2FA on every new sign-in)
