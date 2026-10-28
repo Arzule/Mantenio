@@ -27,6 +27,8 @@ public enum DebtStatus
 public sealed record ProofScanResult(bool Scanned, decimal? Amount, DateOnly? OperationDate, string? OperationNumber);
 
 /// <param name="PayerName">Who the receipt is made out to when an admin registered the proof; null when the resident uploaded it.</param>
+/// <param name="CoveredPeriods">yyyymm of the months this payment is applied to now.</param>
+/// <param name="Unapplied">Part of an approved payment still waiting as credit for the next charges.</param>
 public sealed record PaymentProofItem(
     Guid Id,
     Guid ApartmentId,
@@ -47,7 +49,9 @@ public sealed record PaymentProofItem(
     int RowVersion,
     string? PayerName = null,
     bool HasImage = true,
-    string? PaperReceiptNumber = null)
+    string? PaperReceiptNumber = null,
+    IReadOnlyList<int>? CoveredPeriods = null,
+    decimal Unapplied = 0)
 {
     /// <summary>An admin registered it for the resident (see PayerName); SubmittedByName is that admin.</summary>
     public bool RegisteredByAdmin => PayerName is not null;

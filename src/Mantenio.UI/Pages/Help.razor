@@ -18,32 +18,45 @@
 </MudContainer>
 
 @code {
-    private static readonly (string Title, string Body)[] ResidentTopics =
+    private static readonly (string Title, string Body, bool IsNew)[] ResidentTopics =
     [
-        (UiStrings.HelpRegisterTitle, UiStrings.HelpRegisterBody),
-        (UiStrings.HelpPayTitle, UiStrings.HelpPayBody),
-        (UiStrings.HelpStatementTitle, UiStrings.HelpStatementBody),
-        (UiStrings.HelpNoticesTitle, UiStrings.HelpNoticesBody),
-        (UiStrings.HelpRejectedTitle, UiStrings.HelpRejectedBody),
+        (UiStrings.HelpOnePaymentTitle, UiStrings.HelpOnePaymentBody, true),
+        (UiStrings.HelpRegisterTitle, UiStrings.HelpRegisterBody, false),
+        (UiStrings.HelpPayTitle, UiStrings.HelpPayBody, false),
+        (UiStrings.HelpStatementTitle, UiStrings.HelpStatementBody, false),
+        (UiStrings.HelpNoticesTitle, UiStrings.HelpNoticesBody, false),
+        (UiStrings.HelpRejectedTitle, UiStrings.HelpRejectedBody, false),
     ];
 
-    private static readonly (string Title, string Body)[] AdminTopics =
+    private static readonly (string Title, string Body, bool IsNew)[] AdminTopics =
     [
-        (UiStrings.HelpReviewTitle, UiStrings.HelpReviewBody),
-        (UiStrings.HelpWalkInTitle, UiStrings.HelpWalkInBody),
-        (UiStrings.HelpVoidTitle, UiStrings.HelpVoidBody),
-        (UiStrings.HelpReportsTitle, UiStrings.HelpReportsBody),
-        (UiStrings.HelpSettingsTitle, UiStrings.HelpSettingsBody),
-        (UiStrings.HelpSecurityTitle, UiStrings.HelpSecurityBody),
+        (UiStrings.HelpHistoricalTitle, UiStrings.HelpHistoricalBody, true),
+        (UiStrings.HelpReviewTitle, UiStrings.HelpReviewBody, false),
+        (UiStrings.HelpWalkInTitle, UiStrings.HelpWalkInBody, false),
+        (UiStrings.HelpVoidTitle, UiStrings.HelpVoidBody, false),
+        (UiStrings.HelpReportsTitle, UiStrings.HelpReportsBody, false),
+        (UiStrings.HelpSettingsTitle, UiStrings.HelpSettingsBody, false),
+        (UiStrings.HelpSecurityTitle, UiStrings.HelpSecurityBody, false),
     ];
 
-    private static RenderFragment Topics((string Title, string Body)[] topics) => __builder =>
+    private static RenderFragment Topics((string Title, string Body, bool IsNew)[] topics) => __builder =>
     {
         <MudExpansionPanels MultiExpansion="true" Elevation="1">
-            @foreach (var (title, body) in topics)
+            @foreach (var (title, body, isNew) in topics)
             {
-                <MudExpansionPanel Text="@title">
+                <MudExpansionPanel>
+                    <TitleContent>
+                        <div class="d-flex align-center gap-2">
+                            @if (isNew)
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Secondary">@UiStrings.New</MudChip>
+                            }
+                            <MudText>@title</MudText>
+                        </div>
+                    </TitleContent>
+                    <ChildContent>
                     <MudText Typo="Typo.body2" Style="white-space: pre-line">@body</MudText>
+                    </ChildContent>
                 </MudExpansionPanel>
             }
         </MudExpansionPanels>

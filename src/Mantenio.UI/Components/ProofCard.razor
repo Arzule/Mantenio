@@ -29,6 +29,14 @@
     {
         <MudText Typo="Typo.body2">@Formats.Format(UiStrings.PaperReceipt, paper)</MudText>
     }
+    @if (Item is { Status: ProofStatus.Approved, CoveredPeriods.Count: > 0 })
+    {
+        <MudText Typo="Typo.body2" Class="mt-1">@Formats.Format(UiStrings.CoversMonths, string.Join(", ", Item.CoveredPeriods.Select(Formats.Month)))</MudText>
+    }
+    @if (Item is { Status: ProofStatus.Approved, Unapplied: > 0 })
+    {
+        <MudText Typo="Typo.body2">@Formats.Format(UiStrings.LeftAsCredit, Formats.Money(Item.Unapplied))</MudText>
+    }
     @if (Item.Status == ProofStatus.Historical)
     {
         <MudText Typo="Typo.caption" Class="d-block mt-1">@UiStrings.HistoricalNotApplied</MudText>

@@ -783,11 +783,24 @@ internal static class LedgerEndpoints
                 })
             .ToListAsync(cancellationToken);
 
+        // Months each approved payment pays now, and what is left of it as credit for the next charges.
+        var proofIds = rows.Select(x => x.Proof.Id).ToList();
+        var applied = (await (
+                    from al in db.PaymentAllocations.AsNoTracking()
+                    where proofIds.Contains(al.PaymentProofId) && al.ReversedAt == null
+                    join c in db.Charges on al.ChargeId equals c.Id
+                    select new { al.PaymentProofId, c.Period, al.Amount })
+                .ToListAsync(cancellationToken))
+            .GroupBy(x => x.PaymentProofId)
+            .ToDictionary(g => g.Key, g => (Periods: (IReadOnlyList<int>)g.Select(x => x.Period).Distinct().Order().ToList(), Amount: g.Sum(x => x.Amount)));
+
         return rows.Select(x => new PaymentProofItem(
                 x.Proof.Id, x.Proof.ApartmentId, x.ApartmentCode, x.Submitter, x.Proof.DeclaredAmount, x.Proof.ApprovedAmount,
                 x.Proof.OperationDate, x.Proof.BankName, x.Proof.OperationNumber, (ProofStatus)(int)x.Proof.Status, x.Proof.SubmittedAt,
                 x.Proof.ReviewedAt, x.Reviewer, x.Proof.RejectionReason, x.Proof.VoidReason, x.ReceiptNumber, unchecked((int)x.RowVersion),
-                x.Proof.PayerName, x.Proof.HasImage, x.Proof.PaperReceiptNumber))
+                x.Proof.PayerName, x.Proof.HasImage, x.Proof.PaperReceiptNumber,
+                applied.TryGetValue(x.Proof.Id, out var a) ? a.Periods : [],
+                x.Proof.Status == PaymentProofStatus.Approved ? (x.Proof.ApprovedAmount ?? 0) - (applied.TryGetValue(x.Proof.Id, out var b) ? b.Amount : 0) : 0))
             .ToList();
     }
 }

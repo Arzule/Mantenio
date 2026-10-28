@@ -10,7 +10,8 @@
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="py-6">
     <MudText Typo="Typo.h5" HtmlTag="h1">@UiStrings.BankAccountsTitle</MudText>
-    <MudText Class="mt-2 mb-4">@UiStrings.BankAccountsBody</MudText>
+    <MudText Class="mt-2 mb-3">@UiStrings.BankAccountsBody</MudText>
+    <MudAlert Severity="Severity.Info" Class="mb-4">@UiStrings.OnePaymentPerMonth</MudAlert>
 
     @if (_accounts is null)
     {

@@ -27,6 +27,22 @@ public sealed class LedgerTests(ApiFactory factory) : IClassFixture<ApiFactory>
     private async Task<HttpClient> FounderAsync() => factory.CreateClient(await factory.SignInFounderAsync());
 
     [Fact]
+    public async Task One_payment_for_several_months_shows_the_months_it_covers_and_the_credit_left()
+    {
+        var (resident, apartmentId) = await ResidentAsync("months@test.local", "B-302");
+        using var admin = await FounderAsync();
+        await factory.AddChargeAsync(apartmentId, 202611, 180m);
+        await factory.AddChargeAsync(apartmentId, 202612, 180m);
+
+        var approved = await admin.ApprovedAsync(await resident.SubmitProofAsync(400m, Operation()));
+
+        approved.CoveredPeriods.ShouldBe([202611, 202612]);
+        approved.Unapplied.ShouldBe(40m);
+        var mine = await resident.GetJsonAsync<List<PaymentProofItem>>(factory, "/api/payments/mine");
+        mine.Single(p => p.Id == approved.Id).CoveredPeriods.ShouldBe([202611, 202612]);
+    }
+
+    [Fact]
     public async Task An_exact_payment_pays_the_month_and_issues_a_receipt()
     {
         var (resident, apartmentId) = await ResidentAsync("l1@test.local", "B-101");

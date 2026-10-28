@@ -333,6 +333,23 @@
   <data name="PaperReceipt" xml:space="preserve"><value>Recibo de papel {0}</value></data>
   <data name="HistoricalNotApplied" xml:space="preserve"><value>Pago histórico: registrado para el historial, aún no se aplica a la deuda.</value></data>
   <data name="Optional" xml:space="preserve"><value>Opcional</value></data>
+  <data name="New" xml:space="preserve"><value>Nuevo</value></data>
+  <data name="CoversMonths" xml:space="preserve"><value>Cubre: {0}</value></data>
+  <data name="LeftAsCredit" xml:space="preserve"><value>Saldo a favor: {0} (se aplica solo a los próximos meses)</value></data>
+  <data name="OnePaymentPerMonth" xml:space="preserve"><value>Paga cada mes con una transferencia separada y sube su comprobante. Cada número de operación se registra una sola vez: si pagas varios meses en una sola transferencia, sube ese comprobante una sola vez; al aprobarlo se aplica a los meses que cubre y lo que sobre queda a favor para los meses siguientes.</value></data>
+  <data name="HelpOnePaymentTitle" xml:space="preserve"><value>Un pago por cada mes</value></data>
+  <data name="HelpOnePaymentBody" xml:space="preserve"><value>Paga cada mes de cuota con una transferencia separada y sube un comprobante por cada una. Así cada mes queda con su propio pago y su recibo.
+Cada número de operación se puede registrar una sola vez. Si ya pagaste varios meses en una sola transferencia, sube ese comprobante una sola vez (no lo repitas para cada mes):
+• Al aprobarlo, el pago se aplica a los meses con deuda, empezando por el más antiguo.
+• Lo que sobre queda como saldo a favor y se aplica solo a las cuotas de los meses siguientes, cuando se generen.
+• En Pagos → Comprobantes verás qué meses cubre cada pago y cuánto quedó a favor.
+Si la cuota cambia, la administración puede ajustar tu caso (por ejemplo, anular y volver a registrar el pago).</value></data>
+  <data name="HelpHistoricalTitle" xml:space="preserve"><value>Pagos históricos y reporte por período</value></data>
+  <data name="HelpHistoricalBody" xml:space="preserve"><value>Pagos anteriores a la app (registros en papel): en Comprobantes → Históricos toca "Registrar pago histórico". Solo el monto y la fecha son obligatorios; el pagador, el banco, el número de operación, el número de recibo de papel y la foto son opcionales.
+• Con "Completar" adjuntas la foto del voucher o del recibo (la app intenta leer sus datos) o la reemplazas si te equivocaste, y corriges los datos.
+• "Solo sin foto" muestra los que todavía no tienen foto.
+• Los pagos históricos quedan en el historial y en los reportes, pero todavía no cambian la deuda.
+En Reportes → Reporte por período descargas un Excel de los meses que elijas (hasta 10 años) para las auditorías: cargos, pagos de todo tipo, rechazados y anulados, y totales por torre.</value></data>
   <data name="DebtStatus_Pending" xml:space="preserve"><value>Pendiente</value></data>
   <data name="DebtStatus_PartiallyPaid" xml:space="preserve"><value>Pago parcial</value></data>
   <data name="DebtStatus_Paid" xml:space="preserve"><value>Pagado</value></data>
