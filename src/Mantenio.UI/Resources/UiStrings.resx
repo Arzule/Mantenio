@@ -334,6 +334,13 @@
   <data name="HistoricalNotApplied" xml:space="preserve"><value>Pago histórico: registrado para el historial, aún no se aplica a la deuda.</value></data>
   <data name="Optional" xml:space="preserve"><value>Opcional</value></data>
   <data name="New" xml:space="preserve"><value>Nuevo</value></data>
+  <data name="BoardEmailsTitle" xml:space="preserve"><value>Resumen mensual para la junta</value></data>
+  <data name="BoardEmailsBody" xml:space="preserve"><value>El día 1 de cada mes estas personas reciben por correo el folio y el reporte del mes anterior, con la huella del historial. Así varias personas guardan una copia fuera de la app y cualquier cambio en los registros antiguos se puede detectar.</value></data>
+  <data name="BoardEmailsLabel" xml:space="preserve"><value>Correos de la junta</value></data>
+  <data name="BoardEmailsHint" xml:space="preserve"><value>Uno por línea, hasta 10. Solo el admin primigenio puede cambiarlos.</value></data>
+  <data name="BoardEmailsNone" xml:space="preserve"><value>Aún no hay correos de la junta.</value></data>
+  <data name="AuditAction_BoardEmailsChanged" xml:space="preserve"><value>Correos de la junta cambiados</value></data>
+  <data name="AuditAction_BoardSummarySent" xml:space="preserve"><value>Resumen mensual enviado a la junta</value></data>
   <data name="CoversMonths" xml:space="preserve"><value>Cubre: {0}</value></data>
   <data name="LeftAsCredit" xml:space="preserve"><value>Saldo a favor: {0} (se aplica solo a los próximos meses)</value></data>
   <data name="OnePaymentPerMonth" xml:space="preserve"><value>Paga cada mes con una transferencia separada y sube su comprobante. Cada número de operación se registra una sola vez: si pagas varios meses en una sola transferencia, sube ese comprobante una sola vez; al aprobarlo se aplica a los meses que cubre y lo que sobre queda a favor para los meses siguientes.</value></data>

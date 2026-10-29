@@ -20,7 +20,13 @@ public sealed record CondoSettingsResponse(
     decimal LateFeePercent,
     int TrackingStartPeriod,
     int MaxAdmins,
-    IReadOnlyList<FeeChangeItem> ScheduledGlobalChanges);
+    IReadOnlyList<FeeChangeItem> ScheduledGlobalChanges,
+    IReadOnlyList<string>? BoardEmails = null);
+
+/// <summary>Founder: the board members who get the monthly summary (folio, period report, audit fingerprint).</summary>
+public sealed record ChangeBoardEmailsRequest(
+    [property: MaxLength(10)] IReadOnlyList<string> Emails,
+    [property: Required, MinLength(3), MaxLength(500)] string Reason);
 
 public sealed record FeeChangeItem(
     Guid Id,

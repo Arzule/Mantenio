@@ -65,6 +65,7 @@ builder.Services.AddScoped<ReceiptEmails>();
 builder.Services.AddScoped<DelinquencyService>();
 builder.Services.AddScoped<PeriodReportService>();
 builder.Services.AddScoped<LedgerJobs>();
+builder.Services.AddScoped<BoardSummaryJob>();
 builder.Services.AddMantenioPush(builder.Configuration);
 builder.Services.AddMantenioVision(builder.Configuration);
 
@@ -103,6 +104,7 @@ if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
 {
     await using var scope = app.Services.CreateAsyncScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    MigrationConnection.Use(db, app.Configuration);
     await db.Database.MigrateAsync();
 }
 

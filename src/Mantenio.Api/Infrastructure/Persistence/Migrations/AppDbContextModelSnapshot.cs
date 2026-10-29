@@ -357,6 +357,11 @@ namespace Mantenio.Api.Infrastructure.Persistence.Migrations
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
+                    b.Property<string>("BoardEmails")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
                     b.Property<int>("DueDay")
                         .HasColumnType("integer");
 

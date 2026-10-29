@@ -81,6 +81,23 @@
             </AuthorizeView>
         </MudPaper>
 
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudText Typo="Typo.subtitle1">@UiStrings.BoardEmailsTitle</MudText>
+            <MudText Typo="Typo.body2" Class="mb-3">@UiStrings.BoardEmailsBody</MudText>
+            <AuthorizeView Policy="@MantenioPolicies.FounderOnly">
+                <Authorized>
+                    <MudTextField @bind-Value="_boardEmails" Label="@UiStrings.BoardEmailsLabel" HelperText="@UiStrings.BoardEmailsHint"
+                                  Lines="4" Variant="Variant.Outlined" Immediate="true" />
+                    <MudTextField @bind-Value="_boardReason" Label="@UiStrings.Reason" Variant="Variant.Outlined" Class="mt-3" MaxLength="500" Immediate="true" />
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-3" OnClick="SaveBoardEmailsAsync"
+                               Disabled="@(Busy || _boardReason.Trim().Length < 3)">@UiStrings.Save</MudButton>
+                </Authorized>
+                <NotAuthorized>
+                    <MudText Typo="Typo.body2">@(BoardEmailList.Count == 0 ? UiStrings.BoardEmailsNone : string.Join(", ", BoardEmailList))</MudText>
+                </NotAuthorized>
+            </AuthorizeView>
+        </MudPaper>
+
         <MudText Typo="Typo.h6" HtmlTag="h2" Class="mb-2">@UiStrings.FeeHistoryTitle</MudText>
         <MudTable T="FeeChangeItem" Items="_history" Dense="true" Elevation="1" Breakpoint="Breakpoint.Sm">
             <HeaderContent>
@@ -116,6 +133,10 @@
     private string _dueReason = "";
     private decimal _lateFee;
     private string _lateReason = "";
+    private string _boardEmails = "";
+    private string _boardReason = "";
+
+    private IReadOnlyList<string> BoardEmailList => _settings?.BoardEmails ?? [];
 
     private string DueExample
     {
@@ -139,6 +160,7 @@
         _dueDay = _settings.DueDay;
         _dueOffset = _settings.DueMonthOffset;
         _lateFee = _settings.LateFeePercent;
+        _boardEmails = string.Join(Environment.NewLine, BoardEmailList);
     });
 
     private Task ScheduleFeeAsync() => SaveAsync(() => Api.ChangeGlobalFeeAsync(new ChangeGlobalFeeRequest(_newFee, _feePeriod, _feeReason.Trim())),
@@ -149,6 +171,10 @@
 
     private Task SaveLateFeeAsync() => SaveAsync(() => Api.ChangeLateFeeAsync(new ChangeLateFeeRequest(_lateFee, _lateReason.Trim())),
         UiStrings.SettingsSaved, () => _lateReason = "");
+
+    private Task SaveBoardEmailsAsync() => SaveAsync(() => Api.ChangeBoardEmailsAsync(new ChangeBoardEmailsRequest(
+            _boardEmails.Split(['\n', '\r', ',', ';', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries), _boardReason.Trim())),
+        UiStrings.SettingsSaved, () => _boardReason = "");
 
     private async Task SaveAsync(Func<Task> action, string message, Action reset)
     {

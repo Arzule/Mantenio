@@ -130,6 +130,9 @@ public sealed class MantenioApi(IHttpClientFactory httpClientFactory)
     public Task ChangeDueRuleAsync(ChangeDueRuleRequest request, CancellationToken cancellationToken = default) =>
         SendAsync(HttpMethod.Put, "/api/admin/settings/due-rule", request, cancellationToken);
 
+    public Task ChangeBoardEmailsAsync(ChangeBoardEmailsRequest request, CancellationToken cancellationToken = default) =>
+        SendAsync(HttpMethod.Put, "/api/admin/settings/board-emails", request, cancellationToken);
+
     public Task ChangeLateFeeAsync(ChangeLateFeeRequest request, CancellationToken cancellationToken = default) =>
         SendAsync(HttpMethod.Put, "/api/admin/settings/late-fee", request, cancellationToken);
 

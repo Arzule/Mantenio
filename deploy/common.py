@@ -56,8 +56,11 @@ def app_settings(config, store):
                          "--email-service-name", config["emailService"], "-g", rg,
                          "--query", "mailFromSenderDomain", "-o", "tsv"], capture=True)
 
+    # With a runtime login (deploy/aiven_runtime_user.py) the app cannot drop tables or delete ledger rows; only the
+    # migrations at startup use the owner login.
+    runtime = store.get("AppRuntimeConnectionString")
     app_secrets = {
-        "db-connection": store["AppDbConnectionString"],
+        "db-connection": runtime or store["AppDbConnectionString"],
         "jwt-signing-key": store["JwtSigningKey"],
         "acs-connection": acs_connection,
         "r2-access-key-id": store["R2AccessKeyId"],
@@ -76,6 +79,12 @@ def app_settings(config, store):
         "Storage__R2AccessKeyId": "secretref:r2-access-key-id",
         "Storage__R2SecretAccessKey": "secretref:r2-secret-access-key",
     }
+
+    if runtime:
+        app_secrets["db-migrations"] = store["AppDbConnectionString"]
+        env_vars["Database__MigrationConnectionString"] = "secretref:db-migrations"
+    else:
+        print("No AppRuntimeConnectionString: the app runs with the owner login (run deploy/aiven_runtime_user.py).")
 
     # Telemetry (Application Insights, capped workspace) and who is told when the database is down.
     if store.get("AppInsightsConnectionString"):

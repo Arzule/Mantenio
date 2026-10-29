@@ -19,6 +19,7 @@ internal sealed class CondoSettingsConfiguration : IEntityTypeConfiguration<Cond
         });
         builder.Property(x => x.Id).ValueGeneratedNever();
         builder.Property(x => x.LateFeePercent).HasPrecision(5, 2);
+        builder.Property(x => x.BoardEmails).HasMaxLength(1000);
     }
 }
 

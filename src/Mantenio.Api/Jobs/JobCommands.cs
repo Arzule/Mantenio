@@ -15,12 +15,13 @@ namespace Mantenio.Api.Jobs;
 ///   <item><c>late-fees</c>: daily, 00:30 Lima (<c>30 5 * * *</c>).</item>
 ///   <item><c>reminders</c>: day 15, 09:00 Lima (<c>0 14 15 * *</c>).</item>
 ///   <item><c>cleanup</c>: daily, 03:30 Lima (<c>30 8 * * *</c>).</item>
+///   <item><c>board-summary</c>: day 1, 06:30 Lima (<c>30 11 1 * *</c>).</item>
 /// </list>
 /// The nightly database backup is a separate image (<c>deploy/backup</c>), because it needs <c>pg_dump</c>.
 /// </summary>
 internal static class JobCommands
 {
-    public static readonly string[] Names = ["generate-charges", "late-fees", "reminders", "cleanup"];
+    public static readonly string[] Names = ["generate-charges", "late-fees", "reminders", "cleanup", "board-summary"];
 
     public static async Task<int> RunAsync(IServiceProvider rootServices, string? name, CancellationToken cancellationToken)
     {
@@ -48,6 +49,9 @@ internal static class JobCommands
                 break;
             case "cleanup":
                 await output.WriteLineAsync(await CleanupAsync(services, cancellationToken));
+                break;
+            case "board-summary":
+                await output.WriteLineAsync($"Board members emailed: {await services.GetRequiredService<BoardSummaryJob>().SendAsync(cancellationToken)}.");
                 break;
         }
 

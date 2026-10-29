@@ -53,4 +53,20 @@ Puedes revisar el detalle y subir tu comprobante en la app, sección Pagos. Si y
 Si el servicio gratuito de Aiven se apagó por inactividad, entra a https://console.aiven.io y enciéndelo (Power on). Mientras tanto, la app muestra un mensaje de "sistema no disponible".
 
 Recibirás como máximo una alerta por hora.</value></data>
+  <!-- Monthly summary to the board. {0} = condo, {1} = month -->
+  <data name="BoardSummarySubject" xml:space="preserve"><value>Resumen mensual de {0}: {1}</value></data>
+  <!-- {0} = condo, {1} = month, {2} = collected, {3} = valid receipts, {4} = voided receipts, {5} = overdue debt,
+       {6} = apartments with overdue debt, {7} = close date, {8} = audit events, {9} = audit fingerprint -->
+  <data name="BoardSummaryBody" xml:space="preserve"><value>Resumen de {1} de {0}, enviado automáticamente a los miembros de la junta.
+
+• Recaudado (recibos válidos): {2} en {3} recibos
+• Recibos anulados: {4}
+• Deuda vencida al {7}: {5} en {6} departamentos
+
+Adjuntos: el folio del mes (PDF) y el reporte del período (Excel).
+
+Huella del historial al {7}: {8} eventos
+{9}
+
+Guarda este correo. Si alguien borrara o modificara registros antiguos, al generar de nuevo el reporte por período de este mes la huella ya no coincidiría con la de este correo.</value></data>
 </root>

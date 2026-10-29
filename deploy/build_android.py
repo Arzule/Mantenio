@@ -14,6 +14,7 @@ import json
 import os
 import re
 import shutil
+import unicodedata
 import subprocess
 import sys
 
@@ -48,7 +49,7 @@ for apk in glob.glob(os.path.join(ROOT, "src", "Mantenio.Mobile", "bin", "Releas
 for leftover in glob.glob(os.path.join(out, "*")):
     if not leftover.endswith(("-Signed.apk", "-Signed.aab")):
         os.remove(leftover)
-# A friendly copy to share (Drive, WhatsApp): <ShortName>-<version>.apk, e.g. ElPrado-1.0.0.apk.
+# A friendly copy to share (Drive, WhatsApp) named like the app, without accents: "El Prado de San Jose 1.0.3.apk".
 csproj = open(os.path.join(ROOT, "src", "Mantenio.Mobile", "Mantenio.Mobile.csproj"), encoding="utf-8").read()
 version_name = re.search(r"<ApplicationDisplayVersion>([^<]+)</ApplicationDisplayVersion>", csproj).group(1)
 props = os.path.join(ROOT, "Condo.props")
@@ -56,9 +57,10 @@ slug = "demo"
 if os.path.exists(props):
     match = re.search(r"<Condo\b[^>]*>\s*([^<\s]+)\s*</Condo>", open(props, encoding="utf-8").read())
     slug = match.group(1) if match else slug
-short_name = json.load(open(os.path.join(ROOT, "condos", slug, "condo.json"), encoding="utf-8"))["shortName"]
+app_title = json.load(open(os.path.join(ROOT, "condos", slug, "condo.json"), encoding="utf-8"))["android"]["appTitle"]
+plain_title = re.sub(r"[^A-Za-z0-9 ]", "", unicodedata.normalize("NFKD", app_title).encode("ascii", "ignore").decode()).strip()
 for apk in glob.glob(os.path.join(out, "*-Signed.apk")):
-    shutil.copy2(apk, os.path.join(out, f"{re.sub(r'[^A-Za-z0-9]', '', short_name)}-{version_name}.apk"))
+    shutil.copy2(apk, os.path.join(out, f"{plain_title} {version_name}.apk"))
 files = sorted(f for f in glob.glob(os.path.join(out, "*")) if f.endswith((".apk", ".aab")))
 for f in files:
     print(f"{os.path.relpath(f, ROOT)}  ({os.path.getsize(f) // 1024} KB)")

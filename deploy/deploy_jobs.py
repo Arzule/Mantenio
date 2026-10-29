@@ -5,6 +5,7 @@ Creates/updates the scheduled jobs (Azure Container Apps Jobs, cron in UTC; Lima
     late-fees         daily, 00:30 Lima   30 5 * * *
     reminders         day 15, 09:00 Lima  0 14 15 * *
     cleanup           daily, 03:30 Lima   30 8 * * *
+    board-summary     day 1, 06:30 Lima   30 11 1 * *
     backup            daily, 03:00 Lima   0 8 * * *   (own image: deploy/backup, pg_dump -> R2)
 
 Usage (after deploy/deploy_api.py; the jobs run the image the API app is running):
@@ -25,6 +26,7 @@ JOBS = {
     "late-fees": "30 5 * * *",
     "reminders": "0 14 15 * *",
     "cleanup": "30 8 * * *",
+    "board-summary": "30 11 1 * *",
 }
 BACKUP_CRON = "0 8 * * *"
 

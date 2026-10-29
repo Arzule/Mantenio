@@ -148,6 +148,11 @@ public static class ReportFiles
 
         Line(ReportTexts.DelinquencyAtClose, report.DelinquencyAtClose.DelinquentApartments, report.DelinquencyAtClose.Total);
         summary.Column(3).Style.NumberFormat.Format = "#,##0.00";
+        summary.Cell(row, 1).Value = ReportTexts.AuditFingerprint;
+        summary.Cell(row, 2).Value = report.Fingerprint.Events;
+        summary.Cell(row, 3).Value = report.Fingerprint.Hash;
+        summary.Cell(row, 3).Style.NumberFormat.Format = "@";
+        row++;
 
         row++;
         Header(summary, row++, CondoProfile.Current.TowerLabel, ReportTexts.Charged, ReportTexts.Paid, ReportTexts.Outstanding);

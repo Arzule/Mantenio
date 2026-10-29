@@ -23,7 +23,7 @@ public sealed record PeriodPaymentLine(
 /// <summary>Everything the board audits for a range of months; see <see cref="ReportFiles.PeriodExcel"/>.</summary>
 public sealed record PeriodReport(
     int From, int To, DateOnly CloseDate, IReadOnlyList<PeriodChargeLine> Charges, IReadOnlyList<PeriodPaymentLine> Payments,
-    DelinquencyReport DelinquencyAtClose);
+    DelinquencyReport DelinquencyAtClose, AuditFingerprintResult Fingerprint);
 
 /// <summary>
 /// The audit report of a range of months (e.g. the five years of the previous board): the charges of those months
@@ -109,6 +109,6 @@ internal sealed class PeriodReportService(AppDbContext db, DelinquencyService de
             .ToList();
 
         return new PeriodReport(from.Value, to.Value, closeDate, chargeLines, paymentLines,
-            await delinquency.BuildAsync(closeDate, cancellationToken));
+            await delinquency.BuildAsync(closeDate, cancellationToken), await AuditFingerprint.ComputeAsync(db, closeUtc, cancellationToken));
     }
 }

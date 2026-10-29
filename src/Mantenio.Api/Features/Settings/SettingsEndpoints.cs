@@ -32,6 +32,8 @@ internal static class SettingsEndpoints
         admin.MapPost("/fees/apartments/{apartmentId:guid}", ChangeApartmentFeeAsync);
 
         // Only the founder decides the late-fee percentage.
+        app.MapPut("/api/admin/settings/board-emails", ChangeBoardEmailsAsync)
+            .WithTags("Settings").RequireAuthorization(MantenioPolicies.FounderOnly);
         app.MapPut("/api/admin/settings/late-fee", ChangeLateFeeAsync)
             .WithTags("Settings")
             .RequireAuthorization(MantenioPolicies.FounderOnly);
@@ -57,7 +59,8 @@ internal static class SettingsEndpoints
             settings.LateFeePercent,
             settings.TrackingStartPeriod,
             settings.MaxAdmins,
-            scheduled));
+            scheduled,
+            settings.BoardEmailList));
     }
 
     /// <summary>The fee of the caller's apartment this month and the next scheduled change, if any.</summary>
@@ -174,6 +177,26 @@ internal static class SettingsEndpoints
         var old = new { settings.DueDay, settings.DueMonthOffset };
         settings.SetDueRule(request.DueDay, request.DueMonthOffset);
         AddSettingsAudit(db, principal, time, "DueRuleChanged", old, new { settings.DueDay, settings.DueMonthOffset }, request.Reason);
+        await db.SaveChangesAsync(cancellationToken);
+        return TypedResults.NoContent();
+    }
+
+    /// <summary>Founder: who receives the monthly summary. Every address must be a valid email; audited.</summary>
+    private static async Task<IResult> ChangeBoardEmailsAsync(
+        ChangeBoardEmailsRequest request, ClaimsPrincipal principal, AppDbContext db, TimeProvider time, CancellationToken cancellationToken)
+    {
+        var emails = request.Emails.Select(e => e.Trim()).Where(e => e.Length > 0).ToList();
+        if (emails.Any(e => !System.Net.Mail.MailAddress.TryCreate(e, out var parsed) || parsed.Address != e || e.Length > 256)
+            || emails.Distinct(StringComparer.OrdinalIgnoreCase).Count() > CondoSettings.MaxBoardEmails)
+        {
+            return ApiProblems.BadRequest(ErrorCodes.ValidationFailed);
+        }
+
+        var settings = await CondoSettingsStore.GetOrCreateAsync(db, time, cancellationToken);
+        var old = settings.BoardEmailList;
+        settings.SetBoardEmails(emails);
+        AddSettingsAudit(db, principal, time, "BoardEmailsChanged", new { BoardEmails = old }, new { BoardEmails = settings.BoardEmailList },
+            request.Reason.Trim());
         await db.SaveChangesAsync(cancellationToken);
         return TypedResults.NoContent();
     }

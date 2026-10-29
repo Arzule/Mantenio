@@ -12,6 +12,7 @@ public sealed class CondoSettings
     public const int SingletonId = 1;
     public const int DefaultMaxAdmins = 10;
     public const decimal MaxLateFeePercent = 100m;
+    public const int MaxBoardEmails = 10;
 
     private CondoSettings() { } // EF Core
 
@@ -48,6 +49,25 @@ public sealed class CondoSettings
 
     /// <summary>Last receipt number issued. Only incremented in SQL inside the approval transaction (gap-free).</summary>
     public long LastReceiptSequence { get; private set; }
+
+    /// <summary>Board members who get the monthly summary by email (comma-separated). Only the founder changes it.</summary>
+    public string BoardEmails { get; private set; } = "";
+
+    public IReadOnlyList<string> BoardEmailList =>
+        BoardEmails.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    /// <summary>Replaces the board emails (trimmed, lower case, no duplicates, at most <see cref="MaxBoardEmails"/>).</summary>
+    public void SetBoardEmails(IEnumerable<string> emails)
+    {
+        ArgumentNullException.ThrowIfNull(emails);
+        var list = emails.Select(e => e.Trim().ToLowerInvariant()).Where(e => e.Length > 0).Distinct().ToList();
+        if (list.Count > MaxBoardEmails || list.Any(e => e.Contains(',', StringComparison.Ordinal)))
+        {
+            throw new ArgumentException("Too many board emails or an invalid one.", nameof(emails));
+        }
+
+        BoardEmails = string.Join(',', list);
+    }
 
     /// <summary>Active admins (founder included) can never exceed <see cref="MaxAdmins"/>.</summary>
     public bool HasAdminSeat(int activeAdmins) => activeAdmins < MaxAdmins;

@@ -77,4 +77,5 @@
   <data name="Status_Rejected" xml:space="preserve"><value>Rechazado</value></data>
   <data name="Status_Voided" xml:space="preserve"><value>Anulado</value></data>
   <data name="Status_Historical" xml:space="preserve"><value>Histórico (no aplicado a la deuda)</value></data>
+  <data name="AuditFingerprint" xml:space="preserve"><value>Huella del historial al cierre (eventos y código)</value></data>
 </root>

@@ -86,6 +86,13 @@ internal static class ReportEndpoints
             return ApiProblems.BadRequest(ErrorCodes.InvalidPeriod);
         }
 
+        var lines = await FolioLinesAsync(db, period, cancellationToken);
+        return TypedResults.File(ReportFiles.FolioPdf(period, lines, clock.Now), ReportFiles.PdfContentType, ReportFiles.FolioFileName(period));
+    }
+
+    /// <summary>Every receipt of a month (by folio period), with the months each payment covered when it was issued.</summary>
+    public static async Task<List<FolioLine>> FolioLinesAsync(AppDbContext db, int period, CancellationToken cancellationToken)
+    {
         var rows = await (
                 from r in db.Receipts.AsNoTracking()
                 where r.FolioPeriod == period
@@ -111,10 +118,9 @@ internal static class ReportEndpoints
             .GroupBy(x => x.PaymentProofId)
             .ToDictionary(g => g.Key, g => (IReadOnlyList<int>)g.Select(x => x.Period).Distinct().Order().ToList());
 
-        var lines = rows.Select(r => new FolioLine(r.Number, CondoClock.ToLocal(r.IssuedAt), r.Code, r.Payer,
+        return rows.Select(r => new FolioLine(r.Number, CondoClock.ToLocal(r.IssuedAt), r.Code, r.Payer,
                 periods.GetValueOrDefault(r.ProofId) ?? [], r.Amount, $"{r.OperationNumber} ({r.BankName})", r.Voided))
             .ToList();
-        return TypedResults.File(ReportFiles.FolioPdf(period, lines, clock.Now), ReportFiles.PdfContentType, ReportFiles.FolioFileName(period));
     }
 
     private static async Task<IResult> AuditAsync(
