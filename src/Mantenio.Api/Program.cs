@@ -104,8 +104,7 @@ if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
 {
     await using var scope = app.Services.CreateAsyncScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    MigrationConnection.Use(db, app.Configuration);
-    await db.Database.MigrateAsync();
+    await MigrationConnection.MigrateAsync(db, app.Configuration);
 }
 
 await DevSeedOptions.RunAsync(app);

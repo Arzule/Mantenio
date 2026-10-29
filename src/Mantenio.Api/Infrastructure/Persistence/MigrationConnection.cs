@@ -11,14 +11,21 @@ internal static class MigrationConnection
 {
     public const string SettingName = "Database:MigrationConnectionString";
 
-    /// <summary>Switches the context to the owner login before migrating, when one is configured.</summary>
-    public static void Use(AppDbContext db, IConfiguration configuration)
+    /// <summary>
+    /// Applies the migrations with the owner login when one is configured. It uses a context of its own: the app's
+    /// contexts are pooled, and changing the connection of one would leak the owner login to later requests.
+    /// </summary>
+    public static async Task MigrateAsync(AppDbContext appDb, IConfiguration configuration, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(db);
+        ArgumentNullException.ThrowIfNull(appDb);
         ArgumentNullException.ThrowIfNull(configuration);
-        if (configuration[SettingName] is { Length: > 0 } owner)
+        if (configuration[SettingName] is not { Length: > 0 } owner)
         {
-            db.Database.SetConnectionString(owner);
+            await appDb.Database.MigrateAsync(cancellationToken);
+            return;
         }
+
+        await using var migrating = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(owner).Options);
+        await migrating.Database.MigrateAsync(cancellationToken);
     }
 }

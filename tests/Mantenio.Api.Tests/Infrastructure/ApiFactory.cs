@@ -28,6 +28,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     private readonly string _databaseName = "test_" + Guid.NewGuid().ToString("N");
     private string _connectionString = "";
+    private string? _migrationConnectionString;
 
     /// <summary>Payment-proof images and receipt PDFs of this factory (a temp folder).</summary>
     public string StoragePath { get; } = Path.Combine(Path.GetTempPath(), "mantenio-tests", Guid.NewGuid().ToString("N"));
@@ -50,11 +51,22 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     public string? FounderTemporaryPassword { get; private set; }
 
+    /// <summary>When true the app runs with a login that does not own the tables and migrates with the owner (like production).</summary>
+    protected virtual bool SeparateRuntimeLogin => false;
+
+    /// <summary>The runtime login's name when <see cref="SeparateRuntimeLogin"/> is on.</summary>
+    public string RuntimeRole => "rt_" + _databaseName;
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
         builder.UseSetting($"ConnectionStrings:{AppDbContext.ConnectionName}", _connectionString);
         builder.UseSetting("Database:MigrateOnStartup", "true");
+        if (_migrationConnectionString is not null)
+        {
+            builder.UseSetting("Database:MigrationConnectionString", _migrationConnectionString);
+        }
+
         builder.UseSetting("Push:BackgroundDispatch", "false");
         builder.UseSetting("Storage:Provider", "Local");
         builder.UseSetting("Storage:LocalPath", StoragePath);
@@ -89,6 +101,22 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         }
 
         _connectionString = new NpgsqlConnectionStringBuilder(server) { Database = _databaseName }.ConnectionString;
+        if (SeparateRuntimeLogin)
+        {
+            // Same split as deploy/aiven_runtime_user.py: read/write on the owner's future tables, nothing else.
+            await using var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync();
+            var owner = new NpgsqlConnectionStringBuilder(server).Username;
+            await using var grant = new NpgsqlCommand($"""
+                CREATE ROLE "{RuntimeRole}" LOGIN PASSWORD 'runtime';
+                GRANT USAGE ON SCHEMA public TO "{RuntimeRole}";
+                ALTER DEFAULT PRIVILEGES FOR ROLE "{owner}" IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "{RuntimeRole}";
+                ALTER DEFAULT PRIVILEGES FOR ROLE "{owner}" IN SCHEMA public GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO "{RuntimeRole}";
+                """, connection);
+            await grant.ExecuteNonQueryAsync();
+            _migrationConnectionString = _connectionString;
+            _connectionString = new NpgsqlConnectionStringBuilder(_connectionString) { Username = RuntimeRole, Password = "runtime" }.ConnectionString;
+        }
 
         // Starting the server applies the migrations; then seed what every test expects.
         await using var scope = Services.CreateAsyncScope();

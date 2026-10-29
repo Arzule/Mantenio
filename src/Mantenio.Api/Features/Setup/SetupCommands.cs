@@ -25,9 +25,7 @@ internal static class SetupCommands
         switch (command)
         {
             case "migrate":
-                var migrating = services.GetRequiredService<AppDbContext>();
-                MigrationConnection.Use(migrating, app.Configuration);
-                await migrating.Database.MigrateAsync();
+                await MigrationConnection.MigrateAsync(services.GetRequiredService<AppDbContext>(), app.Configuration);
                 await output.WriteLineAsync("Migrations applied.");
                 return 0;
 
