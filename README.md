@@ -1,8 +1,8 @@
 # Mantenio
 
 Mantenio replaces the paper ledger of a condo's maintenance fees. Residents see what they owe, upload the screenshot
-of their transfer and get a PDF receipt. Admins review payments, register vouchers brought in person, and get the
-delinquency report for any date. Everything is audited.
+of their transfer and get a PDF receipt. Admins and the gatehouse (portería) review payments and register vouchers
+brought in person; admins also get the delinquency report for any date. Everything is audited.
 
 It is built for one condo per installation: name, colors, logo, fee and receipt series come from a **condo profile**
 (`condos/<slug>/condo.json`). This repository ships the `demo` profile; a real condo keeps its own profile and
@@ -25,24 +25,36 @@ deployment settings in a private copy. It is in a pilot with a 180-apartment con
   and any credit it left (one transfer for several months is applied oldest first; the rest pays the next months).
 - Change their password; sign in on several devices at once.
 
-**Admins** (email 2FA on every new sign-in)
+**Admins** (up to 10, email 2FA on every new sign-in; each admin must have their apartment)
 - Review proofs: **approve** (confirming the real amount) or **reject** (with a reason); **void** an approved payment.
-- **Register a voucher brought in person** (the guard on duty): photo (camera/gallery), tower and number,
+- **Register a voucher brought in person**: photo (camera/gallery), tower and number,
   "Recibí de", confirmation step, approved at once; then **send the receipt by WhatsApp** or download it.
 - Manage apartments (add, CSV import, freeze/unfreeze, special fees), users (deactivate, reactivate, move),
   invitations, bank accounts, fee schedule and due rule.
 - Reports: **delinquency at any date** (screen, Excel, PDF), **monthly folio** PDF, **period audit report** (Excel for
   any range of months up to 10 years, e.g. the previous board's term: charges with what was paid and what is still
   owed, every payment in any state, rejected and voided ones apart, totals per tower), dashboard and **audit log**
-  (filters by date, entity, apartment, person and source: residents, admins, both, or the scheduled jobs).
+  (filters by date, entity, apartment, person and source: residents, admins, the gatehouse, all people, or the
+  scheduled jobs).
 - **Historical payments**: load payments from before the app (paper records) with their date, amount and, when known,
   payer, bank, operation number and paper receipt number. The photo of the voucher or receipt can be attached later
   (read automatically) and replaced if it was wrong. They are kept for the history and the reports, and **do not
   change the debt yet** (how the old debt is loaded is decided with the condo's spreadsheet).
 
-**Founder** ("admin primigenio", the board president's account, on the condo's own email)
-- Everything an admin does, plus the late-fee percentage, generating a month's charges by hand and importing the
+**Superadmin** (the founder account: the board president's account, on the condo's own email)
+- Everything an admin does, plus the late-fee percentage, the board emails, changing their own apartment, generating a month's charges by hand and importing the
   opening debt CSV. Gets the database-down alert by email and push.
+
+**Gatehouse / portería** (up to 20, email 2FA; never has an apartment)
+- Approve and reject pending proofs, register vouchers brought in person (approved at once), void approved payments
+  with a reason (also its own registrations: a guard may be alone on duty) and see the history of any payment.
+- Create invitation codes for residents and gatehouse staff. No reports, users, settings or audit log.
+
+**Rules for everyone who reviews**
+- Nobody approves or rejects a proof they sent; an admin never reviews, registers or voids payments of their own
+  apartment (another admin or the gatehouse does), and an admin without an apartment cannot act on payments (the app
+  says so instead of opening the dialog).
+- An admin's apartment is changed by another admin; only the superadmin changes their own. A reason is always required.
 
 **Automatic (scheduled jobs, Lima time)**
 - Day 1, 00:05: monthly charges for every apartment (skips frozen ones, applies credit).
@@ -114,20 +126,22 @@ deployment settings in a private copy. It is in a pilot with a 180-apartment con
 
 **Authentication and sessions**
 - Passwords: at least 8 characters with a digit (ASP.NET Identity). 5 wrong attempts lock the account 15 min.
-- Admins: a 6-digit code by email on every sign-in (2FA). New accounts confirm their email with a code.
+- Admins and the gatehouse: a 6-digit code by email on every sign-in (2FA). New accounts confirm their email with a code.
 - Access token: JWT, 15 minutes, carries the session id (`sid`). Refresh token: random 256-bit, stored hashed,
   **rotated on every use**; replaying an old one revokes the whole session (theft detection).
-- Session length: 12 h, or 30 days (admins) / 90 days (residents) with "keep me signed in".
+- Session length: 12 h, or 30 days (admins, gatehouse) / 90 days (residents) with "keep me signed in".
 - Changing or resetting the password, or deactivating a user, revokes every other session **immediately**
   (`SessionGuard` rejects access tokens of revoked sessions; the app checks every minute).
-- Invitation codes: 6 digits, single use, 24 h, stored as HMAC; at most 10 active admins (advisory lock).
+- Invitation codes: 6 digits, single use, 24 h, stored as HMAC; at most 10 active admins and 20 gatehouse accounts (advisory lock).
 
 **Authorization**
 - **Deny by default**: every endpoint needs a signed-in user unless explicitly anonymous; a test lists the allowed
   anonymous routes and requires the admin policy on all of `/api/admin`.
-- Policies: signed in (and no pending temporary password), `AdminOnly`, `FounderOnly`.
+- Policies: signed in (and no pending temporary password), `StaffOnly` (admins and gatehouse: the payment queue,
+  in-person registration, void, payment history, invitation codes), `AdminOnly`, `FounderOnly`.
 - **IDOR protection**: residents only reach their own apartment; anything else answers **404** (not 403).
-- Admins cannot review, register or void payments of **their own apartment**.
+- Admins cannot review, register or void payments of **their own apartment**, and need an apartment to act on
+  payments; nobody approves or rejects a proof **they sent**.
 
 **Input and business validation**
 - Payment proof: amount 0.01–99,999; date not in the future and at most a year old; bank and operation number
@@ -312,8 +326,8 @@ generated by `dotnet ef`), images and fonts are not listed.
 
 | File | What it does |
 |---|---|
-| `AdminSeats.cs` | Limits how many admins the condo can have; a database advisory lock stops two invitations from taking the last seat at once. |
-| `InvitationEndpoints.cs` | Invitation codes (admins) and registration with a code (anonymous). |
+| `AdminSeats.cs` | Seat limits for staff accounts: admins (MaxAdmins) and the gatehouse (MaxGuards). |
+| `InvitationEndpoints.cs` | Invitation codes (admins and the gatehouse) and registration with a code (anonymous). |
 
 **`src/Mantenio.Api/Features/Ledger/`**
 
@@ -374,6 +388,7 @@ generated by `dotnet ef`), images and fonts are not listed.
 | `AuthSetup.cs` | Identity, JWT and authorization policies of the API. |
 | `InvitationCodeHasher.cs` | Keyed hash (HMAC-SHA256) of invitation codes. A plain hash of a 6-digit code could be reversed by trying all one million values, so the key (derived from the JWT signing key) never leaves the server. |
 | `JwtOptions.cs` | Bound from the "Jwt" section. The signing key is a secret (Aspire parameter locally, Container Apps secret in prod). |
+| `Roles.cs` | Maps the stored role to the one in the contracts and the audit log. |
 | `SessionGuard.cs` | Rejects access tokens whose session was revoked (logout, password change, deactivation) without waiting for the token to expire. A session is alive while its token family has an unrevoked refresh token. Live sessions are cached briefly so most requests skip th |
 | `SessionService.cs` | Issues, rotates and revokes refresh-token sessions. |
 | `TokenService.cs` | Creates and validates the JWTs: 15-minute access tokens and the challenge tokens of the email-code steps; hashes refresh tokens. |
@@ -398,7 +413,7 @@ generated by `dotnet ef`), images and fonts are not listed.
 
 | File | What it does |
 |---|---|
-| `AppUser.cs` | An account (resident or admin). The email is also the user name. |
+| `AppUser.cs` | An account (resident, admin or gatehouse). The email is also the user name. |
 | `RefreshToken.cs` | One refresh token of a session. Every refresh rotates it: the old one is revoked and points to its replacement. All tokens of one sign-in share a FamilyId; reusing a rotated token revokes the family. Only the SHA-256 hash of the token is stored. |
 
 **`src/Mantenio.Api/Infrastructure/Notifications/`**
@@ -537,7 +552,7 @@ generated by `dotnet ef`), images and fonts are not listed.
 | File | What it does |
 |---|---|
 | `AuditEvent.cs` | Append-only history entry. Every ledger or configuration change writes one in the same transaction. Old and new values are JSON snapshots of the fields that changed. |
-| `AuditSource.cs` | Who caused an audited change: a resident, an admin or the system (scheduled jobs, seeding). |
+| `AuditSource.cs` | Who caused an audited change: a resident, an admin, the gatehouse or the system (scheduled jobs, seeding). |
 
 **`src/Mantenio.Domain/Banking/`**
 
@@ -571,9 +586,9 @@ generated by `dotnet ef`), images and fonts are not listed.
 
 | File | What it does |
 |---|---|
-| `InvitationCode.cs` | Single-use 6-digit code an admin hands out so someone can create an account. Only a keyed hash of the code is stored; the plain code is shown once to the admin. |
+| `InvitationCode.cs` | Single-use 6-digit code an admin or the gatehouse hands out so someone can create an account. Only a keyed hash of the code is stored; the plain code is shown once to the admin. |
 | `SessionPolicy.cs` | How long sessions last and which accounts need a second factor. |
-| `UserRole.cs` | The two account roles. The founder is an admin with IsFounder set. |
+| `UserRole.cs` | The account roles, stored as text. The founder (superadmin) is an admin with IsFounder set. |
 
 **`src/Mantenio.Domain/Ledger/`**
 
@@ -758,6 +773,7 @@ generated by `dotnet ef`), images and fonts are not listed.
 | `ProofImageInput.razor` | The voucher photo: camera or gallery on Android, a file input on the web. |
 | `ProofScanFill.cs` | Pre-fills the payment form with what was read from the voucher, never overwriting what the person typed. |
 | `RedirectToLogin.razor` | Used by the router for signed-out users: sends them to the login page. |
+| `RoleLabels.cs` | Spanish name of each role ("Superadmin" for the founder). |
 | `SignInChallenge.razor` | The 6-digit emailed code step (admin 2FA, email confirmation). |
 | `UserActionDialog.razor` | Confirmation dialog that asks for a reason (and an apartment when needed). |
 | `UserActionResult.cs` | What a confirmation dialog returns: the reason and, when asked, the apartment. |
@@ -777,7 +793,7 @@ generated by `dotnet ef`), images and fonts are not listed.
 | `AuthLayout.razor.css` | Styles of the sign-in layout. |
 | `MainLayout.razor` | Layout of every signed-in page: app bar with the bell and account menu, side drawer (desktop), bottom bar (phone), push registration and the session check. |
 | `MainLayout.razor.css` | Styles of the main layout (bottom bar, page padding). |
-| `NavigationItems.cs` | Single source for the side drawer (desktop) and the bottom bar (mobile). Phases add items here. |
+| `NavigationItems.cs` | Who sees a menu entry. |
 | `ThemeProviders.razor` | MudBlazor providers, rendered once by whichever layout is active. |
 
 **`src/Mantenio.UI/`**
@@ -941,7 +957,7 @@ generated by `dotnet ef`), images and fonts are not listed.
 
 | File | What it does |
 |---|---|
-| `AdminRegistrationTests.cs` | An admin (the guard on duty) registers the voucher a resident brought in person; it is approved at once. |
+| `AdminRegistrationTests.cs` | Staff (an admin or the gatehouse) registers the voucher a resident brought in person; it is approved at once. |
 | `ChargeGenerationTests.cs` | Monthly charge generation and the opening debt import. Generation touches every apartment, so the tests run in order on their own database and each uses its own month. |
 | `HistoricalPaymentTests.cs` | Historical payments, the 10-year file retention, the period report and the audit people filter. |
 | `LedgerFlows.cs` | Ledger steps shared by the ledger test classes. |
@@ -967,6 +983,7 @@ generated by `dotnet ef`), images and fonts are not listed.
 | `AuthorizationCoverageTests.cs` | Guards against an endpoint accidentally left open: everything requires sign-in unless it is in the reviewed anonymous list below, and every /api/admin route requires an admin policy. |
 | `DatabaseUnavailableTests.cs` | The database is off (e.g. Aiven Free powered it down): clear 503, and one alert (email + push to the founder). |
 | `LedgerProtectionTests.cs` | Protections against tampering: the database refuses to delete ledger rows or edit the audit log, the board gets a monthly summary with the audit fingerprint, and the fingerprint changes when the log changes. |
+| `RuntimeLoginTests.cs` | Like production: the app runs with a login that does not own the tables, and only the migrations use the owner. |
 
 **`tests/Mantenio.Api.Tests/Settings/`**
 
@@ -986,6 +1003,7 @@ generated by `dotnet ef`), images and fonts are not listed.
 |---|---|
 | `AuthorizationTests.cs` | Who can see what: admin routes, other apartments (404) and the apartment picker. |
 | `SessionRevocationTests.cs` | A revoked session stops working at once, not when its 15-minute access token expires. |
+| `StaffRoleTests.cs` | The gatehouse (portería) and the apartment rules for staff: admins need an apartment to act on payments, nobody reviews what they sent, and the gatehouse never has an apartment. |
 | `UserAdminTests.cs` | Admin user management: list, deactivate, reactivate and change apartment. |
 
 **`tests/Mantenio.Domain.Tests/Audit/`**
