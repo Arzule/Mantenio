@@ -11,6 +11,13 @@
     text-overflow: ellipsis;
 }
 
+/* A full condo name still fits next to the bell and the account menu on narrow phones. */
+@media (max-width: 599px) {
+    ::deep .appbar-title {
+        font-size: 1.1rem;
+    }
+}
+
 /* Leave room for the bottom bar on phones. */
 ::deep .main-content {
     padding-bottom: 72px;
