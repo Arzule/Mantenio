@@ -644,6 +644,8 @@ No puedes aprobar ni rechazar un comprobante que enviaste tú, y un admin no rev
   <data name="UpdateRequiredBody" xml:space="preserve"><value>Esta versión ya no funciona con el sistema. Instala la versión {0} para seguir usando la app.</value></data>
   <data name="UpdateNow" xml:space="preserve"><value>Actualizar</value></data>
   <data name="UpdateLater" xml:space="preserve"><value>Ahora no</value></data>
+  <data name="AndroidDownload" xml:space="preserve"><value>Descarga la app de Android</value></data>
+  <data name="AndroidDownloadQrAlt" xml:space="preserve"><value>Código QR para descargar la app de Android</value></data>
   <data name="UpdateDownloading" xml:space="preserve"><value>Descargando la actualización… {0}</value></data>
   <data name="UpdateInstallerHint" xml:space="preserve"><value>Android te pedirá confirmar la instalación. La primera vez, permite instalar apps desde esta app; tus datos y tu sesión se conservan.</value></data>
   <data name="UpdateFailed" xml:space="preserve"><value>No se pudo descargar la actualización. Revisa tu conexión e inténtalo de nuevo.</value></data>

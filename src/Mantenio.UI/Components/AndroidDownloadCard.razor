@@ -1,0 +1,34 @@
+@* Web only: a link to the published Android app, with a QR code on wide screens (bottom right corner). Hidden in the
+   Android app itself and when no release has been published. *@
+@inject PublicApi Api
+@inject IAppUpdater Updater
+
+@if (_release is not null)
+{
+    <a class="android-download" href="@_release.DownloadUrl" rel="noopener">
+        <span class="android-download-qr" role="img" aria-label="@UiStrings.AndroidDownloadQrAlt">@_qr</span>
+        <span class="android-download-text">
+            <MudIcon Icon="@Icons.Material.Filled.Android" Size="Size.Small" />
+            @UiStrings.AndroidDownload
+        </span>
+    </a>
+}
+
+@code {
+    private AppUpdateInfo? _release;
+    private MarkupString _qr;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Updater.InstalledVersionCode is not null)
+        {
+            return;
+        }
+
+        _release = await Api.GetAndroidReleaseAsync();
+        if (_release is not null)
+        {
+            _qr = new MarkupString(QrSvg.Render(_release.DownloadUrl.AbsoluteUri));
+        }
+    }
+}

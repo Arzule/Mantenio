@@ -25,6 +25,7 @@ public sealed class AuthPageTests : BunitContext
     public AuthPageTests()
     {
         Services.AddMudServices();
+        Services.AddSingleton<Mantenio.UI.Platform.IAppUpdater, Mantenio.UI.Platform.NoAppUpdater>();
         Services.AddSingleton<IHttpClientFactory>(_api);
         Services.AddSingleton<ITokenStore>(_store);
         Services.AddSingleton(new ClientPreferences(KeepSignedInByDefault: true));
@@ -42,7 +43,7 @@ public sealed class AuthPageTests : BunitContext
         cut.Find("form").Submit();
 
         cut.Markup.ShouldContain(UiStrings.Required);
-        _api.Calls.ShouldBeEmpty();
+        _api.Calls.ShouldNotContain("/api/auth/login");
     }
 
     [Fact]

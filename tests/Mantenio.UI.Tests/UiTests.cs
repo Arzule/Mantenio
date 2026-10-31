@@ -21,9 +21,11 @@ public sealed class UiTests : BunitContext
     public UiTests()
     {
         Services.AddMudServices();
+        Services.AddSingleton<Mantenio.UI.Platform.IAppUpdater, Mantenio.UI.Platform.NoAppUpdater>();
         Services.AddSingleton<IHttpClientFactory>(new FakeApi()
             .Returns("/api/fees/mine", new Mantenio.Shared.Settings.MyFeeResponse("H-102", 180m, 202611, new DateOnly(2026, 12, 1), null, null)));
         Services.AddSingleton<MantenioApi>();
+        Services.AddSingleton<PublicApi>();
         JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
