@@ -76,12 +76,18 @@ public sealed class UiTests : BunitContext
         ErrorMessages.For("something_new").ShouldBe(UiStrings.Error_internal_error);
 
     [Fact]
-    public void Residents_do_not_see_the_admin_menu()
+    public void Each_role_sees_its_own_menu()
     {
-        var resident = new ClaimsPrincipal(new ClaimsIdentity([new Claim(MantenioClaims.Role, nameof(AccountRole.Resident))], "jwt"));
-        var admin = new ClaimsPrincipal(new ClaimsIdentity([new Claim(MantenioClaims.Role, nameof(AccountRole.Admin))], "jwt"));
+        static ClaimsPrincipal As(AccountRole role) =>
+            new(new ClaimsIdentity([new Claim(MantenioClaims.Role, role.ToString())], "jwt"));
 
-        NavigationItems.For(resident).ShouldAllBe(item => !item.AdminOnly);
-        NavigationItems.For(admin).Count().ShouldBe(NavigationItems.All.Count);
+        NavigationItems.For(As(AccountRole.Resident)).ShouldAllBe(item => item.Audience == NavAudience.Everyone || item.Audience == NavAudience.ApartmentHolders);
+        NavigationItems.For(As(AccountRole.Admin)).ShouldAllBe(item => item.Audience != NavAudience.Guard);
+        NavigationItems.For(As(AccountRole.Admin)).Count().ShouldBe(NavigationItems.All.Count(i => i.Audience != NavAudience.Guard));
+
+        // The gatehouse: no payments of its own, no admin pages; the review queue and the codes in the bottom bar.
+        var guard = NavigationItems.For(As(AccountRole.Guard)).ToList();
+        guard.ShouldAllBe(item => item.Audience == NavAudience.Everyone || item.Audience == NavAudience.Guard);
+        guard.Where(i => i.InBottomBar).Select(i => i.Href).ShouldBe(["", "admin/payments", "admin/invitations", "notifications"]);
     }
 }

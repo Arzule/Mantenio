@@ -28,6 +28,9 @@ public static class MantenioPolicies
     public const string AdminOnly = "AdminOnly";
     public const string FounderOnly = "FounderOnly";
 
+    /// <summary>Admins and gatehouse staff (portería): payment review and invitation codes.</summary>
+    public const string StaffOnly = "StaffOnly";
+
     /// <summary>Signed in, even with a pending password change (used by "me", change password and logout).</summary>
     public const string SignedIn = "SignedIn";
 }

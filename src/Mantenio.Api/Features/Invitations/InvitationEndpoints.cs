@@ -22,7 +22,7 @@ internal static class InvitationEndpoints
     {
         app.MapPost("/api/admin/invitations", CreateAsync)
             .WithTags("Invitations")
-            .RequireAuthorization(MantenioPolicies.AdminOnly)
+            .RequireAuthorization(MantenioPolicies.StaffOnly)
             .Produces<CreateInvitationResponse>();
 
         app.MapPost("/api/invitations/check", CheckAsync)
@@ -48,10 +48,22 @@ internal static class InvitationEndpoints
         TimeProvider time,
         CancellationToken cancellationToken)
     {
-        var role = request.Role == AccountRole.Admin ? UserRole.Admin : UserRole.Resident;
-        if (role == UserRole.Admin && !await AdminSeats.AnySeatLeftAsync(db, cancellationToken))
+        var role = Roles.ToUserRole(request.Role);
+
+        // The gatehouse invites residents and other gatehouse staff; only admins create admins.
+        if (role == UserRole.Admin && !principal.IsAdmin())
         {
-            return ApiProblems.Conflict(ErrorCodes.AdminLimitReached);
+            return ApiProblems.Forbidden(ErrorCodes.Forbidden);
+        }
+
+        if (role == UserRole.Guard && request.ApartmentId is not null)
+        {
+            return ApiProblems.BadRequest(ErrorCodes.GuardWithoutApartment);
+        }
+
+        if (!await AdminSeats.AnySeatLeftAsync(db, role, cancellationToken))
+        {
+            return ApiProblems.Conflict(SeatLimitCode(role));
         }
 
         var apartment = request.ApartmentId is { } apartmentId
@@ -78,7 +90,7 @@ internal static class InvitationEndpoints
         var invitation = new InvitationCode(hash, role, apartment?.Id, adminId, now);
         db.InvitationCodes.Add(invitation);
         db.AuditEvents.Add(new AuditEvent(
-            AuditEntities.InvitationCode, invitation.Id.ToString(), "Created", AuditSource.Admin, adminId, now,
+            AuditEntities.InvitationCode, invitation.Id.ToString(), "Created", AuditLog.SourceFor(principal), adminId, now,
             newValues: AuditLog.Json(new { Role = role.ToString(), invitation.ApartmentId, invitation.ExpiresAt }),
             apartmentId: invitation.ApartmentId));
         await db.SaveChangesAsync(cancellationToken);
@@ -141,14 +153,15 @@ internal static class InvitationEndpoints
                 return ApiProblems.BadRequest(ErrorCodes.InvitationInvalid);
             }
 
-            if (invitation.Role == UserRole.Admin && !await AdminSeats.HasSeatAsync(db, ct))
+            if (!await AdminSeats.HasSeatAsync(db, invitation.Role, ct))
             {
-                return ApiProblems.Conflict(ErrorCodes.AdminLimitReached);
+                return ApiProblems.Conflict(SeatLimitCode(invitation.Role));
             }
 
-            // A code bound to an apartment wins over whatever the form sent.
-            var apartmentId = invitation.ApartmentId ?? request.ApartmentId;
-            if (apartmentId is null && invitation.Role == UserRole.Resident)
+            // A code bound to an apartment wins over whatever the form sent. Residents and admins live in the condo;
+            // the gatehouse never has an apartment.
+            var apartmentId = invitation.Role == UserRole.Guard ? null : invitation.ApartmentId ?? request.ApartmentId;
+            if (apartmentId is null && invitation.Role != UserRole.Guard)
             {
                 return ApiProblems.BadRequest(ErrorCodes.ApartmentRequired);
             }
@@ -175,7 +188,7 @@ internal static class InvitationEndpoints
             invitation.Redeem(user.Id, now);
             db.AuditEvents.Add(new AuditEvent(
                 AuditEntities.User, user.Id.ToString(), "Registered",
-                invitation.Role == UserRole.Admin ? AuditSource.Admin : AuditSource.Resident,
+                Roles.ToAuditSource(invitation.Role),
                 user.Id, now,
                 newValues: AuditLog.Json(new { user.Email, user.FirstName, user.LastName, Role = user.Role.ToString(), user.ApartmentId, user.AuthorizedById, InvitationCodeId = invitation.Id }),
                 apartmentId: apartmentId));
@@ -190,5 +203,7 @@ internal static class InvitationEndpoints
             .Where(c => c.CodeHash == hash && c.UsedAt == null && c.ExpiresAt > now)
             .FirstOrDefaultAsync(cancellationToken);
 
-    private static AccountRole ToAccountRole(UserRole role) => role == UserRole.Admin ? AccountRole.Admin : AccountRole.Resident;
+    private static AccountRole ToAccountRole(UserRole role) => Roles.ToAccountRole(role);
+
+    private static string SeatLimitCode(UserRole role) => role == UserRole.Guard ? ErrorCodes.GuardLimitReached : ErrorCodes.AdminLimitReached;
 }

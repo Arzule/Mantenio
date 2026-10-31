@@ -1,5 +1,5 @@
 ﻿@page "/admin/payments"
-@attribute [Authorize(Policy = MantenioPolicies.AdminOnly)]
+@attribute [Authorize(Policy = MantenioPolicies.StaffOnly)]
 @inherits BusyComponentBase
 @inject MantenioApi Api
 @inject IDialogService Dialogs
@@ -42,6 +42,7 @@
                                      style="max-width: 100%; max-height: 420px; border-radius: 4px; cursor: zoom-in; display: block; margin-bottom: 8px" />
                             }
                             <ProofCard Item="proof" ShowApartment="true">
+                                <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.History" OnClick="() => HistoryAsync(proof)">@UiStrings.ProofHistory</MudButton>
                                 <MudSpacer />
                                 <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Error" OnClick="() => RejectAsync(proof)">@UiStrings.Reject</MudButton>
                                 <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" OnClick="() => ApproveAsync(proof)">@UiStrings.Approve</MudButton>
@@ -66,6 +67,7 @@
                     @foreach (var proof in _history)
                     {
                         <ProofCard Item="proof" ShowApartment="true" ShowWhatsApp="true">
+                            <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.History" OnClick="() => HistoryAsync(proof)">@UiStrings.ProofHistory</MudButton>
                             @if (proof.Status == ProofStatus.Approved)
                             {
                                 <MudSpacer />
@@ -76,6 +78,8 @@
                 </MudStack>
             }
         </MudTabPanel>
+        @if (_isAdmin)
+        {
         <MudTabPanel Text="@UiStrings.TabHistorical">
             <div class="d-flex align-center justify-space-between flex-wrap gap-2 mb-2">
                 <MudSwitch T="bool" Value="_onlyWithoutPhoto" ValueChanged="v => _onlyWithoutPhoto = v" Color="Color.Primary" Label="@UiStrings.OnlyWithoutPhoto" />
@@ -104,6 +108,7 @@
                 </MudStack>
             }
         </MudTabPanel>
+        }
     </MudTabs>
 </MudContainer>
 
@@ -116,8 +121,46 @@
     private IEnumerable<PaymentProofItem> VisibleHistorical =>
         (_historical ?? []).Where(p => !_onlyWithoutPhoto || !p.HasImage).OrderByDescending(p => p.OperationDate);
     private readonly Dictionary<Guid, string> _images = [];
+    private bool _isAdmin;
+    private bool _needsApartment;
 
-    protected override Task OnInitializedAsync() => LoadPendingAsync();
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationState is not null)
+        {
+            _isAdmin = (await AuthenticationState).User.HasClaim(MantenioClaims.Role, nameof(AccountRole.Admin));
+        }
+
+        if (_isAdmin)
+        {
+            // Read from the server, not the token: an apartment assigned a moment ago counts at once.
+            await RunAsync(async () => _needsApartment = (await Api.GetCurrentUserAsync()).ApartmentId is null);
+        }
+
+        await LoadPendingAsync();
+    }
+
+    /// <summary>An admin without an apartment is told why instead of opening the dialog (the API refuses it too).</summary>
+    private async Task<bool> CanActAsync()
+    {
+        if (!_needsApartment)
+        {
+            return true;
+        }
+
+        await Dialogs.ShowMessageBoxAsync(UiStrings.ApartmentNeededTitle, UiStrings.ApartmentNeededBody, UiStrings.Close);
+        return false;
+    }
+
+    private Task HistoryAsync(PaymentProofItem proof) =>
+        Dialogs.ShowAsync<ChargeTimelineDialog>(UiStrings.ProofHistory, new DialogParameters<ChargeTimelineDialog>
+        {
+            { d => d.ProofId, proof.Id },
+            { d => d.Title, Formats.Format(UiStrings.ProofHistoryTitle, proof.ApartmentCode) },
+        }, new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
 
     private async Task LoadPendingAsync()
     {
@@ -151,6 +194,11 @@
 
     private async Task RegisterAsync()
     {
+        if (!await CanActAsync())
+        {
+            return;
+        }
+
         var dialog = await Dialogs.ShowAsync<RegisterProofDialog>(UiStrings.RegisterProof,
             new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, BackdropClick = false });
         var result = await dialog.Result;
@@ -176,7 +224,7 @@
 
     private async Task ApproveAsync(PaymentProofItem proof)
     {
-        if (await AskAsync(Formats.Format(UiStrings.ApproveTitle, proof.ApartmentCode), UiStrings.ApproveBody, UiStrings.Approve, proof.DeclaredAmount) is decimal amount)
+        if (await CanActAsync() && await AskAsync(Formats.Format(UiStrings.ApproveTitle, proof.ApartmentCode), UiStrings.ApproveBody, UiStrings.Approve, proof.DeclaredAmount) is decimal amount)
         {
             PaymentProofItem? approved = null;
             if (await RunAsync(async () => approved = await Api.ApprovePaymentAsync(proof.Id, new ApproveProofRequest(amount, proof.RowVersion))))
@@ -190,7 +238,7 @@
 
     private async Task RejectAsync(PaymentProofItem proof)
     {
-        if (await AskAsync(Formats.Format(UiStrings.RejectTitle, proof.ApartmentCode), UiStrings.RejectBody, UiStrings.Reject, null) is string reason)
+        if (await CanActAsync() && await AskAsync(Formats.Format(UiStrings.RejectTitle, proof.ApartmentCode), UiStrings.RejectBody, UiStrings.Reject, null) is string reason)
         {
             if (await RunAsync(() => Api.RejectPaymentAsync(proof.Id, new RejectProofRequest(reason, proof.RowVersion))))
             {
@@ -203,7 +251,7 @@
 
     private async Task VoidAsync(PaymentProofItem proof)
     {
-        if (await AskAsync(Formats.Format(UiStrings.VoidTitle, proof.ApartmentCode), UiStrings.VoidBody, UiStrings.Void, null) is string reason)
+        if (await CanActAsync() && await AskAsync(Formats.Format(UiStrings.VoidTitle, proof.ApartmentCode), UiStrings.VoidBody, UiStrings.Void, null) is string reason)
         {
             if (await RunAsync(() => Api.VoidPaymentAsync(proof.Id, new VoidProofRequest(reason))))
             {
@@ -214,7 +262,7 @@
         }
     }
 
-    /// <summary>Reloads the queue (also after a conflict: another admin may have reviewed it).</summary>
+    /// <summary>Reloads the queue (also after a conflict: someone else may have reviewed it).</summary>
     private async Task AfterReviewAsync()
     {
         var error = Error;

@@ -321,6 +321,9 @@ public sealed class MantenioApi(IHttpClientFactory httpClientFactory)
     public Task<PaymentProofItem> VoidPaymentAsync(Guid proofId, VoidProofRequest request, CancellationToken cancellationToken = default) =>
         SendAsync<PaymentProofItem>(HttpMethod.Post, $"/api/admin/payments/{proofId}/void", request, cancellationToken);
 
+    public Task<List<TimelineEntry>> GetProofTimelineAsync(Guid proofId, CancellationToken cancellationToken = default) =>
+        GetAsync<List<TimelineEntry>>($"/api/admin/payments/{proofId}/timeline", cancellationToken);
+
     public Task<List<TimelineEntry>> GetChargeTimelineAsync(Guid chargeId, CancellationToken cancellationToken = default) =>
         GetAsync<List<TimelineEntry>>($"/api/admin/charges/{chargeId}/timeline", cancellationToken);
 

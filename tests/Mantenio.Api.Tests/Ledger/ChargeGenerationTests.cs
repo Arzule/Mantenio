@@ -119,7 +119,7 @@ public sealed class ChargeGenerationTests(ApiFactory factory) : IClassFixture<Ap
     [Fact]
     public async Task Only_the_founder_generates_charges()
     {
-        var admin = factory.CreateClient(await factory.RegisterAsync(AccountRole.Admin, "gen-admin@test.local", null));
+        var admin = factory.CreateClient(await factory.RegisterAsync(AccountRole.Admin, "gen-admin@test.local", "F-502"));
 
         var response = await admin.PostAsJsonAsync("/api/admin/charges/generate", new GenerateChargesRequest(203201), Ct);
 

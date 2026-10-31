@@ -40,7 +40,7 @@ public sealed class UserAdminTests(ApiFactory factory) : IClassFixture<ApiFactor
     [Fact]
     public async Task The_founder_and_yourself_cannot_be_deactivated()
     {
-        await factory.RegisterAsync(AccountRole.Admin, "admin2@test.local", null);
+        await factory.RegisterAsync(AccountRole.Admin, "admin2@test.local", "F-504");
         using var otherAdmin = factory.CreateClient(await factory.SignInAdminAsync("admin2@test.local", TestFlows.ResidentPassword));
         var founderId = await UserIdAsync(ApiFactory.FounderEmail);
         var selfId = await UserIdAsync("admin2@test.local");

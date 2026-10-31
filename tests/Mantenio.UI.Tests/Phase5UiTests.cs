@@ -27,7 +27,7 @@ public sealed class Phase5UiTests : BunitContext
         Services.AddSingleton<PublicApi>();
         Services.AddSingleton<IFileOpener>(_files);
         JSInterop.Mode = JSRuntimeMode.Loose;
-        AddAuthorization().SetAuthorized("Admin").SetPolicies(MantenioPolicies.AdminOnly);
+        AddAuthorization().SetAuthorized("Admin").SetPolicies(MantenioPolicies.AdminOnly, MantenioPolicies.StaffOnly);
     }
 
     [Fact]

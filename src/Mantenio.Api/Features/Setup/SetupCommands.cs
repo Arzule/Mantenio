@@ -84,6 +84,9 @@ internal sealed class DevSeedOptions
     public string FounderFirstName { get; set; } = "";
     public string FounderLastName { get; set; } = "";
 
+    /// <summary>Apartment code of the dev founder (admins need one to review payments).</summary>
+    public string FounderApartment { get; set; } = "";
+
     public static async Task RunAsync(WebApplication app)
     {
         var options = app.Configuration.GetSection(SectionName).Get<DevSeedOptions>();
@@ -102,7 +105,8 @@ internal sealed class DevSeedOptions
         if (options.FounderEmail.Length > 0)
         {
             await seeding.CreateFounderAsync(
-                options.FounderEmail, options.FounderFirstName, options.FounderLastName, options.FounderPassword, CancellationToken.None);
+                options.FounderEmail, options.FounderFirstName, options.FounderLastName, options.FounderPassword, CancellationToken.None,
+                options.FounderApartment);
         }
     }
 }

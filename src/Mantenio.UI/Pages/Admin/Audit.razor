@@ -130,7 +130,7 @@
     private DateTime? _to;
     /// <summary>People first; "System" (scheduled jobs) last.</summary>
     private static readonly AuditSourceFilter[] SourceOptions =
-        [AuditSourceFilter.Resident, AuditSourceFilter.Admin, AuditSourceFilter.People, AuditSourceFilter.System];
+        [AuditSourceFilter.Resident, AuditSourceFilter.Admin, AuditSourceFilter.Guard, AuditSourceFilter.People, AuditSourceFilter.System];
 
     private AuditSourceFilter? _source;
     private string _entityType = "";

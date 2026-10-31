@@ -29,7 +29,7 @@ internal static class UserAdminEndpoints
         return app;
     }
 
-    /// <summary>Search by name, email or apartment code. Admins first, then by last name.</summary>
+    /// <summary>Search by name, email or apartment code. Admins first, then the gatehouse, then by last name.</summary>
     private static async Task<IResult> ListAsync(
         AppDbContext db, string? search, bool? includeInactive, int? page, int? pageSize, CancellationToken cancellationToken)
     {
@@ -53,7 +53,8 @@ internal static class UserAdminEndpoints
 
         var total = await query.CountAsync(cancellationToken);
         var items = await query
-            .OrderByDescending(u => u.Role == UserRole.Admin).ThenBy(u => u.LastName).ThenBy(u => u.FirstName)
+            .OrderByDescending(u => u.Role == UserRole.Admin).ThenByDescending(u => u.Role == UserRole.Guard)
+            .ThenBy(u => u.LastName).ThenBy(u => u.FirstName)
             .Skip(skip)
             .Take(size)
             .Select(u => new UserSummary(
@@ -61,7 +62,7 @@ internal static class UserAdminEndpoints
                 u.FirstName,
                 u.LastName,
                 u.Email!,
-                u.Role == UserRole.Admin ? AccountRole.Admin : AccountRole.Resident,
+                Roles.ToAccountRole(u.Role),
                 u.IsFounder,
                 u.IsActive,
                 u.ApartmentId,
@@ -126,9 +127,9 @@ internal static class UserAdminEndpoints
 
             if (!user.IsActive)
             {
-                if (user.Role == UserRole.Admin && !await AdminSeats.HasSeatAsync(db, ct))
+                if (!await AdminSeats.HasSeatAsync(db, user.Role, ct))
                 {
-                    return ApiProblems.Conflict(ErrorCodes.AdminLimitReached);
+                    return ApiProblems.Conflict(user.Role == UserRole.Guard ? ErrorCodes.GuardLimitReached : ErrorCodes.AdminLimitReached);
                 }
 
                 var now = time.GetUtcNow();
@@ -146,7 +147,10 @@ internal static class UserAdminEndpoints
             return (IResult)TypedResults.NoContent();
         }, cancellationToken);
 
-    /// <summary>Residents always keep an apartment; admins may have none.</summary>
+    /// <summary>
+    /// Residents and admins always keep an apartment; the gatehouse never has one. An admin's apartment is changed by
+    /// another admin, except the superadmin (founder), who may change their own. The reason is always required.
+    /// </summary>
     private static async Task<IResult> ChangeApartmentAsync(
         Guid id, ChangeUserApartmentRequest request, ClaimsPrincipal principal, AppDbContext db, TimeProvider time, CancellationToken cancellationToken)
     {
@@ -156,7 +160,17 @@ internal static class UserAdminEndpoints
             return ApiProblems.NotFound();
         }
 
-        if (request.ApartmentId is null && user.Role == UserRole.Resident)
+        if (user.Id == principal.GetUserId() && !user.IsFounder)
+        {
+            return ApiProblems.BadRequest(ErrorCodes.CannotModifySelf);
+        }
+
+        if (user.Role == UserRole.Guard && request.ApartmentId is not null)
+        {
+            return ApiProblems.BadRequest(ErrorCodes.GuardWithoutApartment);
+        }
+
+        if (request.ApartmentId is null && user.Role != UserRole.Guard)
         {
             return ApiProblems.BadRequest(ErrorCodes.ApartmentRequired);
         }

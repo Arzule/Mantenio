@@ -38,7 +38,7 @@ else
 {
     <MudText Typo="Typo.h5" HtmlTag="h1">@UiStrings.RegisterTitle</MudText>
     <MudAlert Severity="Severity.Info" Dense="true" Class="mt-2">
-        @(IsAdmin ? UiStrings.RegisterAsAdmin : UiStrings.RegisterAsResident)
+        @(_invitation.Role switch { AccountRole.Admin => UiStrings.RegisterAsAdmin, AccountRole.Guard => UiStrings.RegisterAsGuard, _ => UiStrings.RegisterAsResident })
     </MudAlert>
 
     <EditForm Model="_form" OnValidSubmit="RegisterAsync">
@@ -50,7 +50,10 @@ else
                       Variant="Variant.Outlined" Class="mt-3" MaxLength="100"
                       UserAttributes="@(new Dictionary<string, object?> { ["autocomplete"] = "family-name" })" />
 
-        @if (_invitation.Apartment is { } locked)
+        @if (IsGuard)
+        {
+        }
+        else if (_invitation.Apartment is { } locked)
         {
             <MudAlert Severity="Severity.Normal" Dense="true" Class="mt-3" Icon="@Icons.Material.Filled.Apartment">
                 @string.Format(UiStrings.ApartmentLocked, NoBreak(locked.Code))
@@ -59,8 +62,8 @@ else
         else
         {
             <ApartmentPicker @bind-Value="_apartment"
-                             Required="!IsAdmin"
-                             HelperText="@(IsAdmin ? UiStrings.ApartmentOptionalHint : null)"
+                             Required="true"
+                             HelperText="@(IsAdmin ? UiStrings.AdminApartmentHint : null)"
                              Class="mt-3" />
         }
 
@@ -97,14 +100,16 @@ else
 
     private bool IsAdmin => _invitation?.Role == AccountRole.Admin;
 
+    private bool IsGuard => _invitation?.Role == AccountRole.Guard;
+
     protected override void OnInitialized() => _form = new RegisterForm { KeepSignedIn = Preferences.KeepSignedInByDefault };
 
     private Task CheckCodeAsync() => RunAsync(async () => _invitation = await Api.CheckInvitationAsync(_codeForm.Code));
 
     private async Task RegisterAsync()
     {
-        // Residents always need an apartment, unless the code already brings one.
-        if (!IsAdmin && _invitation!.Apartment is null && _apartment is null)
+        // Residents and admins always need an apartment, unless the code already brings one; the gatehouse has none.
+        if (!IsGuard && _invitation!.Apartment is null && _apartment is null)
         {
             Error = UiStrings.Error_apartment_required;
             return;
@@ -118,7 +123,7 @@ else
                 _form.LastName.Trim(),
                 _form.Email.Trim(),
                 _form.Password,
-                _invitation!.Apartment?.Id ?? _apartment?.Id,
+                IsGuard ? null : _invitation!.Apartment?.Id ?? _apartment?.Id,
                 _form.KeepSignedIn));
         });
     }

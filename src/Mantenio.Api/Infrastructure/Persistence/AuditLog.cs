@@ -28,7 +28,8 @@ internal static class AuditLog
 
     public static string Json(object value) => JsonSerializer.Serialize(value, Options);
 
-    public static AuditSource SourceFor(ClaimsPrincipal user) => user.IsAdmin() ? AuditSource.Admin : AuditSource.Resident;
+    public static AuditSource SourceFor(ClaimsPrincipal user) =>
+        user.IsAdmin() ? AuditSource.Admin : user.IsGuard() ? AuditSource.Guard : AuditSource.Resident;
 }
 
 internal static class TransactionExtensions

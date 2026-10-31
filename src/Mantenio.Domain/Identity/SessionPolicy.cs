@@ -10,11 +10,14 @@ public static class SessionPolicy
 
     public static TimeSpan RefreshTokenLifetime(UserRole role, bool keepSignedIn) => (role, keepSignedIn) switch
     {
-        (UserRole.Admin, true) => TimeSpan.FromDays(30),
+        (UserRole.Admin or UserRole.Guard, true) => TimeSpan.FromDays(30),
         (UserRole.Resident, true) => TimeSpan.FromDays(90),
         _ => TimeSpan.FromHours(12),
     };
 
-    /// <summary>Admins always confirm a code sent by email after the password.</summary>
-    public static bool RequiresTwoFactor(UserRole role) => role == UserRole.Admin;
+    /// <summary>Staff (admins and gatehouse) always confirm a code sent by email after the password.</summary>
+    public static bool RequiresTwoFactor(UserRole role) => role is UserRole.Admin or UserRole.Guard;
+
+    /// <summary>Admins and gatehouse staff review and register payments.</summary>
+    public static bool IsStaff(UserRole role) => role is UserRole.Admin or UserRole.Guard;
 }

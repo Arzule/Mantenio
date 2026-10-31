@@ -8,6 +8,7 @@ public enum AccountRole
 {
     Resident,
     Admin,
+    Guard,
 }
 
 /// <summary>What the client must do after a login, registration or password step.</summary>

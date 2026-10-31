@@ -94,7 +94,7 @@ public sealed class SettingsTests(ApiFactory factory) : IClassFixture<ApiFactory
     [Fact]
     public async Task Only_the_founder_changes_the_late_fee()
     {
-        var otherAdmin = await factory.RegisterAsync(AccountRole.Admin, "admin.fee@test.local", null);
+        var otherAdmin = await factory.RegisterAsync(AccountRole.Admin, "admin.fee@test.local", "F-503");
         _ = otherAdmin;
         using var admin = factory.CreateClient(await factory.SignInAdminAsync("admin.fee@test.local", TestFlows.ResidentPassword));
         using var founder = factory.CreateClient(await factory.SignInFounderAsync());

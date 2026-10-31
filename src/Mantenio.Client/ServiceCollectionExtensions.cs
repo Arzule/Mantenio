@@ -24,6 +24,7 @@ public static class ServiceCollectionExtensions
         services.AddAuthorizationCore(options =>
         {
             options.AddPolicy(MantenioPolicies.AdminOnly, policy => policy.RequireClaim(MantenioClaims.Role, nameof(AccountRole.Admin)));
+            options.AddPolicy(MantenioPolicies.StaffOnly, policy => policy.RequireClaim(MantenioClaims.Role, nameof(AccountRole.Admin), nameof(AccountRole.Guard)));
             options.AddPolicy(MantenioPolicies.FounderOnly, policy => policy
                 .RequireClaim(MantenioClaims.Role, nameof(AccountRole.Admin))
                 .RequireClaim(MantenioClaims.Founder, "true"));

@@ -131,16 +131,23 @@ public sealed class RegistrationTests(ApiFactory factory) : IClassFixture<ApiFac
     }
 
     [Fact]
-    public async Task Admins_register_without_an_apartment_and_then_sign_in_with_two_factor()
+    public async Task Admins_register_with_their_apartment_and_then_sign_in_with_two_factor()
     {
-        await factory.RegisterAsync(AccountRole.Admin, "tesorero@test.local", apartmentCode: null);
+        using var founder = factory.CreateClient(await factory.SignInFounderAsync());
+        var code = await founder.CreateInvitationAsync(AccountRole.Admin);
+        using var anonymous = factory.CreateClient();
+        var withoutApartment = await anonymous.PostAsJsonAsync("/api/auth/register",
+            new RegisterRequest(code, "Sin", "Depa", "nodepa@test.local", TestFlows.ResidentPassword, null, false), Ct);
+        await withoutApartment.ShouldBeProblemAsync(HttpStatusCode.BadRequest, ErrorCodes.ApartmentRequired);
+
+        await factory.RegisterAsync(AccountRole.Admin, "tesorero@test.local", "F-501");
 
         var tokens = await factory.SignInAdminAsync("tesorero@test.local", TestFlows.ResidentPassword);
         using var client = factory.CreateClient(tokens);
         var me = await client.GetFromJsonAsync<CurrentUserResponse>("/api/account/me", Ct);
 
         me!.Role.ShouldBe(AccountRole.Admin);
-        me.ApartmentId.ShouldBeNull();
+        me.ApartmentCode.ShouldBe("F-501");
         me.IsFounder.ShouldBeFalse();
     }
 

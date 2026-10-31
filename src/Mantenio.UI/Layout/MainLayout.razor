@@ -80,7 +80,7 @@
 @code {
     private static readonly CondoProfile Profile = CondoProfile.Current;
     private bool _drawerOpen = true;
-    private List<NavigationItem> _items = [.. NavigationItems.All.Where(i => !i.AdminOnly)];
+    private List<NavigationItem> _items = [.. NavigationItems.All.Where(i => i.Audience is NavAudience.Everyone or NavAudience.ApartmentHolders)];
     private int _unread;
     private DateTimeOffset _unreadCheckedAt;
     private bool _pushRegistered;
@@ -184,7 +184,7 @@
     }
 
     private static string RoleLabel(System.Security.Claims.ClaimsPrincipal user) =>
-        user.HasClaim(MantenioClaims.Founder, "true") ? UiStrings.RoleFounder
-        : user.HasClaim(MantenioClaims.Role, nameof(AccountRole.Admin)) ? UiStrings.RoleAdmin
-        : UiStrings.RoleResident;
+        RoleLabels.For(
+            Enum.TryParse<AccountRole>(user.FindFirst(MantenioClaims.Role)?.Value, out var role) ? role : AccountRole.Resident,
+            user.HasClaim(MantenioClaims.Founder, "true"));
 }

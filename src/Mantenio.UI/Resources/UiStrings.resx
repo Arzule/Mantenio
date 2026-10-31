@@ -45,7 +45,8 @@
   <data name="SignOut" xml:space="preserve"><value>Cerrar sesión</value></data>
   <data name="RoleAdmin" xml:space="preserve"><value>Administrador</value></data>
   <data name="RoleResident" xml:space="preserve"><value>Residente</value></data>
-  <data name="RoleFounder" xml:space="preserve"><value>Admin fundador</value></data>
+  <data name="RoleFounder" xml:space="preserve"><value>Superadmin</value></data>
+  <data name="RoleGuard" xml:space="preserve"><value>Portería</value></data>
   <data name="ForbiddenTitle" xml:space="preserve"><value>Acceso restringido</value></data>
   <data name="ForbiddenBody" xml:space="preserve"><value>Esta sección es solo para administradores.</value></data>
   <data name="Loading" xml:space="preserve"><value>Cargando…</value></data>
@@ -94,8 +95,10 @@
   <data name="InvitationCodeLabel" xml:space="preserve"><value>Código de invitación</value></data>
   <data name="RegisterAsAdmin" xml:space="preserve"><value>Este código es para una cuenta de administrador.</value></data>
   <data name="RegisterAsResident" xml:space="preserve"><value>Este código es para una cuenta de residente.</value></data>
+  <data name="RegisterAsGuard" xml:space="preserve"><value>Este código es para una cuenta de portería. Las cuentas de portería no tienen departamento.</value></data>
+  <data name="AdminApartmentHint" xml:space="preserve"><value>Los administradores también deben tener su departamento: lo necesitas para aprobar o registrar pagos.</value></data>
+  <data name="InvitationGuardHint" xml:space="preserve"><value>Portería no tiene departamento. Si la persona vive en el condominio, créale una cuenta de admin o residente.</value></data>
   <data name="ApartmentLocked" xml:space="preserve"><value>Tu departamento ya fue asignado: {0}.</value></data>
-  <data name="ApartmentOptionalHint" xml:space="preserve"><value>Opcional: elige tu departamento solo si también vives en el condominio.</value></data>
   <data name="RegisterSubmit" xml:space="preserve"><value>Crear cuenta</value></data>
   <data name="HaveAccountPrompt" xml:space="preserve"><value>¿Ya tienes una cuenta?</value></data>
   <data name="LoginLink" xml:space="preserve"><value>Inicia sesión</value></data>
@@ -161,9 +164,11 @@
   <data name="Error_email_taken" xml:space="preserve"><value>Ya existe una cuenta con ese correo.</value></data>
   <data name="Error_invitation_invalid" xml:space="preserve"><value>El código de invitación no es válido, ya se usó o venció. Pide uno nuevo a la administración.</value></data>
   <data name="Error_admin_limit_reached" xml:space="preserve"><value>Ya se alcanzó el máximo de administradores activos.</value></data>
+  <data name="Error_guard_limit_reached" xml:space="preserve"><value>Ya se alcanzó el máximo de cuentas de portería activas.</value></data>
+  <data name="Error_guard_without_apartment" xml:space="preserve"><value>Las cuentas de portería no tienen departamento. Si la persona vive en el condominio, créale una cuenta de admin.</value></data>
   <data name="Error_apartment_required" xml:space="preserve"><value>Elige tu departamento.</value></data>
   <data name="Error_apartment_not_found" xml:space="preserve"><value>El departamento elegido no existe.</value></data>
-  <data name="Error_founder_protected" xml:space="preserve"><value>La cuenta del admin fundador no se puede desactivar.</value></data>
+  <data name="Error_founder_protected" xml:space="preserve"><value>La cuenta del superadmin no se puede desactivar.</value></data>
   <data name="Error_cannot_modify_self" xml:space="preserve"><value>No puedes desactivar tu propia cuenta.</value></data>
   <data name="Error_network_unavailable" xml:space="preserve"><value>No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.</value></data>
   <!-- Navigation (Phase 3) -->
@@ -242,7 +247,7 @@
   <data name="DueRuleExample" xml:space="preserve"><value>Ejemplo: la cuota de {0} vence el {1}.</value></data>
   <data name="LateFeeTitle" xml:space="preserve"><value>Recargo por mora</value></data>
   <data name="LateFeePercent" xml:space="preserve"><value>Porcentaje de recargo</value></data>
-  <data name="LateFeeFounderOnly" xml:space="preserve"><value>Solo el admin fundador puede cambiar el recargo.</value></data>
+  <data name="LateFeeFounderOnly" xml:space="preserve"><value>Solo el superadmin puede cambiar el recargo.</value></data>
   <data name="FeeHistoryTitle" xml:space="preserve"><value>Historial de cambios de cuota</value></data>
   <data name="ColumnScope" xml:space="preserve"><value>Alcance</value></data>
   <data name="ColumnFrom" xml:space="preserve"><value>Desde</value></data>
@@ -337,7 +342,7 @@
   <data name="BoardEmailsTitle" xml:space="preserve"><value>Resumen mensual para la junta</value></data>
   <data name="BoardEmailsBody" xml:space="preserve"><value>El día 1 de cada mes estas personas reciben por correo el folio y el reporte del mes anterior, con la huella del historial. Así varias personas guardan una copia fuera de la app y cualquier cambio en los registros antiguos se puede detectar.</value></data>
   <data name="BoardEmailsLabel" xml:space="preserve"><value>Correos de la junta</value></data>
-  <data name="BoardEmailsHint" xml:space="preserve"><value>Uno por línea, hasta 10. Solo el admin primigenio puede cambiarlos.</value></data>
+  <data name="BoardEmailsHint" xml:space="preserve"><value>Uno por línea, hasta 10. Solo el superadmin puede cambiarlos.</value></data>
   <data name="BoardEmailsNone" xml:space="preserve"><value>Aún no hay correos de la junta.</value></data>
   <data name="AuditAction_BoardEmailsChanged" xml:space="preserve"><value>Correos de la junta cambiados</value></data>
   <data name="AuditAction_BoardSummarySent" xml:space="preserve"><value>Resumen mensual enviado a la junta</value></data>
@@ -401,6 +406,10 @@ En Reportes → Reporte por período descargas un Excel de los meses que elijas 
   <data name="ProofVoided" xml:space="preserve"><value>Pago anulado.</value></data>
   <data name="ChargeHistory" xml:space="preserve"><value>Historial</value></data>
   <data name="ChargeHistoryTitle" xml:space="preserve"><value>Historial de {0}</value></data>
+  <data name="ProofHistory" xml:space="preserve"><value>Historial</value></data>
+  <data name="ProofHistoryTitle" xml:space="preserve"><value>pago de {0}</value></data>
+  <data name="ApartmentNeededTitle" xml:space="preserve"><value>Necesitas un departamento asignado</value></data>
+  <data name="ApartmentNeededBody" xml:space="preserve"><value>Los administradores deben tener su departamento asignado para aprobar, rechazar, anular o registrar pagos. El superadmin puede asignarse el suyo en Administración → Usuarios; un admin debe pedírselo a otro admin.</value></data>
   <data name="NoTimeline" xml:space="preserve"><value>Sin movimientos.</value></data>
   <data name="Timeline_ChargeCreated" xml:space="preserve"><value>Cargo creado</value></data>
   <data name="Timeline_PaymentApplied" xml:space="preserve"><value>Pago aplicado</value></data>
@@ -413,7 +422,7 @@ En Reportes → Reporte por período descargas un Excel de los meses que elijas 
   <data name="ChargesBody" xml:space="preserve"><value>Los cargos mensuales se generan automáticamente cada mes. Aquí puedes generarlos manualmente o cargar la deuda anterior al sistema.</value></data>
   <data name="GenerateCharges" xml:space="preserve"><value>Generar cargos del mes</value></data>
   <data name="GenerateChargesBody" xml:space="preserve"><value>Crea la cuota de cada departamento no congelado para el mes elegido. Si ya existen, no se duplican.</value></data>
-  <data name="GenerateChargesFounderOnly" xml:space="preserve"><value>Solo el admin fundador puede generar cargos manualmente.</value></data>
+  <data name="GenerateChargesFounderOnly" xml:space="preserve"><value>Solo el superadmin puede generar cargos manualmente.</value></data>
   <data name="Generate" xml:space="preserve"><value>Generar</value></data>
   <data name="ChargesGenerated" xml:space="preserve"><value>Se crearon {0} cargos. Ya existían {1}; congelados: {2}.</value></data>
   <data name="OpeningDebt" xml:space="preserve"><value>Deuda anterior</value></data>
@@ -435,7 +444,9 @@ En Reportes → Reporte por período descargas un Excel de los meses que elijas 
   <data name="NoticePaymentVoided" xml:space="preserve"><value>Tu pago de {0} (recibo {1}) fue anulado.</value></data>
   <!-- API error codes added in Phase 4 -->
   <data name="Error_duplicate_operation_number" xml:space="preserve"><value>Ese número de operación ya fue registrado en otro comprobante.</value></data>
-  <data name="Error_own_apartment_review" xml:space="preserve"><value>No puedes revisar comprobantes de tu propio departamento: debe hacerlo otro admin.</value></data>
+  <data name="Error_own_apartment_review" xml:space="preserve"><value>No puedes revisar comprobantes de tu propio departamento: debe hacerlo otro admin o portería.</value></data>
+  <data name="Error_own_submission_review" xml:space="preserve"><value>No puedes aprobar ni rechazar un comprobante que enviaste tú: debe hacerlo otra persona.</value></data>
+  <data name="Error_admin_apartment_required" xml:space="preserve"><value>Para aprobar, rechazar, anular o registrar pagos necesitas tener un departamento asignado. Se asigna en Usuarios: el superadmin puede asignarse el suyo; un admin debe pedírselo a otro admin.</value></data>
   <data name="Error_invalid_image" xml:space="preserve"><value>El archivo no es una imagen válida. Sube una captura en JPG o PNG.</value></data>
   <data name="Error_proof_not_pending" xml:space="preserve"><value>Este comprobante ya fue revisado.</value></data>
   <data name="Error_proof_not_approved" xml:space="preserve"><value>Solo se pueden anular pagos aprobados.</value></data>
@@ -483,8 +494,9 @@ En Reportes → Reporte por período descargas un Excel de los meses que elijas 
   <data name="AuditCount" xml:space="preserve"><value>{0} registros</value></data>
   <data name="Source_Resident" xml:space="preserve"><value>Residente</value></data>
   <data name="Source_Admin" xml:space="preserve"><value>Administración</value></data>
+  <data name="Source_Guard" xml:space="preserve"><value>Portería</value></data>
   <data name="Source_System" xml:space="preserve"><value>Sistema</value></data>
-  <data name="Source_People" xml:space="preserve"><value>Residentes y administración</value></data>
+  <data name="Source_People" xml:space="preserve"><value>Personas (sin el sistema)</value></data>
   <data name="Entity_User" xml:space="preserve"><value>Usuario</value></data>
   <data name="Entity_InvitationCode" xml:space="preserve"><value>Código de invitación</value></data>
   <data name="Entity_ApartmentList" xml:space="preserve"><value>Lista de departamentos</value></data>
@@ -508,7 +520,7 @@ En Reportes → Reporte por período descargas un Excel de los meses que elijas 
   <data name="AuditAction_Deactivated" xml:space="preserve"><value>Desactivado</value></data>
   <data name="AuditAction_Deleted" xml:space="preserve"><value>Eliminado</value></data>
   <data name="AuditAction_DueRuleChanged" xml:space="preserve"><value>Cambio de vencimiento</value></data>
-  <data name="AuditAction_FounderSeeded" xml:space="preserve"><value>Admin fundador creado</value></data>
+  <data name="AuditAction_FounderSeeded" xml:space="preserve"><value>Superadmin creado</value></data>
   <data name="AuditAction_Frozen" xml:space="preserve"><value>Congelado</value></data>
   <data name="AuditAction_GlobalFeeChanged" xml:space="preserve"><value>Cambio de cuota</value></data>
   <data name="AuditAction_Imported" xml:space="preserve"><value>Importación</value></data>
@@ -552,7 +564,7 @@ En Reportes → Reporte por período descargas un Excel de los meses que elijas 
   <data name="RegisteredFor" xml:space="preserve"><value>Registrado por {0} a nombre de {1}</value></data>
   <data name="ReceiptReadyBody" xml:space="preserve"><value>Envíale el recibo al residente por WhatsApp o descárgalo para imprimirlo.</value></data>
   <data name="PhotoError" xml:space="preserve"><value>No se pudo obtener la imagen. Revisa el permiso de la cámara o elige una de la galería.</value></data>
-  <data name="AuditAction_RegisteredByAdmin" xml:space="preserve"><value>Registrado por administración</value></data>
+  <data name="AuditAction_RegisteredByAdmin" xml:space="preserve"><value>Registrado en persona</value></data>
   <data name="AuditAction_HistoricalRegistered" xml:space="preserve"><value>Pago histórico registrado</value></data>
   <data name="AuditAction_HistoricalUpdated" xml:space="preserve"><value>Pago histórico corregido</value></data>
   <data name="AuditAction_HistoricalPhotoAttached" xml:space="preserve"><value>Foto de pago histórico adjuntada</value></data>
@@ -561,7 +573,20 @@ En Reportes → Reporte por período descargas un Excel de los meses que elijas 
   <data name="HelpTitle" xml:space="preserve"><value>Ayuda</value></data>
   <data name="HelpIntro" xml:space="preserve"><value>Guía rápida para usar la app. Toca un tema para ver los pasos.</value></data>
   <data name="HelpResidents" xml:space="preserve"><value>Para residentes</value></data>
-  <data name="HelpAdmins" xml:space="preserve"><value>Para administradores</value></data>
+  <data name="HelpAdmins" xml:space="preserve"><value>Solo para administradores</value></data>
+  <data name="HelpStaff" xml:space="preserve"><value>Para administración y portería</value></data>
+  <data name="HelpRolesTitle" xml:space="preserve"><value>Superadmin, admins y portería</value></data>
+  <data name="HelpRolesBody" xml:space="preserve"><value>• Superadmin: la cuenta principal de la junta. Es la única que cambia el recargo por mora y los correos de la junta, y la única que puede cambiar su propio departamento.
+• Admins (hasta 10): manejan todo el condominio. Deben tener su departamento asignado para aprobar, rechazar, anular o registrar pagos; sin él, la app muestra un aviso.
+• Portería (hasta 20): aprueba y rechaza comprobantes, registra los vouchers que traen en persona, anula pagos con motivo, ve el historial de cada pago y crea códigos para residentes y portería. No tiene departamento ni acceso a reportes, usuarios o configuración.
+Nadie puede aprobar ni rechazar su propio comprobante, y los admins no revisan los de su propio departamento.</value></data>
+  <data name="HelpCodesTitle" xml:space="preserve"><value>Códigos de invitación</value></data>
+  <data name="HelpCodesBody" xml:space="preserve"><value>En Códigos elige el tipo de cuenta, genera el código y envíaselo a la persona: vence en 24 horas y solo se usa una vez.
+• Residente o admin: si eliges el departamento, la cuenta queda en ese departamento; si no, la persona lo elige al registrarse (es obligatorio).
+• Portería: no lleva departamento. Si la persona vive en el condominio, créale una cuenta de admin o residente.
+Portería crea códigos de residente y de portería; los códigos de admin solo los crea un admin.</value></data>
+  <data name="GuardHomeTitle" xml:space="preserve"><value>Portería</value></data>
+  <data name="GuardHomeBody" xml:space="preserve"><value>Revisa los comprobantes pendientes, registra los vouchers que te entregan en persona y crea códigos para nuevos residentes.</value></data>
   <data name="HelpRegisterTitle" xml:space="preserve"><value>Crear tu cuenta</value></data>
   <data name="HelpRegisterBody" xml:space="preserve"><value>1. Pide a la administración un código de invitación.
 2. En la pantalla de inicio toca "Crear cuenta", escribe el código, tus datos y elige tu departamento.
@@ -585,20 +610,21 @@ Importante: si cambia una cuenta bancaria del condominio verás un aviso que deb
   <data name="HelpRejectedTitle" xml:space="preserve"><value>Si rechazan tu comprobante</value></data>
   <data name="HelpRejectedBody" xml:space="preserve"><value>Verás el motivo en el aviso y en Pagos → Comprobantes. Corrige lo indicado (por ejemplo, una captura que no se lee) y sube el comprobante otra vez. Tu deuda no cambia hasta que un comprobante se aprueba.</value></data>
   <data name="HelpReviewTitle" xml:space="preserve"><value>Revisar comprobantes</value></data>
-  <data name="HelpReviewBody" xml:space="preserve"><value>En Administración → Comprobantes, pestaña Pendientes:
+  <data name="HelpReviewBody" xml:space="preserve"><value>En Comprobantes (admins: Administración → Comprobantes), pestaña Pendientes:
 1. Compara la captura con el monto, la fecha y el número de operación.
 2. "Aprobar": confirma el monto que realmente se transfirió. Se aplica a las deudas más antiguas del departamento y se emite el recibo.
 3. "Rechazar": escribe el motivo; el residente lo verá y podrá subir otro.
-No puedes revisar comprobantes de tu propio departamento: debe hacerlo otro administrador. Si el mismo número de operación ya existe, la app lo bloquea.</value></data>
-  <data name="HelpWalkInTitle" xml:space="preserve"><value>Registrar el pago de un residente (guardia de turno)</value></data>
+"Historial" muestra todo lo que pasó con ese pago: quién lo envió, quién lo revisó, los meses que cubrió y el recibo.
+No puedes aprobar ni rechazar un comprobante que enviaste tú, y un admin no revisa los de su propio departamento: lo hace otro admin o portería. Si el mismo número de operación ya existe, la app lo bloquea.</value></data>
+  <data name="HelpWalkInTitle" xml:space="preserve"><value>Registrar el pago de un residente (portería)</value></data>
   <data name="HelpWalkInBody" xml:space="preserve"><value>Para quien entrega su voucher en persona o no tiene la app:
 1. En Comprobantes toca "Registrar comprobante de un residente".
 2. Toma una foto del voucher o elígela de la galería (es obligatoria): la app intenta leer el monto, la fecha y el número de operación.
 3. Elige o escribe el edificio y el departamento, quién paga ("Recibí de") y el banco de origen, y revisa los datos leídos.
-4. Revisa la confirmación: al aceptar, el pago queda aprobado y se emite el recibo.
+4. Revisa la confirmación: al aceptar, el pago queda aprobado y se emite el recibo. Un admin no puede registrar pagos de su propio departamento: los sube en Pagos y otra persona los aprueba.
 5. Toca "Enviar por WhatsApp" y elige al residente, o descarga el recibo para imprimirlo.</value></data>
   <data name="HelpVoidTitle" xml:space="preserve"><value>Anular un pago</value></data>
-  <data name="HelpVoidBody" xml:space="preserve"><value>Si un pago se aprobó por error (por ejemplo, era de otro departamento): en Comprobantes → Historial toca "Anular" y escribe el motivo. Las deudas que cubría vuelven a quedar pendientes y el recibo se marca como ANULADO. La devolución del dinero se hace fuera de la app.</value></data>
+  <data name="HelpVoidBody" xml:space="preserve"><value>Si un pago se aprobó por error (por ejemplo, era de otro departamento): en Comprobantes → Historial toca "Anular" y escribe el motivo (obligatorio). Portería también puede anular, incluso uno que haya registrado en su turno. Las deudas que cubría vuelven a quedar pendientes y el recibo se marca como ANULADO. La devolución del dinero se hace fuera de la app.</value></data>
   <data name="HelpReportsTitle" xml:space="preserve"><value>Reportes e historial</value></data>
   <data name="HelpReportsBody" xml:space="preserve"><value>• Administración → Reportes: morosidad por edificio a cualquier fecha (Excel o PDF) y el folio mensual de recibos en PDF.
 • Administración → Historial: todo cambio queda registrado con fecha, quién lo hizo y el motivo.
@@ -609,5 +635,5 @@ No puedes revisar comprobantes de tu propio departamento: debe hacerlo otro admi
 • Departamentos: puedes poner una cuota especial o congelar un departamento desocupado (no genera cargos mientras esté congelado).
 • Cargos: se generan solos el día 1 de cada mes. Aquí también se carga la deuda anterior al sistema.</value></data>
   <data name="HelpSecurityTitle" xml:space="preserve"><value>Seguridad de la cuenta</value></data>
-  <data name="HelpSecurityBody" xml:space="preserve"><value>Los administradores entran con contraseña y un código de 6 dígitos que llega al correo. Nunca compartas tu contraseña ni los códigos. Para agregar residentes o administradores, crea un código de invitación en Administración → Códigos y envíaselo a la persona: vence en 24 horas y solo se usa una vez. Si lo creas para un departamento, la cuenta queda en ese departamento.</value></data>
+  <data name="HelpSecurityBody" xml:space="preserve"><value>Los administradores y portería entran con contraseña y un código de 6 dígitos que llega al correo. Nunca compartas tu contraseña ni los códigos. Para agregar residentes, administradores o portería, crea un código de invitación en Códigos (ver "Códigos de invitación").</value></data>
 </root>

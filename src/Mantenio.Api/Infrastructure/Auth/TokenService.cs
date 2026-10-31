@@ -122,4 +122,9 @@ public static class ClaimsPrincipalExtensions
 
     public static bool IsAdmin(this ClaimsPrincipal principal) =>
         principal.HasClaim(MantenioClaims.Role, nameof(UserRole.Admin));
+
+    public static bool IsGuard(this ClaimsPrincipal principal) =>
+        principal.HasClaim(MantenioClaims.Role, nameof(UserRole.Guard));
+
+    public static bool IsStaff(this ClaimsPrincipal principal) => principal.IsAdmin() || principal.IsGuard();
 }

@@ -23,6 +23,14 @@ public sealed class AuthorizationCoverageTests(ApiFactory factory) : IClassFixtu
         "/api/files/{**key}",
     ];
 
+    /// <summary>Reviewed: the /api/admin routes the gatehouse (portería) shares with admins.</summary>
+    private static readonly string[] StaffRoutes =
+    [
+        "GET /api/admin/payments", "POST /api/admin/payments/register", "GET /api/admin/apartments/{id:guid}/residents",
+        "POST /api/admin/payments/{id:guid}/approve", "POST /api/admin/payments/{id:guid}/reject", "POST /api/admin/payments/{id:guid}/void",
+        "GET /api/admin/payments/{id:guid}/timeline", "POST /api/admin/invitations",
+    ];
+
     private IEnumerable<RouteEndpoint> Endpoints() =>
         factory.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>()
             .Where(e => e.RoutePattern.RawText is not null);
@@ -50,11 +58,19 @@ public sealed class AuthorizationCoverageTests(ApiFactory factory) : IClassFixtu
             .Where(e => Route(e).StartsWith("/api/admin", StringComparison.Ordinal))
             .Where(e => !e.Metadata.GetOrderedMetadata<IAuthorizeData>()
                 .Any(a => a.Policy is MantenioPolicies.AdminOnly or MantenioPolicies.FounderOnly))
-            .Select(Route)
+            .Select(MethodAndRoute)
+            .Order()
             .ToList();
 
-        unprotected.ShouldBeEmpty();
+        // Staff routes require StaffOnly instead, and nothing else is opened to the gatehouse.
+        unprotected.ShouldBe(StaffRoutes.Order().ToList());
+        Endpoints()
+            .Where(e => StaffRoutes.Contains(MethodAndRoute(e)))
+            .ShouldAllBe(e => e.Metadata.GetOrderedMetadata<IAuthorizeData>().Any(a => a.Policy == MantenioPolicies.StaffOnly));
     }
+
+    private static string MethodAndRoute(RouteEndpoint endpoint) =>
+        $"{endpoint.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods[0]} {Route(endpoint)}";
 
     [Fact]
     public async Task Api_responses_carry_security_headers()

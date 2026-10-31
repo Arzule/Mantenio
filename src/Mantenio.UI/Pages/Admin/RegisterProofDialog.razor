@@ -4,6 +4,7 @@
 @using Mantenio.Shared.Ledger
 @inherits BusyComponentBase
 @inject MantenioApi Api
+@inject PublicApi PublicApi
 @inject IFileOpener Files
 
 <MudDialog>
@@ -92,7 +93,7 @@
     }
 
     private Step _step = Step.Form;
-    private List<ApartmentAdminItem> _apartments = [];
+    private List<ApartmentOption> _apartments = [];
     private List<string> _residents = [];
     private string? _tower;
     private string? _number;
@@ -108,7 +109,7 @@
     private IMudDialogInstance Dialog { get; set; } = default!;
 
     /// <summary>The apartment typed or picked; null while the tower and number do not match a real one.</summary>
-    private ApartmentAdminItem? Apartment => _apartments.FirstOrDefault(a =>
+    private ApartmentOption? Apartment => _apartments.FirstOrDefault(a =>
         string.Equals(a.Tower, _tower?.Trim(), StringComparison.OrdinalIgnoreCase)
         && string.Equals(a.Number, _number?.Trim(), StringComparison.OrdinalIgnoreCase));
 
@@ -117,7 +118,7 @@
 
     protected override Task OnInitializedAsync() => RunAsync(async () =>
     {
-        _apartments = await Api.ListApartmentsAsync(null, null);
+        _apartments = [.. await PublicApi.ListApartmentOptionsAsync()];
     });
 
     /// <summary>Fills what the admin has not filled yet with what was read from the image.</summary>

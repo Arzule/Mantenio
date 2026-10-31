@@ -1,5 +1,5 @@
 @page "/admin/invitations"
-@attribute [Authorize(Policy = MantenioPolicies.AdminOnly)]
+@attribute [Authorize(Policy = MantenioPolicies.StaffOnly)]
 @inherits BusyComponentBase
 @inject MantenioApi Api
 @inject IJSRuntime JS
@@ -18,7 +18,7 @@
             <MudText Typo="Typo.subtitle1">@UiStrings.GeneratedCodeTitle</MudText>
             <MudText Typo="Typo.h3" Class="invitation-code my-3" Color="Color.Primary">@_created.Code</MudText>
             <MudChip T="string" Color="Color.Default" Size="Size.Small">
-                @(_created.Role == AccountRole.Admin ? UiStrings.RoleAdmin : UiStrings.RoleResident)
+                @RoleLabels.For(_created.Role)
             </MudChip>
             @if (_created.Apartment is { } apartment)
             {
@@ -38,14 +38,25 @@
     else
     {
         <MudPaper Class="pa-6" Elevation="1">
-            <MudSelect T="AccountRole" @bind-Value="_role" Label="@UiStrings.InvitationRole" Variant="Variant.Outlined">
+            <MudSelect T="AccountRole" Value="_role" ValueChanged="RoleChanged" Label="@UiStrings.InvitationRole" Variant="Variant.Outlined">
                 <MudSelectItem Value="AccountRole.Resident">@UiStrings.RoleResident</MudSelectItem>
-                <MudSelectItem Value="AccountRole.Admin">@UiStrings.RoleAdmin</MudSelectItem>
+                @if (_isAdmin)
+                {
+                    <MudSelectItem Value="AccountRole.Admin">@UiStrings.RoleAdmin</MudSelectItem>
+                }
+                <MudSelectItem Value="AccountRole.Guard">@UiStrings.RoleGuard</MudSelectItem>
             </MudSelect>
-            <ApartmentPicker @bind-Value="_apartment"
-                             Label="@UiStrings.InvitationApartmentLabel"
-                             HelperText="@UiStrings.InvitationApartmentHint"
-                             Class="mt-4" />
+            @if (_role == AccountRole.Guard)
+            {
+                <MudText Typo="Typo.body2" Class="mt-3">@UiStrings.InvitationGuardHint</MudText>
+            }
+            else
+            {
+                <ApartmentPicker @bind-Value="_apartment"
+                                 Label="@UiStrings.InvitationApartmentLabel"
+                                 HelperText="@UiStrings.InvitationApartmentHint"
+                                 Class="mt-4" />
+            }
 
             @if (Error is not null)
             {
@@ -65,6 +76,28 @@
     private AccountRole _role = AccountRole.Resident;
     private ApartmentOption? _apartment;
     private Mantenio.Shared.Invitations.CreateInvitationResponse? _created;
+    private bool _isAdmin;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    /// <summary>The gatehouse invites residents and gatehouse staff; only admins see the admin option.</summary>
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationState is not null)
+        {
+            _isAdmin = (await AuthenticationState).User.HasClaim(MantenioClaims.Role, nameof(AccountRole.Admin));
+        }
+    }
+
+    private void RoleChanged(AccountRole role)
+    {
+        _role = role;
+        if (role == AccountRole.Guard)
+        {
+            _apartment = null;
+        }
+    }
 
     private Task GenerateAsync() => RunAsync(async () =>
     {

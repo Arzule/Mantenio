@@ -32,7 +32,7 @@
                 <div class="user-cell">
                     <MudText Typo="Typo.body1"><b>@context.FirstName @context.LastName</b></MudText>
                     <MudText Typo="Typo.body2" Class="user-email">@context.Email</MudText>
-                    <MudText Typo="Typo.caption" Color="@(context.Role == AccountRole.Admin ? Color.Primary : Color.Default)">@RoleLabel(context)</MudText>
+                    <MudText Typo="Typo.caption" Color="@(context.Role == AccountRole.Resident ? Color.Default : Color.Primary)">@RoleLabels.For(context.Role, context.IsFounder)</MudText>
                 </div>
             </MudTd>
             <MudTd DataLabel="@UiStrings.ColumnApartment">@(context.ApartmentCode ?? "—")</MudTd>
@@ -44,7 +44,11 @@
                     </MudChip>
                     <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" AriaLabel="@UiStrings.ColumnActions"
                              AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
-                        <MudMenuItem Icon="@Icons.Material.Filled.Apartment" OnClick="() => ChangeApartmentAsync(context)">@UiStrings.ChangeApartment</MudMenuItem>
+                        @* The gatehouse has no apartment; an admin's own apartment is changed by another admin (the superadmin may change theirs). *@
+                        @if (context.Role != AccountRole.Guard && (context.Id != _currentUserId || context.IsFounder))
+                        {
+                            <MudMenuItem Icon="@Icons.Material.Filled.Apartment" OnClick="() => ChangeApartmentAsync(context)">@UiStrings.ChangeApartment</MudMenuItem>
+                        }
                         @if (!context.IsFounder)
                         {
                             @if (context.IsActive)
@@ -74,6 +78,19 @@
     private MudTable<UserSummary> _table = default!;
     private string? _search;
     private bool _includeInactive;
+    private Guid? _currentUserId;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationState is not null
+            && Guid.TryParse((await AuthenticationState).User.FindFirst(MantenioClaims.UserId)?.Value, out var id))
+        {
+            _currentUserId = id;
+        }
+    }
 
     private async Task<TableData<UserSummary>> LoadAsync(TableState state, CancellationToken cancellationToken)
     {
@@ -128,7 +145,6 @@
             { d => d.Message, string.Format(UiStrings.ChangeApartmentBody, $"{user.FirstName} {user.LastName}") },
             { d => d.ConfirmText, UiStrings.ChangeApartment },
             { d => d.AskApartment, true },
-            { d => d.AllowNoApartment, user.Role == AccountRole.Admin },
             { d => d.InitialApartment, current },
         });
         if (result is null)
@@ -159,7 +175,4 @@
             Snackbar.Add(ErrorMessages.For(ex.Code), Severity.Error);
         }
     }
-
-    private static string RoleLabel(UserSummary user) =>
-        user.IsFounder ? UiStrings.RoleFounder : user.Role == AccountRole.Admin ? UiStrings.RoleAdmin : UiStrings.RoleResident;
 }

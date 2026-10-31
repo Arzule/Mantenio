@@ -69,7 +69,8 @@ internal static class RateLimitingSetup
             options.AddPolicy(RateLimitPolicies.Refresh, http => PerClient(http, settings.RefreshPerMinute, TimeSpan.FromMinutes(1)));
             options.AddPolicy(RateLimitPolicies.Upload, http =>
             {
-                var isAdmin = http.User.HasClaim(Mantenio.Shared.Auth.MantenioClaims.Role, nameof(Mantenio.Shared.Auth.AccountRole.Admin));
+                var isAdmin = http.User.HasClaim(Mantenio.Shared.Auth.MantenioClaims.Role, nameof(Mantenio.Shared.Auth.AccountRole.Admin))
+                    || http.User.HasClaim(Mantenio.Shared.Auth.MantenioClaims.Role, nameof(Mantenio.Shared.Auth.AccountRole.Guard));
                 return RateLimitPartition.GetFixedWindowLimiter(
                     http.User.FindFirst(Mantenio.Shared.Auth.MantenioClaims.UserId)?.Value ?? http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                     _ => new FixedWindowRateLimiterOptions

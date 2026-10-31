@@ -64,7 +64,7 @@ public static class TestFlows
         return (await response.Content.ReadFromJsonAsync<CreateInvitationResponse>(Ct))!.Code;
     }
 
-    /// <summary>Invitation from the founder → registration → email confirmation. Returns the new user's tokens.</summary>
+    /// <summary>Invitation from the founder → registration → email confirmation. Returns the new user's tokens. Admins need an apartment; the gatehouse has none.</summary>
     public static async Task<AuthTokens> RegisterAsync(
         this ApiFactory factory, AccountRole role, string email, string? apartmentCode, bool keepSignedIn = false)
     {
@@ -72,7 +72,7 @@ public static class TestFlows
         var code = await admin.CreateInvitationAsync(role);
 
         using var client = factory.CreateClient();
-        Guid? apartmentId = apartmentCode is null ? null : (await client.ApartmentAsync(apartmentCode)).Id;
+        Guid? apartmentId = apartmentCode is null || role == AccountRole.Guard ? null : (await client.ApartmentAsync(apartmentCode)).Id;
         var response = await client.PostAsJsonAsync(
             "/api/auth/register",
             new RegisterRequest(code, "Nombre", "Apellido", email, ResidentPassword, apartmentId, keepSignedIn),

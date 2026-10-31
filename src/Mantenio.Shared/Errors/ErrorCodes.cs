@@ -29,6 +29,8 @@ public static class ErrorCodes
     public const string EmailTaken = "email_taken";
     public const string InvitationInvalid = "invitation_invalid";
     public const string AdminLimitReached = "admin_limit_reached";
+    public const string GuardLimitReached = "guard_limit_reached";
+    public const string GuardWithoutApartment = "guard_without_apartment";
     public const string ApartmentRequired = "apartment_required";
     public const string ApartmentNotFound = "apartment_not_found";
     public const string FounderProtected = "founder_protected";
@@ -48,6 +50,8 @@ public static class ErrorCodes
     // Ledger
     public const string DuplicateOperationNumber = "duplicate_operation_number";
     public const string OwnApartmentReview = "own_apartment_review";
+    public const string OwnSubmissionReview = "own_submission_review";
+    public const string AdminApartmentRequired = "admin_apartment_required";
     public const string InvalidImage = "invalid_image";
     public const string ProofNotPending = "proof_not_pending";
     public const string ProofNotApproved = "proof_not_approved";

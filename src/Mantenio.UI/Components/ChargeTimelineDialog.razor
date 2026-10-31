@@ -1,4 +1,4 @@
-@* Admin: everything that happened to one charge (creation, payments applied, reversals). *@
+@* Staff: everything that happened to one charge (creation, payments applied, reversals) or to one payment (ProofId). *@
 @inherits BusyComponentBase
 @inject MantenioApi Api
 
@@ -25,10 +25,10 @@
             <MudTimeline TimelinePosition="TimelinePosition.Start">
                 @foreach (var entry in _entries)
                 {
-                    <MudTimelineItem Size="Size.Small" Color="@(entry.Action == "PaymentReversed" ? Color.Warning : Color.Primary)">
-                        <MudText Typo="Typo.subtitle2">@LedgerText.TimelineAction(entry.Action)</MudText>
+                    <MudTimelineItem Size="Size.Small" Color="@(entry.Action is "PaymentReversed" or "Voided" or "Rejected" ? Color.Warning : Color.Primary)">
+                        <MudText Typo="Typo.subtitle2">@(ProofId is null ? LedgerText.TimelineAction(entry.Action) : LedgerText.AuditAction(entry.Action))</MudText>
                         <MudText Typo="Typo.caption" Class="d-block">
-                            @Formats.DateTime(entry.At) · @(entry.ActorName ?? UiStrings.TimelineSource_System)
+                            @Formats.DateTime(entry.At) · @(entry.ActorName is { } actor ? $"{actor} ({LedgerText.AuditSource(entry.Source)})" : UiStrings.TimelineSource_System)
                         </MudText>
                         @if (entry.Reason is { } reason)
                         {
@@ -50,11 +50,16 @@
     [CascadingParameter]
     private IMudDialogInstance Dialog { get; set; } = default!;
 
-    [Parameter, EditorRequired]
+    [Parameter]
     public Guid ChargeId { get; set; }
+
+    /// <summary>Shows the history of this payment instead of a charge.</summary>
+    [Parameter]
+    public Guid? ProofId { get; set; }
 
     [Parameter]
     public string Title { get; set; } = "";
 
-    protected override Task OnInitializedAsync() => RunAsync(async () => _entries = await Api.GetChargeTimelineAsync(ChargeId));
+    protected override Task OnInitializedAsync() => RunAsync(async () =>
+        _entries = ProofId is { } proofId ? await Api.GetProofTimelineAsync(proofId) : await Api.GetChargeTimelineAsync(ChargeId));
 }

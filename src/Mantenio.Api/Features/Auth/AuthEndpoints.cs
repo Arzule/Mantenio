@@ -216,7 +216,7 @@ internal static class AuthEndpoints
 
         db.AuditEvents.Add(new AuditEvent(
             AuditEntities.User, user.Id.ToString(), "PasswordReset",
-            user.Role == Domain.Identity.UserRole.Admin ? AuditSource.Admin : AuditSource.Resident,
+            Roles.ToAuditSource(user.Role),
             user.Id, time.GetUtcNow()));
         await db.SaveChangesAsync(cancellationToken);
 

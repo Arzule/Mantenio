@@ -26,7 +26,29 @@
             </div>
         </div>
     </MudPaper>
-    <MyFeeCard />
+    <AuthorizeView Policy="@MantenioPolicies.StaffOnly">
+        <Authorized>
+            @if (context.User.HasClaim(MantenioClaims.Role, nameof(AccountRole.Guard)))
+            {
+                @* The gatehouse has no apartment: its home is the shortcut to its two tasks. *@
+                <MudPaper Class="pa-6 mt-4" Elevation="1">
+                    <MudText Typo="Typo.h6" HtmlTag="h2">@UiStrings.GuardHomeTitle</MudText>
+                    <MudText Class="mt-2">@UiStrings.GuardHomeBody</MudText>
+                    <div class="d-flex flex-wrap gap-2 mt-4">
+                        <MudButton Href="admin/payments" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FactCheck">@UiStrings.NavPaymentReview</MudButton>
+                        <MudButton Href="admin/invitations" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd">@UiStrings.NavInvitations</MudButton>
+                    </div>
+                </MudPaper>
+            }
+            else
+            {
+                <MyFeeCard />
+            }
+        </Authorized>
+        <NotAuthorized>
+            <MyFeeCard />
+        </NotAuthorized>
+    </AuthorizeView>
 </MudContainer>
 
 @code {

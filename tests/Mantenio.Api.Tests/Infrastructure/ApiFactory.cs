@@ -26,6 +26,9 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public const string FounderEmail = "founder@test.local";
     public const string FounderPassword = "Founder2026";
 
+    /// <summary>Admins need an apartment to review payments; no test uses this one for residents.</summary>
+    public const string FounderApartment = "G-503";
+
     private readonly string _databaseName = "test_" + Guid.NewGuid().ToString("N");
     private string _connectionString = "";
     private string? _migrationConnectionString;
@@ -123,7 +126,8 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         var seeding = scope.ServiceProvider.GetRequiredService<Seeding>();
         await seeding.SeedApartmentsAsync(Seeding.EmbeddedApartmentList()!, CancellationToken.None);
         var founder = await seeding.CreateFounderAsync(
-            FounderEmail, "Fiorella", "Fundadora", FounderHasTemporaryPassword ? null : FounderPassword, CancellationToken.None);
+            FounderEmail, "Fiorella", "Fundadora", FounderHasTemporaryPassword ? null : FounderPassword, CancellationToken.None,
+            FounderApartment);
         FounderTemporaryPassword = FounderHasTemporaryPassword ? founder!.Value.Password : null;
     }
 

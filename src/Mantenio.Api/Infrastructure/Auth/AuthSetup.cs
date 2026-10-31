@@ -61,6 +61,7 @@ internal static class AuthSetup
             .SetFallbackPolicy(Policy(_ => { }))
             .AddPolicy(MantenioPolicies.SignedIn, p => p.RequireAuthenticatedUser())
             .AddPolicy(MantenioPolicies.AdminOnly, Policy(p => p.RequireClaim(MantenioClaims.Role, nameof(AccountRole.Admin))))
+            .AddPolicy(MantenioPolicies.StaffOnly, Policy(p => p.RequireClaim(MantenioClaims.Role, nameof(AccountRole.Admin), nameof(AccountRole.Guard))))
             .AddPolicy(MantenioPolicies.FounderOnly, Policy(p => p
                 .RequireClaim(MantenioClaims.Role, nameof(AccountRole.Admin))
                 .RequireClaim(MantenioClaims.Founder, "true")));

@@ -13,7 +13,7 @@ using Shouldly;
 
 namespace Mantenio.Api.Tests.Ledger;
 
-/// <summary>An admin (the guard on duty) registers the voucher a resident brought in person; it is approved at once.</summary>
+/// <summary>Staff (an admin or the gatehouse) registers the voucher a resident brought in person; it is approved at once.</summary>
 public sealed class AdminRegistrationTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

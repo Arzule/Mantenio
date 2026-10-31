@@ -34,7 +34,7 @@ internal static class AccountEndpoints
                 u.Email!,
                 u.FirstName,
                 u.LastName,
-                u.Role == Domain.Identity.UserRole.Admin ? AccountRole.Admin : AccountRole.Resident,
+                Roles.ToAccountRole(u.Role),
                 u.IsFounder,
                 u.ApartmentId,
                 u.Apartment != null ? u.Apartment.Code : null,

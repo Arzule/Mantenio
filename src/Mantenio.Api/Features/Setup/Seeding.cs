@@ -35,11 +35,12 @@ internal sealed class Seeding(AppDbContext db, UserManager<AppUser> users, TimeP
     }
 
     /// <summary>
-    /// Creates the founder admin. Without a password a random temporary one is generated and must be changed at first login.
-    /// Returns null when a founder already exists.
+    /// Creates the founder admin (superadmin). Without a password a random temporary one is generated and must be
+    /// changed at first login. Without <paramref name="apartmentCode"/> the founder assigns their own apartment later
+    /// (Users), before reviewing payments. Returns null when a founder already exists.
     /// </summary>
     public async Task<(AppUser User, string Password)?> CreateFounderAsync(
-        string email, string firstName, string lastName, string? password, CancellationToken cancellationToken)
+        string email, string firstName, string lastName, string? password, CancellationToken cancellationToken, string? apartmentCode = null)
     {
         if (await db.Users.AnyAsync(u => u.IsFounder, cancellationToken))
         {
@@ -49,6 +50,12 @@ internal sealed class Seeding(AppDbContext db, UserManager<AppUser> users, TimeP
         var now = time.GetUtcNow();
         var user = AppUser.Create(email, firstName, lastName, UserRole.Admin, now);
         user.IsFounder = true;
+        if (apartmentCode is { Length: > 0 })
+        {
+            user.ApartmentId = await db.Apartments.Where(a => a.Code == apartmentCode).Select(a => (Guid?)a.Id).SingleOrDefaultAsync(cancellationToken)
+                ?? throw new InvalidOperationException($"Apartment {apartmentCode} does not exist.");
+        }
+
         user.EmailConfirmed = true; // every admin login still needs the emailed code
         user.MustChangePassword = password is null;
         var finalPassword = password ?? TemporaryPassword();
@@ -62,7 +69,8 @@ internal sealed class Seeding(AppDbContext db, UserManager<AppUser> users, TimeP
 
         db.AuditEvents.Add(new AuditEvent(
             AuditEntities.User, user.Id.ToString(), "FounderSeeded", AuditSource.System, null, now,
-            newValues: AuditLog.Json(new { user.Email, user.FirstName, user.LastName })));
+            newValues: AuditLog.Json(new { user.Email, user.FirstName, user.LastName, user.ApartmentId }),
+            apartmentId: user.ApartmentId));
         await db.SaveChangesAsync(cancellationToken);
         return (user, finalPassword);
     }

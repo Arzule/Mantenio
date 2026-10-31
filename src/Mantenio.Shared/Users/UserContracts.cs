@@ -20,7 +20,7 @@ public sealed record PagedResult<T>(IReadOnlyList<T> Items, int Total);
 
 public sealed record ChangeUserStatusRequest([property: Required, MinLength(3), MaxLength(500)] string Reason);
 
-/// <summary>Residents always need an apartment; for admins it is optional (null removes it).</summary>
+/// <summary>Residents and admins always need an apartment; the gatehouse never has one.</summary>
 public sealed record ChangeUserApartmentRequest(
     Guid? ApartmentId,
     [property: Required, MinLength(3), MaxLength(500)] string Reason);

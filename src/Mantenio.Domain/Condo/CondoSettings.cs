@@ -11,6 +11,9 @@ public sealed class CondoSettings
 {
     public const int SingletonId = 1;
     public const int DefaultMaxAdmins = 10;
+
+    /// <summary>Active gatehouse (portería) accounts allowed at once.</summary>
+    public const int MaxGuards = 20;
     public const decimal MaxLateFeePercent = 100m;
     public const int MaxBoardEmails = 10;
 

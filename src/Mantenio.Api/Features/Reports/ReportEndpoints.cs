@@ -146,7 +146,7 @@ internal static class ReportEndpoints
         }
         else if (source is { } wanted)
         {
-            var domainSource = (AuditSource)(int)wanted;
+            var domainSource = Enum.Parse<AuditSource>(wanted.ToString());
             query = query.Where(e => e.Source == domainSource);
         }
 

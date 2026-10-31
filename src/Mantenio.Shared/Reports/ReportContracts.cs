@@ -29,8 +29,11 @@ public enum AuditSourceFilter
     Admin,
     System,
 
-    /// <summary>Residents and admins together: everything people did, without the scheduled jobs.</summary>
+    /// <summary>Residents, admins and the gatehouse together: everything people did, without the scheduled jobs.</summary>
     People,
+
+    /// <summary>The gatehouse (portería).</summary>
+    Guard,
 }
 
 public sealed record AuditItem(

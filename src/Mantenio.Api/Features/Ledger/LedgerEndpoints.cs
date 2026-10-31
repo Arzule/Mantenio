@@ -44,15 +44,19 @@ internal static class LedgerEndpoints
         app.MapGet("/api/apartments/{id:guid}/statement", StatementAsync).WithTags("Payments").RequireAuthorization()
             .Produces<AccountStatement>();
 
+        // The review queue is shared by admins and the gatehouse (portería).
+        var staff = app.MapGroup("/api/admin").WithTags("Payments").RequireAuthorization(MantenioPolicies.StaffOnly);
+        staff.MapGet("/payments", ListAsync).Produces<IReadOnlyList<PaymentProofItem>>();
+        staff.MapPost("/payments/register", RegisterAsync).DisableAntiforgery().WithUploadLimits().Produces<PaymentProofItem>();
+        staff.MapGet("/apartments/{id:guid}/residents", ResidentsAsync).Produces<IReadOnlyList<string>>();
+        staff.MapPost("/payments/{id:guid}/approve", ApproveAsync).Produces<PaymentProofItem>();
+        staff.MapPost("/payments/{id:guid}/reject", RejectAsync).Produces<PaymentProofItem>();
+        staff.MapPost("/payments/{id:guid}/void", VoidAsync).Produces<PaymentProofItem>();
+        staff.MapGet("/payments/{id:guid}/timeline", ProofTimelineAsync).Produces<IReadOnlyList<TimelineEntry>>();
+
         var admin = app.MapGroup("/api/admin").WithTags("Payments").RequireAuthorization(MantenioPolicies.AdminOnly);
-        admin.MapGet("/payments", ListAsync).Produces<IReadOnlyList<PaymentProofItem>>();
-        admin.MapPost("/payments/register", RegisterAsync).DisableAntiforgery().WithUploadLimits().Produces<PaymentProofItem>();
         admin.MapPost("/payments/historical", RegisterHistoricalAsync).DisableAntiforgery().WithUploadLimits().Produces<PaymentProofItem>();
         admin.MapPost("/payments/{id:guid}/historical", UpdateHistoricalAsync).DisableAntiforgery().WithUploadLimits().Produces<PaymentProofItem>();
-        admin.MapGet("/apartments/{id:guid}/residents", ResidentsAsync).Produces<IReadOnlyList<string>>();
-        admin.MapPost("/payments/{id:guid}/approve", ApproveAsync).Produces<PaymentProofItem>();
-        admin.MapPost("/payments/{id:guid}/reject", RejectAsync).Produces<PaymentProofItem>();
-        admin.MapPost("/payments/{id:guid}/void", VoidAsync).Produces<PaymentProofItem>();
         admin.MapGet("/charges/{id:guid}/timeline", TimelineAsync).Produces<IReadOnlyList<TimelineEntry>>();
         admin.MapPost("/charges/opening", ImportOpeningAsync).Produces<ImportOpeningDebtResult>();
         admin.MapPost("/charges/generate", GenerateAsync).RequireAuthorization(MantenioPolicies.FounderOnly)
@@ -139,7 +143,7 @@ internal static class LedgerEndpoints
         Guid id, ClaimsPrincipal principal, AppDbContext db, IFileStorage storage, CancellationToken cancellationToken)
     {
         var proof = await db.PaymentProofs.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, cancellationToken);
-        if (proof is not { HasImage: true } || !await ApartmentAccess.CanAccessAsync(db, principal, proof.ApartmentId, cancellationToken))
+        if (proof is not { HasImage: true } || !await CanViewProofAsync(db, principal, proof.ApartmentId, cancellationToken))
         {
             return ApiProblems.NotFound();
         }
@@ -151,7 +155,7 @@ internal static class LedgerEndpoints
         Guid id, ClaimsPrincipal principal, AppDbContext db, IFileStorage storage, CancellationToken cancellationToken)
     {
         var proof = await db.PaymentProofs.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, cancellationToken);
-        if (proof is null || !await ApartmentAccess.CanAccessAsync(db, principal, proof.ApartmentId, cancellationToken))
+        if (proof is null || !await CanViewProofAsync(db, principal, proof.ApartmentId, cancellationToken))
         {
             return ApiProblems.NotFound();
         }
@@ -223,6 +227,7 @@ internal static class LedgerEndpoints
         NotificationService notifications, ReceiptEmails emails, CancellationToken cancellationToken)
     {
         var adminId = principal.GetUserId();
+        var source = AuditLog.SourceFor(principal);
         Receipt? issued = null;
         IResult result;
         try
@@ -230,7 +235,7 @@ internal static class LedgerEndpoints
             result = await db.InTransactionAsync<IResult>(async ct =>
             {
                 var proof = await db.PaymentProofs.SingleOrDefaultAsync(p => p.Id == id, ct);
-                if (await ReviewProblemAsync(db, proof, adminId, PaymentProofStatus.Pending, request.RowVersion, ct) is { } problem)
+                if (await ReviewProblemAsync(db, principal, proof, PaymentProofStatus.Pending, request.RowVersion, ct) is { } problem)
                 {
                     return problem;
                 }
@@ -238,11 +243,11 @@ internal static class LedgerEndpoints
                 var now = time.GetUtcNow();
                 db.Entry(proof!).Property<uint>("RowVersion").OriginalValue = unchecked((uint)request.RowVersion);
                 proof!.Approve(request.ApprovedAmount, adminId, now);
-                db.AuditEvents.Add(new AuditEvent(AuditEntities.PaymentProof, proof.Id.ToString(), "Approved", AuditSource.Admin, adminId, now,
+                db.AuditEvents.Add(new AuditEvent(AuditEntities.PaymentProof, proof.Id.ToString(), "Approved", source, adminId, now,
                     oldValues: AuditLog.Json(new { Status = nameof(PaymentProofStatus.Pending), proof.DeclaredAmount }),
                     newValues: AuditLog.Json(new { Status = nameof(PaymentProofStatus.Approved), proof.ApprovedAmount }),
                     apartmentId: proof.ApartmentId));
-                var receipt = await SettleAndIssueReceiptAsync(db, ledger, notifications, proof, adminId, now, ct);
+                var receipt = await SettleAndIssueReceiptAsync(db, ledger, notifications, proof, source, adminId, now, ct);
                 issued = receipt;
                 return TypedResults.Ok(await ItemAsync(db, proof.Id, ct));
             }, cancellationToken);
@@ -266,12 +271,13 @@ internal static class LedgerEndpoints
         NotificationService notifications, CancellationToken cancellationToken)
     {
         var adminId = principal.GetUserId();
+        var source = AuditLog.SourceFor(principal);
         try
         {
             return await db.InTransactionAsync<IResult>(async ct =>
             {
                 var proof = await db.PaymentProofs.SingleOrDefaultAsync(p => p.Id == id, ct);
-                if (await ReviewProblemAsync(db, proof, adminId, PaymentProofStatus.Pending, request.RowVersion, ct) is { } problem)
+                if (await ReviewProblemAsync(db, principal, proof, PaymentProofStatus.Pending, request.RowVersion, ct) is { } problem)
                 {
                     return problem;
                 }
@@ -280,7 +286,7 @@ internal static class LedgerEndpoints
                 var reason = request.Reason.Trim();
                 db.Entry(proof!).Property<uint>("RowVersion").OriginalValue = unchecked((uint)request.RowVersion);
                 proof!.Reject(reason, adminId, now);
-                db.AuditEvents.Add(new AuditEvent(AuditEntities.PaymentProof, proof.Id.ToString(), "Rejected", AuditSource.Admin, adminId, now,
+                db.AuditEvents.Add(new AuditEvent(AuditEntities.PaymentProof, proof.Id.ToString(), "Rejected", source, adminId, now,
                     oldValues: AuditLog.Json(new { Status = nameof(PaymentProofStatus.Pending) }),
                     newValues: AuditLog.Json(new { Status = nameof(PaymentProofStatus.Rejected) }), reason: reason, apartmentId: proof.ApartmentId));
                 await notifications.NotifyApartmentAsync(proof.ApartmentId, NotificationType.PaymentRejected,
@@ -300,12 +306,13 @@ internal static class LedgerEndpoints
         NotificationService notifications, CancellationToken cancellationToken)
     {
         var adminId = principal.GetUserId();
+        var source = AuditLog.SourceFor(principal);
         try
         {
             return await db.InTransactionAsync<IResult>(async ct =>
             {
                 var proof = await db.PaymentProofs.SingleOrDefaultAsync(p => p.Id == id, ct);
-                if (await ReviewProblemAsync(db, proof, adminId, PaymentProofStatus.Approved, null, ct) is { } problem)
+                if (await ReviewProblemAsync(db, principal, proof, PaymentProofStatus.Approved, null, ct) is { } problem)
                 {
                     return problem;
                 }
@@ -316,13 +323,13 @@ internal static class LedgerEndpoints
                 foreach (var allocation in allocations)
                 {
                     allocation.Reverse(now);
-                    db.AuditEvents.Add(new AuditEvent(AuditEntities.Charge, allocation.ChargeId.ToString(), "PaymentReversed", AuditSource.Admin, adminId, now,
+                    db.AuditEvents.Add(new AuditEvent(AuditEntities.Charge, allocation.ChargeId.ToString(), "PaymentReversed", source, adminId, now,
                         oldValues: AuditLog.Json(new { allocation.PaymentProofId, allocation.Amount }), reason: reason,
                         apartmentId: proof!.ApartmentId, chargeId: allocation.ChargeId));
                 }
 
                 proof!.Void(reason, adminId, now);
-                db.AuditEvents.Add(new AuditEvent(AuditEntities.PaymentProof, proof.Id.ToString(), "Voided", AuditSource.Admin, adminId, now,
+                db.AuditEvents.Add(new AuditEvent(AuditEntities.PaymentProof, proof.Id.ToString(), "Voided", source, adminId, now,
                     oldValues: AuditLog.Json(new { Status = nameof(PaymentProofStatus.Approved), proof.ApprovedAmount }),
                     newValues: AuditLog.Json(new { Status = nameof(PaymentProofStatus.Voided) }), reason: reason, apartmentId: proof.ApartmentId));
 
@@ -331,14 +338,14 @@ internal static class LedgerEndpoints
                 {
                     receipt.Void(now);
                     await ledger.StoreReceiptPdfAsync(receipt, proof, voided: true, ct);
-                    db.AuditEvents.Add(new AuditEvent(AuditEntities.Receipt, receipt.Id.ToString(), "Voided", AuditSource.Admin, adminId, now,
+                    db.AuditEvents.Add(new AuditEvent(AuditEntities.Receipt, receipt.Id.ToString(), "Voided", source, adminId, now,
                         newValues: AuditLog.Json(new { receipt.Number, receipt.PdfObjectKey }), reason: reason, apartmentId: proof.ApartmentId));
                 }
 
                 await db.SaveChangesAsync(ct);
 
                 // The charges are open again: other credit of the apartment pays them first.
-                await ledger.SettleAsync(proof.ApartmentId, AuditSource.Admin, adminId, ct);
+                await ledger.SettleAsync(proof.ApartmentId, source, adminId, ct);
                 await notifications.NotifyApartmentAsync(proof.ApartmentId, NotificationType.PaymentVoided,
                     new PaymentNoticeData(proof.Id, proof.ApprovedAmount!.Value, receipt?.Number, reason), ct);
                 await db.SaveChangesAsync(ct);
@@ -368,6 +375,41 @@ internal static class LedgerEndpoints
             .ToListAsync(cancellationToken);
 
         return TypedResults.Ok(rows
+            .Select(r => new TimelineEntry(r.CreatedAt, r.Action, r.Source.ToString(), r.FirstName is null ? null : $"{r.FirstName} {r.LastName}",
+                r.NewValues ?? r.OldValues, r.Reason))
+            .ToList());
+    }
+
+    /// <summary>
+    /// Everything that happened to one payment: submission or registration, review, the months it paid, the receipt
+    /// and a void. Open to the gatehouse, which has no other access to the audit log.
+    /// </summary>
+    private static async Task<IResult> ProofTimelineAsync(Guid id, AppDbContext db, CancellationToken cancellationToken)
+    {
+        var apartmentId = await db.PaymentProofs.AsNoTracking().Where(p => p.Id == id).Select(p => (Guid?)p.ApartmentId).SingleOrDefaultAsync(cancellationToken);
+        if (apartmentId is null)
+        {
+            return ApiProblems.NotFound();
+        }
+
+        var proofKey = id.ToString();
+        var receiptKey = (await db.Receipts.Where(r => r.PaymentProofId == id).Select(r => (Guid?)r.Id).SingleOrDefaultAsync(cancellationToken))?.ToString() ?? "";
+        var rows = await (
+                from e in db.AuditEvents.AsNoTracking()
+                where (e.EntityType == AuditEntities.PaymentProof && e.EntityId == proofKey)
+                      || (e.EntityType == AuditEntities.Receipt && e.EntityId == receiptKey)
+                      || (e.EntityType == AuditEntities.Charge && e.ApartmentId == apartmentId
+                          && (e.Action == "PaymentApplied" || e.Action == "PaymentReversed"))
+                join u in db.Users on e.ActorUserId equals u.Id into users
+                from u in users.DefaultIfEmpty()
+                orderby e.CreatedAt, e.Id
+                select new { e.EntityType, e.CreatedAt, e.Action, e.Source, FirstName = u == null ? null : u.FirstName, LastName = u == null ? null : u.LastName, e.NewValues, e.OldValues, e.Reason })
+            .ToListAsync(cancellationToken);
+
+        // Allocations of other payments of the same apartment are left out (each names its proof in the values).
+        return TypedResults.Ok(rows
+            .Where(r => r.EntityType != AuditEntities.Charge
+                        || (r.NewValues ?? r.OldValues ?? "").Contains(proofKey, StringComparison.OrdinalIgnoreCase))
             .Select(r => new TimelineEntry(r.CreatedAt, r.Action, r.Source.ToString(), r.FirstName is null ? null : $"{r.FirstName} {r.LastName}",
                 r.NewValues ?? r.OldValues, r.Reason))
             .ToList());
@@ -425,9 +467,9 @@ internal static class LedgerEndpoints
     // ---- Helpers --------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// An admin (e.g. the guard on duty) registers the voucher a resident brought in person: it is approved at once
-    /// and the receipt is made out to <paramref name="payerName"/>. The screenshot or photo is required, and the
-    /// admin's own apartment is excluded, as in the review queue.
+    /// The gatehouse or an admin registers the voucher a resident brought in person: it is approved at once and the
+    /// receipt is made out to <paramref name="payerName"/>. The screenshot or photo is required; an admin needs an
+    /// apartment and cannot register for it, as in the review queue.
     /// </summary>
     private static async Task<IResult> RegisterAsync(
         [FromForm] Guid apartmentId, [FromForm] string payerName, [FromForm] decimal amount, [FromForm] DateOnly operationDate,
@@ -436,14 +478,15 @@ internal static class LedgerEndpoints
         ReceiptEmails emails, CancellationToken cancellationToken)
     {
         var adminId = principal.GetUserId();
+        var source = AuditLog.SourceFor(principal);
         if (!await db.Apartments.AnyAsync(a => a.Id == apartmentId, cancellationToken))
         {
             return ApiProblems.BadRequest(ErrorCodes.ApartmentNotFound);
         }
 
-        if (await db.Users.AnyAsync(u => u.Id == adminId && u.ApartmentId == apartmentId, cancellationToken))
+        if (await StaffProblemAsync(db, principal, apartmentId, cancellationToken) is { } staffProblem)
         {
-            return ApiProblems.Forbidden(ErrorCodes.OwnApartmentReview);
+            return staffProblem;
         }
 
         if (string.IsNullOrWhiteSpace(payerName) || payerName.Trim().Length > 120)
@@ -471,13 +514,13 @@ internal static class LedgerEndpoints
                 var now = time.GetUtcNow();
                 var proof = PaymentProof.RegisteredByAdmin(apartmentId, adminId, payerName, amount, operationDate, bankName, operationNumber, key, now);
                 db.PaymentProofs.Add(proof);
-                db.AuditEvents.Add(new AuditEvent(AuditEntities.PaymentProof, proof.Id.ToString(), "RegisteredByAdmin", AuditSource.Admin, adminId, now,
+                db.AuditEvents.Add(new AuditEvent(AuditEntities.PaymentProof, proof.Id.ToString(), "RegisteredByAdmin", source, adminId, now,
                     newValues: AuditLog.Json(new { proof.PayerName, proof.DeclaredAmount, proof.OperationDate, proof.BankName, proof.OperationNumber }),
                     apartmentId: apartmentId));
                 proof.Approve(amount, adminId, now);
-                db.AuditEvents.Add(new AuditEvent(AuditEntities.PaymentProof, proof.Id.ToString(), "Approved", AuditSource.Admin, adminId, now,
+                db.AuditEvents.Add(new AuditEvent(AuditEntities.PaymentProof, proof.Id.ToString(), "Approved", source, adminId, now,
                     newValues: AuditLog.Json(new { Status = nameof(PaymentProofStatus.Approved), proof.ApprovedAmount }), apartmentId: apartmentId));
-                issued = await SettleAndIssueReceiptAsync(db, ledger, notifications, proof, adminId, now, ct);
+                issued = await SettleAndIssueReceiptAsync(db, ledger, notifications, proof, source, adminId, now, ct);
                 return TypedResults.Ok(await ItemAsync(db, proof.Id, ct));
             }, cancellationToken);
         }
@@ -510,9 +553,9 @@ internal static class LedgerEndpoints
             return ApiProblems.BadRequest(ErrorCodes.ApartmentNotFound);
         }
 
-        if (await db.Users.AnyAsync(u => u.Id == adminId && u.ApartmentId == apartmentId, cancellationToken))
+        if (await StaffProblemAsync(db, principal, apartmentId, cancellationToken) is { } staffProblem)
         {
-            return ApiProblems.Forbidden(ErrorCodes.OwnApartmentReview);
+            return staffProblem;
         }
 
         if (await ValidateHistoricalAsync(db, clock, amount, operationDate, payerName, bankName, operationNumber, paperReceiptNumber, null,
@@ -565,9 +608,9 @@ internal static class LedgerEndpoints
             return ApiProblems.Conflict(ErrorCodes.Conflict);
         }
 
-        if (await db.Users.AnyAsync(u => u.Id == adminId && u.ApartmentId == proof.ApartmentId, cancellationToken))
+        if (await StaffProblemAsync(db, principal, proof.ApartmentId, cancellationToken) is { } staffProblem)
         {
-            return ApiProblems.Forbidden(ErrorCodes.OwnApartmentReview);
+            return staffProblem;
         }
 
         if (await ValidateHistoricalAsync(db, clock, amount, operationDate, payerName, bankName, operationNumber, paperReceiptNumber, id,
@@ -643,7 +686,7 @@ internal static class LedgerEndpoints
         Guid id, ClaimsPrincipal principal, AppDbContext db, IFileStorage storage, CancellationToken cancellationToken)
     {
         var proof = await db.PaymentProofs.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, cancellationToken);
-        if (proof is null || !await ApartmentAccess.CanAccessAsync(db, principal, proof.ApartmentId, cancellationToken))
+        if (proof is null || !await CanViewProofAsync(db, principal, proof.ApartmentId, cancellationToken))
         {
             return ApiProblems.NotFound();
         }
@@ -658,11 +701,11 @@ internal static class LedgerEndpoints
 
     /// <summary>Approves the saved proof's effects: FIFO allocation, gap-free receipt with its PDF, notice. Caller owns the transaction.</summary>
     private static async Task<Receipt> SettleAndIssueReceiptAsync(
-        AppDbContext db, LedgerService ledger, NotificationService notifications, PaymentProof proof, Guid adminId, DateTimeOffset now,
-        CancellationToken ct)
+        AppDbContext db, LedgerService ledger, NotificationService notifications, PaymentProof proof, AuditSource source, Guid adminId,
+        DateTimeOffset now, CancellationToken ct)
     {
         await db.SaveChangesAsync(ct);
-        await ledger.SettleAsync(proof.ApartmentId, AuditSource.Admin, adminId, ct);
+        await ledger.SettleAsync(proof.ApartmentId, source, adminId, ct);
         await db.SaveChangesAsync(ct);
 
         var sequence = await ledger.NextReceiptSequenceAsync(ct);
@@ -670,7 +713,7 @@ internal static class LedgerEndpoints
             LedgerService.ReceiptNumber(sequence), now);
         await ledger.StoreReceiptPdfAsync(receipt, proof, voided: false, ct);
         db.Receipts.Add(receipt);
-        db.AuditEvents.Add(new AuditEvent(AuditEntities.Receipt, receipt.Id.ToString(), "Issued", AuditSource.Admin, adminId, now,
+        db.AuditEvents.Add(new AuditEvent(AuditEntities.Receipt, receipt.Id.ToString(), "Issued", source, adminId, now,
             newValues: AuditLog.Json(new { receipt.Number, receipt.FolioPeriod, PaymentProofId = proof.Id }), apartmentId: proof.ApartmentId));
         await notifications.NotifyApartmentAsync(proof.ApartmentId, NotificationType.PaymentApproved,
             new PaymentNoticeData(proof.Id, proof.ApprovedAmount!.Value, receipt.Number, null), ct);
@@ -723,19 +766,27 @@ internal static class LedgerEndpoints
         return ProofImage.Normalize(buffer.ToArray());
     }
 
-    /// <summary>Not found, wrong status or the admin's own apartment (another admin must review it).</summary>
+    /// <summary>
+    /// Not found, an admin without an apartment, the reviewer's own apartment, a pending proof the reviewer sent
+    /// (someone else must approve or reject it; voiding one's own registration is allowed), stale or wrong status.
+    /// </summary>
     private static async Task<IResult?> ReviewProblemAsync(
-        AppDbContext db, PaymentProof? proof, Guid adminId, PaymentProofStatus expected, int? rowVersion, CancellationToken cancellationToken)
+        AppDbContext db, ClaimsPrincipal principal, PaymentProof? proof, PaymentProofStatus expected, int? rowVersion,
+        CancellationToken cancellationToken)
     {
         if (proof is null)
         {
             return ApiProblems.NotFound();
         }
 
-        var ownApartment = await db.Users.Where(u => u.Id == adminId).Select(u => u.ApartmentId).SingleAsync(cancellationToken);
-        if (ownApartment == proof.ApartmentId)
+        if (await StaffProblemAsync(db, principal, proof.ApartmentId, cancellationToken) is { } staffProblem)
         {
-            return ApiProblems.Forbidden(ErrorCodes.OwnApartmentReview);
+            return staffProblem;
+        }
+
+        if (expected == PaymentProofStatus.Pending && proof.SubmittedById == principal.GetUserId())
+        {
+            return ApiProblems.Forbidden(ErrorCodes.OwnSubmissionReview);
         }
 
         // Another admin changed it since this one loaded the queue (also caught by xmin if it happens right now).
@@ -751,6 +802,28 @@ internal static class LedgerEndpoints
 
         return null;
     }
+
+    /// <summary>
+    /// Admins act on payments only once they have an apartment, and never on their own apartment. The gatehouse has
+    /// no apartment, so neither rule applies to it.
+    /// </summary>
+    private static async Task<IResult?> StaffProblemAsync(AppDbContext db, ClaimsPrincipal principal, Guid apartmentId, CancellationToken cancellationToken)
+    {
+        if (!principal.IsAdmin())
+        {
+            return null;
+        }
+
+        var userId = principal.GetUserId();
+        var ownApartment = await db.Users.Where(u => u.Id == userId).Select(u => u.ApartmentId).SingleAsync(cancellationToken);
+        return ownApartment is null ? ApiProblems.Forbidden(ErrorCodes.AdminApartmentRequired)
+            : ownApartment == apartmentId ? ApiProblems.Forbidden(ErrorCodes.OwnApartmentReview)
+            : null;
+    }
+
+    /// <summary>Proof images and receipts: the apartment's residents, and staff for any apartment (they review them).</summary>
+    private static async Task<bool> CanViewProofAsync(AppDbContext db, ClaimsPrincipal principal, Guid apartmentId, CancellationToken cancellationToken) =>
+        principal.IsStaff() || await ApartmentAccess.CanAccessAsync(db, principal, apartmentId, cancellationToken);
 
     private static Task<bool> IsDuplicateAsync(
         AppDbContext db, string bankName, string operationNumber, CancellationToken cancellationToken, Guid? excludeId = null) =>
