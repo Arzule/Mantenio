@@ -1,7 +1,7 @@
 # Mantenio
 
 Mantenio replaces the paper ledger of a condo's maintenance fees. Residents see what they owe, upload the screenshot
-of their transfer and get a PDF receipt. Admins and the gatehouse (portería) review payments and register vouchers
+of their transfer and get a PDF receipt. Admins and the gatehouse review payments and register vouchers
 brought in person; admins also get the delinquency report for any date. Everything is audited.
 
 It is built for one condo per installation: name, colors, logo, fee and receipt series come from a **condo profile**
