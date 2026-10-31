@@ -33,6 +33,9 @@ public static class StorageKeys
 
     /// <summary>The founder's push tokens, kept outside the database for the outage alert.</summary>
     public const string FounderDevices = "system/founder-devices.json";
+
+    /// <summary>The published Android release (written by deploy/build_android.py --publish, beside the APK).</summary>
+    public const string AndroidRelease = "app/android/version.json";
 }
 
 /// <summary>"Storage" section. Provider "R2" needs the R2 values; anything else uses the local folder.</summary>

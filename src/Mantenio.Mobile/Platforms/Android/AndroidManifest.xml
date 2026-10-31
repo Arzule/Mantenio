@@ -5,6 +5,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- In-app updates: the downloaded APK is handed to the system installer, which asks the person to confirm. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <queries>
         <!-- Camera for photos of vouchers, and WhatsApp to send receipts. -->
         <intent><action android:name="android.media.action.IMAGE_CAPTURE" /></intent>

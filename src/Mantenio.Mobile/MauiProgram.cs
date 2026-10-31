@@ -26,9 +26,11 @@ public static class MauiProgram
 #if ANDROID
         builder.Services.AddSingleton<IPushRegistration, AndroidPushRegistration>();
         builder.Services.AddSingleton<IImagePicker, MediaImagePicker>();
+        builder.Services.AddSingleton<IAppUpdater, ApkUpdater>();
 #else
         builder.Services.AddSingleton<IPushRegistration, NoPushRegistration>();
         builder.Services.AddSingleton<IImagePicker, NoImagePicker>();
+        builder.Services.AddSingleton<IAppUpdater, NoAppUpdater>();
 #endif
         builder.Services.AddSingleton(new ClientPreferences(KeepSignedInByDefault: true));
         builder.Services.AddMantenioClient(ApiBaseAddress());

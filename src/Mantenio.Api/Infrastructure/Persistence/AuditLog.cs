@@ -20,6 +20,7 @@ internal static class AuditEntities
     public const string PaymentProof = "PaymentProof";
     public const string Receipt = "Receipt";
     public const string Job = "Job";
+    public const string AppRelease = "AppRelease";
 }
 
 internal static class AuditLog

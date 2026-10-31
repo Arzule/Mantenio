@@ -71,6 +71,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         }
 
         builder.UseSetting("Push:BackgroundDispatch", "false");
+        builder.UseSetting("AppRelease:Watch", "false");
         builder.UseSetting("Storage:Provider", "Local");
         builder.UseSetting("Storage:LocalPath", StoragePath);
         builder.UseSetting("Jwt:SigningKey", "test-signing-key-that-is-long-enough-0123456789");

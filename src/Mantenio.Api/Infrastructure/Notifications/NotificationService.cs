@@ -26,6 +26,14 @@ public sealed class NotificationService(AppDbContext db, TimeProvider time, Push
         return userIds.Count;
     }
 
+    /// <summary>Adds a notice for the active users with the Android app on a phone (a new app version).</summary>
+    public async Task<int> NotifyDeviceUsersAsync(NotificationType type, object data, CancellationToken cancellationToken)
+    {
+        var userIds = await db.Users.Where(u => u.IsActive && db.UserDevices.Any(d => d.UserId == u.Id)).Select(u => u.Id).ToListAsync(cancellationToken);
+        Add(userIds, type, data, requiresAcknowledgement: false);
+        return userIds.Count;
+    }
+
     private void Add(IEnumerable<Guid> userIds, NotificationType type, object data, bool requiresAcknowledgement)
     {
         var json = AuditLog.Json(data);

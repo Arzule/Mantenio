@@ -1,0 +1,105 @@
+@* Android: compares the installed version with the published one when the app opens. Older than the minimum: a screen
+   that only lets the person update. Just older: a dismissable offer, shown again the next time the app opens. *@
+@implements IDisposable
+@inject PublicApi Api
+@inject IAppUpdater Updater
+
+@if (_release is not null && (_required || (_available && !s_dismissed)))
+{
+    <div class="update-backdrop" style="position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px; background: @(_required ? "var(--mud-palette-background)" : "rgba(0,0,0,0.45)")">
+        <MudPaper Elevation="4" Class="pa-6" Style="max-width: 420px; width: 100%">
+            <MudStack Spacing="3">
+                <MudIcon Icon="@Icons.Material.Filled.SystemUpdate" Color="Color.Primary" Size="Size.Large" />
+                <MudText Typo="Typo.h6" HtmlTag="h2">@(_required ? UiStrings.UpdateRequiredTitle : UiStrings.UpdateAvailableTitle)</MudText>
+                <MudText>@Formats.Format(_required ? UiStrings.UpdateRequiredBody : UiStrings.UpdateAvailableBody, _release.VersionName)</MudText>
+                <MudText Typo="Typo.body2">@UiStrings.UpdateInstallerHint</MudText>
+                @if (_progress is { } progress)
+                {
+                    <MudProgressLinear Color="Color.Primary" Value="@(progress * 100)" />
+                    <MudText Typo="Typo.caption">@Formats.Format(UiStrings.UpdateDownloading, progress.ToString("P0", System.Globalization.CultureInfo.CurrentCulture))</MudText>
+                }
+                @if (_error)
+                {
+                    <MudAlert Severity="Severity.Error" Dense="true">@UiStrings.UpdateFailed</MudAlert>
+                }
+                <div class="d-flex justify-end flex-wrap gap-2">
+                    @if (!_required)
+                    {
+                        <MudButton Variant="Variant.Text" OnClick="Dismiss" Disabled="_downloading">@UiStrings.UpdateLater</MudButton>
+                    }
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"
+                               OnClick="UpdateAsync" Disabled="_downloading">@UiStrings.UpdateNow</MudButton>
+                </div>
+            </MudStack>
+        </MudPaper>
+    </div>
+}
+
+@code {
+    // One check per app start, shared by the sign-in and main layouts; "Ahora no" lasts until the app is opened again.
+    private static Task<AppUpdateInfo?>? s_check;
+    private static bool s_dismissed;
+
+    /// <summary>Forgets the check and the dismissal, as a new app start does (used by tests).</summary>
+    public static void ResetSession()
+    {
+        s_check = null;
+        s_dismissed = false;
+    }
+
+    private readonly CancellationTokenSource _disposed = new();
+    private AppUpdateInfo? _release;
+    private bool _required;
+    private bool _available;
+    private bool _downloading;
+    private bool _error;
+    private double? _progress;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Updater.InstalledVersionCode is not { } installed)
+        {
+            return;
+        }
+
+        _release = await (s_check ??= Api.GetAndroidReleaseAsync());
+        if (_release is not null)
+        {
+            _required = installed < _release.MinVersionCode;
+            _available = installed < _release.VersionCode;
+        }
+    }
+
+    private void Dismiss() => s_dismissed = true;
+
+    private async Task UpdateAsync()
+    {
+        _downloading = true;
+        _error = false;
+        _progress = 0;
+        try
+        {
+            var progress = new Progress<double>(value =>
+            {
+                _progress = value;
+                _ = InvokeAsync(StateHasChanged);
+            });
+            await Updater.InstallAsync(_release!.DownloadUrl, progress, _disposed.Token);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or IOException or TaskCanceledException)
+        {
+            _error = true;
+        }
+        finally
+        {
+            _downloading = false;
+            _progress = null;
+        }
+    }
+
+    public void Dispose()
+    {
+        _disposed.Cancel();
+        _disposed.Dispose();
+    }
+}

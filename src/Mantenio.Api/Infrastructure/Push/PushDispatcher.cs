@@ -128,6 +128,7 @@ public sealed partial class PushDispatcher(IServiceScopeFactory scopes, IOptions
             NotificationType.PaymentRejected => (PushTexts.RejectedTitle, Format(PushTexts.RejectedBody, Money(data), Str(data, "reason"))),
             NotificationType.PaymentVoided => (PushTexts.VoidedTitle, Format(PushTexts.VoidedBody, Money(data), Str(data, "reason"))),
             NotificationType.DebtReminder => (PushTexts.ReminderTitle, Format(PushTexts.ReminderBody, Str(data, "apartmentCode"), Money(data))),
+            NotificationType.AppUpdateAvailable => (PushTexts.AppUpdateTitle, Format(PushTexts.AppUpdateBody, Str(data, "versionName"))),
             _ => (PushTexts.GenericTitle, PushTexts.GenericBody),
         };
     }

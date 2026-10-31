@@ -16,11 +16,11 @@ public sealed class AuthorizationCoverageTests(ApiFactory factory) : IClassFixtu
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    /// <summary>Reviewed: sign-in, registration, password reset, the apartment picker, health and public info.</summary>
+    /// <summary>Reviewed: sign-in, registration, password reset, the apartment picker, health, public info and the Android download.</summary>
     private static readonly string[] AnonymousRoutes =
     [
         "/health", "/alive", "/api/system/info", "/api/apartments/options", "/api/invitations/check", "/api/auth/register",
-        "/api/files/{**key}",
+        "/api/files/{**key}", "/api/app/android", "/api/app/android/version",
     ];
 
     /// <summary>Reviewed: the /api/admin routes the gatehouse (portería) shares with admins.</summary>

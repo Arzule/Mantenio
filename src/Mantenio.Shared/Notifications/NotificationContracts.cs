@@ -12,6 +12,7 @@ public enum NotificationKind
     PaymentRejected,
     PaymentVoided,
     DebtReminder,
+    AppUpdateAvailable,
 }
 
 /// <summary>Data of <see cref="NotificationKind.DebtReminder"/>: overdue amount and number of overdue months.</summary>

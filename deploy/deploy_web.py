@@ -75,7 +75,14 @@ def write_security_headers(site_dir):
         f.write("  Permissions-Policy: geolocation=(), microphone=()\n")
 
 
+def write_redirects(site_dir):
+    """Cloudflare Pages `_redirects`: <web>/app is the stable Android download link (the brochure's), via the API."""
+    with open(os.path.join(site_dir, "_redirects"), "w", encoding="utf-8", newline="\n") as f:
+        f.write(f"/app {api_origin()}/api/app/android 302\n")
+
+
 write_security_headers(site)
+write_redirects(site)
 
 project = config["pagesProject"]
 listing = run(["npx", "--yes", "wrangler@4", "pages", "project", "list"], check=False)

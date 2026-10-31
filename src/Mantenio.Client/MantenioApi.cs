@@ -22,9 +22,34 @@ public static class MantenioHttpClients
     public const string Authenticated = "Mantenio.Authenticated";
 }
 
+/// <summary>The latest Android version, with its download link already absolute.</summary>
+public sealed record AppUpdateInfo(int VersionCode, string VersionName, int MinVersionCode, Uri DownloadUrl);
+
 /// <summary>Calls that work without being signed in.</summary>
 public sealed class PublicApi(IHttpClientFactory httpClientFactory)
 {
+    /// <summary>The published Android version; null when there is none or the API cannot be reached (the app goes on).</summary>
+    public async Task<AppUpdateInfo?> GetAndroidReleaseAsync(CancellationToken cancellationToken = default)
+    {
+        using var client = httpClientFactory.CreateClient(MantenioHttpClients.Public);
+        try
+        {
+            using var response = await client.GetAsync(new Uri("/api/app/android/version", UriKind.Relative), cancellationToken).SendSafeAsync();
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            var release = await response.ReadAsync<Mantenio.Shared.SystemInfo.AndroidRelease>(cancellationToken);
+            return new AppUpdateInfo(release.VersionCode, release.VersionName, release.MinVersionCode,
+                new Uri(client.BaseAddress!, release.DownloadPath));
+        }
+        catch (ApiException)
+        {
+            return null;
+        }
+    }
+
     public Task<SignInResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default) =>
         PostAsync<SignInResponse>("/api/auth/login", request, cancellationToken);
 

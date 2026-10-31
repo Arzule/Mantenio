@@ -1,4 +1,5 @@
 using Mantenio.Api.Features.Account;
+using Mantenio.Api.Features.AppRelease;
 using Mantenio.Api.Features.Apartments;
 using Mantenio.Api.Features.Auth;
 using Mantenio.Api.Features.BankAccounts;
@@ -59,6 +60,10 @@ builder.Services.AddScoped<SignInFlow>();
 builder.Services.AddScoped<Seeding>();
 builder.Services.AddSingleton<CondoClock>();
 builder.Services.AddScoped<NotificationService>();
+builder.Services.AddSingleton<AppReleaseService>();
+builder.Services.Configure<AppReleaseOptions>(
+    builder.Configuration.GetSection(AppReleaseOptions.SectionName));
+builder.Services.AddHostedService<AppReleaseWatcher>();
 builder.Services.AddMantenioStorage(builder.Configuration);
 builder.Services.AddScoped<LedgerService>();
 builder.Services.AddScoped<ReceiptEmails>();
@@ -111,6 +116,7 @@ await DevSeedOptions.RunAsync(app);
 
 app.MapDefaultEndpoints();
 app.MapSystemInfoEndpoints();
+app.MapAppReleaseEndpoints();
 app.MapAuthEndpoints();
 app.MapAccountEndpoints();
 app.MapInvitationEndpoints();

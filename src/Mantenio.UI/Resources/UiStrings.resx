@@ -636,4 +636,15 @@ No puedes aprobar ni rechazar un comprobante que enviaste tú, y un admin no rev
 • Cargos: se generan solos el día 1 de cada mes. Aquí también se carga la deuda anterior al sistema.</value></data>
   <data name="HelpSecurityTitle" xml:space="preserve"><value>Seguridad de la cuenta</value></data>
   <data name="HelpSecurityBody" xml:space="preserve"><value>Los administradores y portería entran con contraseña y un código de 6 dígitos que llega al correo. Nunca compartas tu contraseña ni los códigos. Para agregar residentes, administradores o portería, crea un código de invitación en Códigos (ver "Códigos de invitación").</value></data>
+  <data name="NoticeAppUpdateTitle" xml:space="preserve"><value>Nueva versión de la app</value></data>
+  <data name="NoticeAppUpdate" xml:space="preserve"><value>Ya está disponible la versión {0}. Abre la app en tu celular y toca Actualizar.</value></data>
+  <data name="UpdateAvailableTitle" xml:space="preserve"><value>Hay una nueva versión de la app</value></data>
+  <data name="UpdateAvailableBody" xml:space="preserve"><value>La versión {0} ya está disponible. Instalarla toma menos de un minuto.</value></data>
+  <data name="UpdateRequiredTitle" xml:space="preserve"><value>Actualiza la app para continuar</value></data>
+  <data name="UpdateRequiredBody" xml:space="preserve"><value>Esta versión ya no funciona con el sistema. Instala la versión {0} para seguir usando la app.</value></data>
+  <data name="UpdateNow" xml:space="preserve"><value>Actualizar</value></data>
+  <data name="UpdateLater" xml:space="preserve"><value>Ahora no</value></data>
+  <data name="UpdateDownloading" xml:space="preserve"><value>Descargando la actualización… {0}</value></data>
+  <data name="UpdateInstallerHint" xml:space="preserve"><value>Android te pedirá confirmar la instalación. La primera vez, permite instalar apps desde esta app; tus datos y tu sesión se conservan.</value></data>
+  <data name="UpdateFailed" xml:space="preserve"><value>No se pudo descargar la actualización. Revisa tu conexión e inténtalo de nuevo.</value></data>
 </root>

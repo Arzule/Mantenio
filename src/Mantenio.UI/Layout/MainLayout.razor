@@ -6,6 +6,7 @@
 @inject IPushRegistration Push
 
 <ThemeProviders />
+<AppUpdateGate />
 <PendingNoticesGate OnAcknowledged="RefreshUnreadAsync" />
 
 @* Plain root element so the scoped ::deep rules in MainLayout.razor.css reach MudMainContent. *@

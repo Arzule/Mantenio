@@ -14,6 +14,9 @@ public enum NotificationType
 
     /// <summary>Monthly reminder (day 15) to apartments with overdue debt. Neutral text, no consequences.</summary>
     DebtReminder = 5,
+
+    /// <summary>A new Android version was published (once per release, only to users with the app on a phone).</summary>
+    AppUpdateAvailable = 6,
 }
 
 /// <summary>

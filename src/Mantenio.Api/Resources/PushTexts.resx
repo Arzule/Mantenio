@@ -27,6 +27,8 @@
   <data name="VoidedBody" xml:space="preserve"><value>Tu pago de {0} fue anulado. Motivo: {1}</value></data>
   <data name="ReminderTitle" xml:space="preserve"><value>Recordatorio de pago</value></data>
   <data name="ReminderBody" xml:space="preserve"><value>El departamento {0} tiene un saldo pendiente de {1}. Puedes ver el detalle en la app.</value></data>
+  <data name="AppUpdateTitle" xml:space="preserve"><value>Nueva versión de la app</value></data>
+  <data name="AppUpdateBody" xml:space="preserve"><value>Ya está disponible la versión {0}. Abre la app y toca Actualizar.</value></data>
   <data name="GenericTitle" xml:space="preserve"><value>Nuevo aviso</value></data>
   <data name="GenericBody" xml:space="preserve"><value>Tienes un nuevo aviso en la app.</value></data>
   <!-- Database-down alert, only to the founder. {0} = condo -->

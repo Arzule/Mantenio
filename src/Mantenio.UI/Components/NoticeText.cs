@@ -17,6 +17,7 @@ public static class NoticeText
             NotificationKind.PaymentRejected => UiStrings.NoticePaymentRejectedTitle,
             NotificationKind.PaymentVoided => UiStrings.NoticePaymentVoidedTitle,
             NotificationKind.DebtReminder => UiStrings.NoticeReminderTitle,
+            NotificationKind.AppUpdateAvailable => UiStrings.NoticeAppUpdateTitle,
             _ => UiStrings.NoticeFeeTitle,
         };
     }
@@ -42,6 +43,11 @@ public static class NoticeText
         {
             var months = data.TryGetProperty("months", out var count) && count.ValueKind == JsonValueKind.Number ? count.GetInt32() : 0;
             return Formats.Format(UiStrings.NoticeReminder, Text(data, "apartmentCode"), Formats.Money(Amount(data, "amount") ?? 0), months);
+        }
+
+        if (notice.Kind == NotificationKind.AppUpdateAvailable)
+        {
+            return Formats.Format(UiStrings.NoticeAppUpdate, Text(data, "versionName"));
         }
 
         if (notice.Kind is NotificationKind.PaymentApproved or NotificationKind.PaymentRejected or NotificationKind.PaymentVoided)
